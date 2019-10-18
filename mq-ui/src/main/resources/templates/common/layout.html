@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <header th:include="common/header::header" th:remove="tag"></header>
+</head>
+<body class="main_body">
+<div class="layui-layout layui-layout-admin">
+    <!-- 顶部 -->
+    <div th:include="common/topbar::topbar(${userName}, ${roleName})" class="layui-header header"></div>
+    <!-- 左侧导航 -->
+    <div th:include="common/leftmenu::leftmenu" class="layui-side layui-bg-black"></div>
+
+    <!-- 右侧内容 -->
+    <div class="layui-body">
+        <div layout:fragment="content">
+        </div>
+
+    </div>
+    <!-- 底部 -->
+    <div class="layui-footer footer">
+        <p>copyright@2018</p>
+    </div>
+    <script th:src="@{/layui/layui.js}"></script>
+    <script th:src="@{/js/config.js}"></script>
+    <script th:src="@{/js/index.js?v=20190716}"></script>
+    <script th:src="@{/js/jquery-1.11.1.min.js}"></script>
+
+    <div layout:fragment="end-load-files">
+
+    </div>
+</div>
+
+</body>
+</html>
+

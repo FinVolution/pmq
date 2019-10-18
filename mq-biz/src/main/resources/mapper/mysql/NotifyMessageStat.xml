@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.NotifyMessageStatRepository">
+    <!-- 业务逻辑sql请写在这个文件内 -->
+     <update id="updateNotifyMessageId">
+        update notify_message_stat set notify_message_id=(select max(id) from notify_message) where 
+        notify_message_id>(select max(id) from notify_message)       
+    </update>
+</mapper>

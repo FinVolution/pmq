@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">			
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.ppdai.infrastructure</groupId>
+	<artifactId>mq-client</artifactId>
+	<version>5.0.0</version>
+	<packaging>pom</packaging>	
+    <modules>
+	    <!--module>mq-common</module>
+		<module>mq-common-cat</module-->
+		<module>mq-core</module>
+		<module>mq-client-core</module>
+		<module>mq-client-spring</module>
+		<module>mq-client-springboot</module>
+    </modules>
+	<properties>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
+		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+		<slf4j.version>1.7.24</slf4j.version>		
+	</properties>
+
+    <distributionManagement>
+        <repository>
+            <id>ppdai-Releases</id>
+            <name>Internal Releases</name>
+            <url>http://maven.repo.ppdai.com/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>ppdai-Snapshots</id>
+            <name>Internal Snapshots</name>
+            <url>http://maven.repo.ppdai.com/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+	<dependencyManagement>
+		<dependencies>  
+		    <!--dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+			<dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-common-cat</artifactId>
+                <version>${project.version}</version>
+            </dependency-->
+			<dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>			   			
+		   <dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-client-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>		
+			<dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-client-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+			<dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-client-springboot</artifactId>
+                <version>${project.version}</version>
+            </dependency>	
+			<dependency>
+				<groupId>com.squareup.okhttp3</groupId>
+				<artifactId>okhttp</artifactId>
+				<version>3.9.1</version>
+		   </dependency>			
+		<!-- https://mvnrepository.com/artifact/junit/junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+			</dependencies>
+		</dependencyManagement>
+		
+	<repositories>
+        <repository>
+            <id>ppdai</id>
+            <name>ppdai</name>
+            <url>http://maven.repo.ppdai.com/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+    <build>
+        <pluginManagement>
+            <plugins>               
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <verbose>true</verbose>
+                        <fork>true</fork>
+                        <compilerVersion>${java.version}</compilerVersion>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <testFailureIgnore>true</testFailureIgnore>
+                    </configuration>
+                    <version>2.7.2</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+	
+</project>

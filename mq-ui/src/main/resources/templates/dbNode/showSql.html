@@ -1,0 +1,36 @@
+<form th:fragment="showSqlForm" xmlns:th="http://www.thymeleaf.org" xmlns:th="http://www.w3.org/1999/xhtml">
+
+    <div class="layui-form-item layui-form-text">
+        <input type="hidden" name="dbNodeId">
+        <input type="hidden" name="quantity">
+        <button class="layui-btn copy_sql" id="copy_sql" type="button">复制</button>
+        <button class="layui-btn execute_sql" id="execute_sql"><i class="layui-icon">&#xe608;</i>尝试执行</button>
+        <label class="layui-form-label">建表语句：</label>
+        <div class="layui-input-block">
+            <textarea id="showSql" name="showSql" class="layui-textarea" rows="30" cols="100"></textarea>
+        </div>
+    </div>
+
+</form>
+
+<!--<script src="../../static/dist/clipboard.min.js">
+
+    $(".btn").click(function(){
+        alert(123)
+    });
+
+    var clipboard = new ClipboardJS('.btn', {
+        text: function() {
+            return 'to be or not to be';
+        }
+    });
+
+    clipboard.on('success', function(e) {
+        console.log(e);
+    });
+
+    clipboard.on('error', function(e) {
+        console.log(e);
+    });
+
+</script>-->

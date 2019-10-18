@@ -1,0 +1,52 @@
+<div th:fragment="topbar(userName, roleName)" xmlns:th="http://www.thymeleaf.org">
+    <div class="layui-main">
+        <div class="layui-logo1">
+        <img class="myiconfont icon-leida" alt="" src="/images/mq.png"/>
+                  消息系统后台</div>
+        <!-- 顶部右侧菜单 -->
+        <div th:if="${userName} ne ''">
+            <ul class="layui-nav top_menu">
+                <li class="layui-nav-item">
+                    <a href="" onclick="return false" th:text="${userName}"></a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="" onclick="return false" th:text="${roleName}">退出</a></dd>
+                        <dd><a href="/logout">退出</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+        <div th:if="${userName} eq ''">
+            <ul class="layui-nav top_menu">
+                <li class="layui-nav-item">
+                    <a href="" th:text="请登录"></a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/login">登陆</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+
+        <div class="top-process ">
+            <div class="layui-inline"><p>队列已分配 / 总量:  </p></div>
+            <div class="layui-inline">正常类型</div>
+            <div class="layui-inline">
+                <div class="process-bar">
+                <div class="layui-progress layui-progress-big" lay-showPercent="true" lay-filter="successPercent">
+                    <div class="layui-progress-bar layui-bg-blue" lay-percent="0%"></div>
+                </div>
+                </div>
+            </div>
+            <div class="layui-inline">失败类型</div>
+            <div class="layui-inline">
+                <div class="process-bar">
+                <div class="layui-progress layui-progress-big" lay-showPercent="true" lay-filter="failPercent">
+                    <div class="layui-progress-bar layui-bg-orange" lay-percent="0%"></div>
+                </div>
+                </div>
+            </div>
+            <div class="layui-inline" style="margin-left:30px; ">客户端最新版本：</div>
+            <div class="layui-inline"  th:text="${sdkVersion}"></div> 
+        </div>
+    </div>
+
+</div>

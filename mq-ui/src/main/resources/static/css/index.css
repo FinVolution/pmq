@@ -1,0 +1,19 @@
+.top-process {
+    padding-top: 25px;
+    margin-left: 250px;
+    color: white;
+    /*width: 400px;*/
+}
+
+.process-bar {
+    width: 100px;
+}
+
+.layui-progress-big .layui-progress-text {
+    position: static;
+    padding: 0 10px;
+    color: #666;
+}
+.visualHidden{
+	visibility: hidden;
+}

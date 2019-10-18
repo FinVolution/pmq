@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" id="main">
+<head>
+    <!--<meta name="viewport" content="width=device-width,initial-scale=0.7, minimum-scale=0.7, maximum-scale=0.7, user-scalable=yes"/>-->
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/layui/css/layui.mobile.css" media="all" />
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all" />
+    <style type="text/css">
+        .btnFocus {
+            background-color: #009688;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body margintop="10px">
+<br/>
+<div class="layui-inline">
+    <input type="hidden" name="hostPort" id="hostPort" th:value="${hostPort}">
+    <input type="hidden" name="hostPort" id="consumerGroupName" th:value="${consumerGroupName}">
+    <input type="hidden" name="hostPort" id="queueId" th:value="${queueId}">
+    <a class="layui-btn layui-btn monitor" id="cache" name="cache">cache</a>
+    <a class="layui-btn layui-btn monitor" id="trace" name="trace">trace</a>
+    <a class="layui-btn layui-btn monitor" id="dm" name="dm">dm</a>
+</div>
+<div id="monitorData" style="width: 750px;height:450px;overflow: auto" >
+
+</div>
+
+
+</body>
+
+<script th:src="@{/layui/layui.js}"></script>
+<script th:inline="javascript">
+    layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
+        var $ = layui.$;
+        var element = layui.element;
+        var hostPort=$("#hostPort").val();
+        $("body").on(
+            "click",
+            "a.monitor",
+            function() {
+                $.get("/mq/client/monitor?path="+$(this).attr("name")+"&hostPort="+encodeURI(hostPort)+
+                    "&consumerGroupName="+$('#consumerGroupName').val()+
+                    "&queueId="+$('#queueId').val(), function (data) {
+                    $("#monitorData").html(data);
+                });
+            });
+
+
+    });
+</script>
+
+</html>

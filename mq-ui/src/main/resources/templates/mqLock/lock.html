@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <header th:include="common/header::header" th:remove="tag"></header>
+</head>
+<body>
+    <br/>
+    <div class="layui-inline">
+        <a class="layui-btn" id="lockSearchList_btn" lay-filter="lockSearchFilter">刷新数据</a>
+    </div>
+<table class="layui-table" lay-data="{height:'full', url:'/lock/list/data', page:true,limit: 10, id:'mqLockTableId'}" lay-filter="mqLockTableId">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'id', align: 'center', sort: true,width:80}" rowspan="2">id</th>
+        <th lay-data="{field: 'ip', align: 'center'}" rowspan="2">ip</th>
+        <th lay-data="{field: 'key1', align: 'center'}" rowspan="2">key1</th>
+        <th lay-data="{field: 'heartTime', align: 'center'}" rowspan="2">心跳时间</th>
+        <th lay-data="{field: 'insertTime', align: 'center'}" rowspan="2">插入时间</th>
+        <th lay-data="{field: 'insertBy', align: 'center'}" rowspan="2">操作人</th>
+        <th lay-data="{field: 'updateTime', align: 'center'}" rowspan="2">更新时间</th>
+        <th lay-data="{field: 'updateBy', align: 'center'}" rowspan="2">修改者</th>
+        <th lay-data="{fixed: 'right', align:'center',toolbar: '#ctrlBar'}">操作区</th>
+    </thead>
+</table>
+
+<script th:src="@{/layui/layui.js}"></script>
+    <script type="text/html" id="ctrlBar">
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a>
+    </script>
+<script>
+    layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
+        var table = layui.table,
+            form = layui.form,
+            layer = layui.layer,
+            $ = layui.$,
+            element = layui.element;
+
+        $("body").on("click", "#lockSearchList_btn", function () {
+            getLockList()
+        });
+
+        table.on('tool(mqLockTableId)', function (obj) {
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            if (layEvent === 'delete') {
+                deleteLock(data)
+            }
+        });
+
+        function deleteLock(lock){
+            layer.confirm("确认要删除Lock:"+lock.ip+"吗？", {icon: 3, title: '不可逆操作！'}, function (index) {
+                $.post("/lock/delete",'lockId='+lock.id, requestCallback);
+                layer.close(index);
+            });
+        }
+
+        function getLockList() {
+            var option={
+            };
+                option["page"]=1;
+
+            table.reload('mqLockTableId',option);
+        }
+
+        function requestCallback(result, xhr) {
+            if (xhr === 'success') {
+                if (result.code === '0') {
+                    successBox(result.msg);
+                } else {
+                    failBox(result.msg);
+                }
+            } else {
+                failBox("网络异常！"+xhr);
+            }
+        }
+
+        function successBox(msg) {
+            getLockList();
+            layer.msg(msg, {icon: 1})
+        }
+
+        function failBox(msg) {
+            layer.alert(msg, {icon: 2})
+        }
+
+
+
+    });
+
+</script>
+</body>
+
+
+</html>

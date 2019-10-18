@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<div layout:fragment="content">
+    <form style="max-width: 700px" class="layui-form" id="createConsumerGroupForm" action="">
+        <input type="hidden" name="id" id="consumerGroupId" th:value="${consumerGroupId}">
+        <input type="hidden" id="isAdmin" th:value="${isAdmin}">
+        <div class="layui-form-item">
+            <label class="layui-form-label">消费者组*</label>
+            <div class="layui-input-block">
+                <input type="text" id="name" name="name" required lay-verType="tips" lay-verify="required" placeholder="请输入消费者组名称"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">负责人*</label>
+            <div class="layui-input-block">
+                <select lay-ignore style="width: 100%"  id="ownerIds" required lay-verType="tips" lay-verify="required" class="layui-input" multiple="multiple">
+                </select>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属部门*</label>
+            <div class="layui-input-block">
+
+                <select lay-ignore style="width: 100%" name="dptName" id="dptName" required lay-verType="tips" lay-verify="required" class="layui-input">
+                </select>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">告警邮件*</label>
+            <div class="layui-input-block">
+                <input type="text" id="alarmEmails" name="alarmEmails" th:value="${email}" required lay-verType="tips" lay-verify="required|emailList"
+                       placeholder="请输入延迟告警邮件地址，多个地址用英文逗号间隔" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">消费模式*</label>
+            <div class="layui-input-block">
+                <select name="mode" id="mode" lay-verify="required" lay-search>
+                    <option value="1">集群模式</option>
+                    <option value ="2">广播模式</option>
+                    <option value ="3">代理模式</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">告警手机号</label>
+            <div class="layui-input-block">
+                <input type="text" name="tels" lay-verType="tips" lay-verify="telList"
+                       placeholder="请输入延迟告警手机号，多个号码用英文逗号间隔" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">最大实例数</label>
+            <div class="layui-input-block">
+                <input type="number" id="consumerQuality" name="consumerQuality" required lay-verType="tips" lay-verify="negative|required"
+                       placeholder="请输入最大实例数" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">黑/白名单</label>
+            <div class="layui-input-block" id="ipFlagDiv">
+                <input type="radio" name="ipFlag" value="1" title="黑名单" lay-filter="ipFlag">
+                <input type="radio" name="ipFlag" value="0" title="白名单" lay-filter="ipFlag">
+            </div>
+            <div class="layui-input-block">
+                <input type="text" id="ipList" name="ipList"  lay-verType="tips" lay-verify="ip" placeholder="请输入特殊ip，多个ip用英文逗号分开" autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">是否告警*</label>
+            <div class="layui-input-block" id="alarmFlagDiv">
+                <input type="radio" name="alarmFlag" value="1" title="是" checked>
+                <input type="radio" name="alarmFlag" value="0" title="否">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">消息追踪*</label>
+            <div class="layui-input-block" id="traceFlagDiv">
+                <input type="radio" name="traceFlag" value="1" title="是">
+                <input type="radio" name="traceFlag" value="0" title="否" checked>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">AppId</label>
+            <div class="layui-input-block">
+                <input type="text" id="appId" name="appId" required lay-verType="tips" placeholder="请输入AppId"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea name="remark" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit lay-filter="createSubmit" id="createSubmit">提交</button>
+                <!--<button type="reset" class="layui-btn layui-btn-primary">重置</button>-->
+            </div>
+        </div>
+    </form>
+
+    <div class="layui-collapse">
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title">文本模式</h2>
+            <div class="layui-colla-content">
+                <textarea id="textMode" name="textMode"class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <fieldset class="layui-elem-field layui-field-title" style="color: red">
+        <p>只有在新增页面，文本模式才会生效。</p>
+        <p>consumer_quality用于指定最大消费者数量，默认为0表示不限制数量。比如consumer_quality为2 但是有3个客户端启动，此时依然只能有2个能消费。</p>
+    </fieldset>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/createConsumerGroupForm.js}"></script>
+</div>

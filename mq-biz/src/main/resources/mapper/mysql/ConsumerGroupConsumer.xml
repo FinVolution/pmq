@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.ppdai.infrastructure.mq.biz.dal.meta.ConsumerGroupConsumerRepository">
+	<!-- 业务逻辑sql请写在这个文件内 -->
+	<select id="getByConsumerGroupIds" resultMap="BaseResultMap"
+		useCache="false">
+		select *
+		from consumer_group_consumer
+		where consumer_group_id in
+		(
+		<foreach collection="consumerGroupIds" item="item" index="index"
+			separator=",">#{item}</foreach>
+		) and consumer_id in (select id from consumer)
+	</select>
+
+	<select id="getByConsumerIds" resultMap="BaseResultMap"
+		useCache="false">
+		select *
+		from consumer_group_consumer
+		where consumer_id in
+		(
+		<foreach collection="consumerIds" item="item" index="index"
+			separator=",">#{item}</foreach>
+		)
+	</select>
+
+	<delete id="deleteByConsumerId">
+		delete from consumer_group_consumer
+		where consumer_id = #{consumerId}
+	</delete>
+
+	<delete id="deleteByConsumerIds" parameterType="java.util.List">
+		delete from consumer_group_consumer
+		where consumer_id in (
+		<foreach collection="consumerIds" item="id" index="index"
+			separator=",">
+			#{id}
+		</foreach>
+		)
+	</delete>
+	<delete id="deleteUnActiveConsumer" >
+		delete from consumer_group_consumer	where not exists (select 1 from consumer where consumer.id=consumer_group_consumer.consumer_id)		
+	</delete>	
+</mapper>

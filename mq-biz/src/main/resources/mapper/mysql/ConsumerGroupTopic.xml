@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.ConsumerGroupTopicRepository">
+    <!-- 业务逻辑sql请写在这个文件内 -->
+    <resultMap id="LastUpdateMap"
+		type="com.ppdai.infrastructure.mq.biz.entity.LastUpdateEntity">
+		<result column="lastDate" property="lastDate" />
+		<result column="maxId" property="maxId" />
+		<result column="count" property="count" />
+	</resultMap>
+	<select id="getLastUpdate" resultMap="LastUpdateMap"
+		useCache="false">
+		select max(meta_update_time) as lastDate,max(id) as maxId,count(1) as `count` from consumer_group_topic
+	</select>	
+    <delete id="deleteByConsumerGroupId" parameterType="java.lang.Long">
+        delete from consumer_group_topic
+        where consumer_group_id = #{consumerGroupId}
+    </delete>
+
+    <delete id="deleteByOriginTopicName">
+        delete from consumer_group_topic
+        where consumer_group_id = #{consumerGroupId} and origin_topic_name = #{originTopicName}
+    </delete>
+
+    <select id="getFailTopicNames" parameterType="java.lang.Long" resultType="java.lang.String">
+        select topic_name from consumer_group_topic
+        where consumer_group_id = #{consumerGroupId} and topic_type=2
+    </select>
+
+    <select id="getCorrespondConsumerGroupTopic" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select * from consumer_group_topic
+        where consumer_group_id = #{consumerGroupId} and origin_topic_name=#{originTopicName} and topic_type!=#{topicType}
+    </select>
+
+    <update id="updateEmailByGroupName">
+        update consumer_group_topic set
+        `alarm_emails` = #{alarmEmails}
+        where `consumer_group_name` = #{consumerGroupName}
+    </update>
+
+
+</mapper>

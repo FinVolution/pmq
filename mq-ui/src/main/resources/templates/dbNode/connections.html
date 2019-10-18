@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <header>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" href="/layui/css/layui.css" media="all"/>
+    </header>
+</head>
+<body>
+&nbsp;
+<form class="layui-form" style="margin-top: 20px;">
+    <a class="layui-btn" id="connections_btn" lay-filter="connections_btn">刷新</a>
+</form>
+
+
+<table class="layui-table" lay-data="{height:'full', url:'/dbNode/connections', id:'connectionsTable'}" lay-filter="connectionsTable">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'ip', align: 'center', sort: true}">物理机</th>
+        <th lay-data="{field: 'maxConnection', align: 'center',sort: true}">最大连接数</th>
+        <th lay-data="{field: 'curConnection',sort: true, align: 'center'}">当前连接数</th>
+    </tr>
+    </thead>
+</table>
+
+<script th:src="@{/layui/layui.js}"></script>
+<script th:inline="javascript">
+    layui.use(['element', 'table', 'jquery', 'layer','form'], function () {
+        var $ = layui.$;
+        var startTime;
+        var element = layui.element;
+        var table = layui.table;
+
+        $("body").on("click", "#connections_btn", function () {
+            table.reload('connectionsTable');
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>mq</artifactId>
+		<groupId>com.ppdai.infrastructure</groupId>
+		<version>1.0.0</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>mq-client-test-001</artifactId>
+	<packaging>jar</packaging>
+	<properties>
+		<docker.img.name>mqtest.ppdapi.com</docker.img.name>
+	</properties>
+	<dependencies>
+	
+		<dependency>
+			<groupId>com.ppdai.infrastructure</groupId>
+			<artifactId>mq-client-springboot</artifactId>			
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	
+	
+	
+
+	</dependencies>
+	<dependencyManagement>
+		<!-- 依赖管理，解决版本冲突 -->
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>1.5.2.RELEASE</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<build>		
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>2.8.2</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>1.2.3-ppdtoken-release</version>
+                <configuration>
+                    <!--镜像名格式：应用名称-->
+                    <imageName>${docker.img.name}</imageName>
+                    <imageTags>					
+					   <imageTag>${image.version}</imageTag> 
+					</imageTags>
+                    <dockeryardAccessToken>
+                        ${dockerToken}
+                    </dockeryardAccessToken>
+                    <entryPoint>java -jar -server ${heap.xm} -XX:+UseG1GC	${project.build.finalName}.jar </entryPoint>
+
+                    <resources>
+                        <resource>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>                   
+                 </configuration>
+                 
+<!--                  <executions> -->
+<!-- 					<execution> -->
+<!-- 						<id>build-image</id> -->
+<!-- 						<phase>install</phase> -->
+<!-- 						<goals> -->
+<!-- 							<goal>build</goal> -->
+<!-- 						</goals> -->
+<!-- 					</execution> -->
+<!-- 				</executions> -->
+            </plugin>
+		</plugins>
+	</build>
+</project>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      th:with="
+      site1='首页',
+      site2='数据节点管理'
+      "
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/layout.html-->
+<div layout:fragment="content">
+    <form class="layui-form" id="queryForm">
+        <div class="layui-form-item layui-inline">
+            <div class="layui-input-inline">
+                <input type="text" value="" id="id" name="id" placeholder="ID" class="layui-input search_input"/>
+            </div>
+            <div class="layui-input-inline">
+                <input type="text" value="" id="ip" name="ip" placeholder="ip地址" class="layui-input search_input"/>
+            </div>
+            <div class="layui-input-inline">
+                <input type="text" value="" id="dbName" name="dbName" placeholder="数据库名称" class="layui-input search_input"/>
+            </div>
+            <div class="layui-input-inline">
+                <select id="isReadOnly" class="search-select">
+                    <option value="">请选择读写状态</option>
+                    <option value ="1">可读可写</option>
+                    <option value ="2">只读</option>
+                    <option value ="3">不可读不可写</option>
+                </select>
+            </div>
+            <a class="layui-btn" id="nodeSearchList_btn" lay-filter="nodeSearchList_btn"><i class="layui-icon">&#xe615;</i>查询</a>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </form>
+    <a class="layui-btn topicSearchList_btn" id="createDbNode"><i class="layui-icon">&#xe608;</i>创建</a>
+    <button class="layui-btn batchDilatation_btn" id="batchDilatation"><i class="layui-icon">&#xe608;</i>批量对比</button>
+    <table id="dbNodeTable" class="layui-table" lay-data="{height:'full', url:'/dbNode/list2/data', page:true,limit: 10, id:'dbNodeTable'}" lay-filter="dbNodeTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'id', align: 'center', sort: true,width:80, templet:'#idDb'}">ID</th>
+            <th lay-data="{field: 'nodeType', align: 'center', templet:'#nodeTypeTpl'}">存储类型</th>
+            <th lay-data="{field: 'normalFlag', align: 'center', templet:'#normalFlagTpl'}">Topic分配方式</th>
+            <th lay-data="{field: 'readOnly', align: 'center', templet:'#readOnlyTpl'}">读写状态</th>
+            <th lay-data="{field: 'ip', align: 'center'}">ip</th>
+            <th lay-data="{field: 'conStr', align: 'center',width:300}">连接字符串</th>
+            <th lay-data="{field: 'insertTime',align: 'center'}">创建时间</th>
+            <th lay-data="{field: 'updateTime',align: 'center'}">更新时间</th>
+            <th lay-data="{fixed: 'right', align:'center', width:360, toolbar: '#ctrlBar'}">操作区</th>
+        </tr>
+        </thead>
+    </table>
+
+    <div style="display: none">
+        <div id="createDbNodeFormDiv">
+            <form th:include="dbNode/createDbNode::createDbNodeForm" class="layui-form" id="createDbNodeForm" action="" ></form>
+        </div>
+    </div>
+
+    <div style="display: none">
+        <div id="editDbNodeFormDiv">
+            <form th:include="dbNode/editDbNode::editDbNodeForm" class="layui-form" id="editDbNodeForm" action="" ></form>
+        </div>
+    </div>
+
+    <div style="display: none">
+        <div id="showSqlFormDiv">
+            <form th:include="dbNode/showSql::showSqlForm" class="layui-form" id="showSqlForm" action="" ></form>
+        </div>
+    </div>
+
+    <div style="display: none">
+        <div id="confirmCreateSqlFormDiv">
+            <form th:include="dbNode/confirmCreateSql::confirmCreateSqlForm" class="layui-form" id="showSqlForm2" action="" ></form>
+        </div>
+    </div>
+
+    <div style="display: none">
+        <div id="compareMessageTablesFormDiv">
+            <form th:include="dbNode/compareMessageTables::compareMessageTablesForm" class="layui-form" id="compareMessageTablesForm" action="" ></form>
+        </div>
+    </div>
+
+    <div style="display: none">
+        <div id="changeStatusFormDiv">
+            <form th:include="dbNode/changeStatus::changeStatusForm" class="layui-form" id="changeStatusForm" action="" ></form>
+        </div>
+    </div>
+
+    <div style="display: none">
+        <div id="analysisFormDiv">
+            <form th:include="dbNode/analysis::analysisForm" class="layui-form" id="analysisForm" action="" ></form>
+        </div>
+    </div>
+
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/dbNode.js}"></script>
+    <script th:src="@{/js/analysis.js}"></script>
+    <script th:src="@{/dist/clipboard.min.js}"></script>
+    <script type="text/html" id="idDb"> 
+        <a href onclick="return false" ><img src="/images/log.png"  data-id="{{= d.id }}"
+                                          class="logSearch"/></a>&nbsp;&nbsp;{{= d.id }}
+    </script>
+    <script >
+        /*$("body").on("click", "#showSqlForm .btn",function(){
+            alert(123)
+        });*/
+        //find("textarea[name='showSql']").val(createSql);
+        var clipboard = new ClipboardJS('#showSqlForm #copy_sql', {
+            text: function() {
+                var str = $(".layui-layer-dialog #showSqlForm #showSql").val();
+                return str;
+            }
+        });
+
+        clipboard.on('success', function(e) {
+            alert("已复制到剪切板上。");
+            console.log(e);
+        });
+
+        clipboard.on('error', function(e) {
+            alert("复制失败！");
+            console.log(e);
+        });
+
+
+    </script>
+    <script type="text/html" id="nodeTypeTpl">
+        {{# if (d.nodeType == 1) { }}
+        <label><span class="layui-badge layui-bg-green">正常</span></label>
+        {{# } else { }}
+        <label><span class="layui-badge">失败</span></label>
+        {{# } }}
+    </script>
+    <script type="text/html" id="normalFlagTpl">
+        {{# if (d.normalFlag == 1) { }}
+        自动分配
+        {{# } else { }}
+        手动分配
+        {{# } }}
+    </script>
+    <script type="text/html" id="readOnlyTpl">
+        {{# if (d.readOnly == 1) { }}
+        <label><span class="layui-badge layui-bg-green">读写</span></label>
+        {{# } else if (d.readOnly == 2) { }}
+        <label><span class="layui-badge">只读</span></label>
+        {{# } else if (d.readOnly == 3) { }}
+        <label><span class="layui-badge layui-bg-orange">不可读写</span></label>
+        {{# } }}
+    </script>
+    <script type="text/html" id="servUpdate">
+        <div class="layui-inline">
+            <button class="layui-btn layui-btn-primary layui-btn-xs" lay-event="servUpdate">
+                <i class="myiconfont icon-gengxin"></i>
+            </button>
+        </div>
+    </script>
+    <script type="text/html" id="ctrlBar">
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="editDbNode">编辑</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="createSql">生成Sql</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="compareDbNode">对比</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="analyseDbNode">分析</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="changeStatus">更改状态</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="createInsert">生成Insert</a>
+    </script>
+    <style type="text/css">
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        /*.layui-layer-btn0
+        {
+            display: block;
+        }
+
+        .layui-layer-btn1
+        {
+            display: block;
+        }
+
+        .layui-layer-btn
+        {
+            display: none;
+        }*/
+
+    </style>
+</div>
+</html>

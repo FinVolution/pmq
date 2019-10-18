@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div layout:fragment="content">
+    <form class="layui-form" id="toEditQueueOffsetForm">
+        <input type="hidden" name="id" id="queueOffsetId" th:value="${queueOffsetId}">
+        <div class="layui-form-item">
+            <label class="layui-form-label">消费者组*</label>
+            <div class="layui-input-block consumerGroup-search-select">
+                <input type="text" name="consumerGroupName"
+                       lay-filter="consumerGroupNamesSelect" id="consumerGroupNamesSelect" autocomplete="off"
+                       class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">主题名称*</label>
+            <div class="layui-input-block topic-search-select">
+                <input type="text" name="topicName" lay-filter="topicNamesSelect"
+                       id="topicNamesSelect" autocomplete="off" class="layui-input" class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">消费者</label>
+            <div class="layui-input-block">
+                <input type="text"  name="consumerName" required lay-verType="tips"
+                       placeholder="请输入消费者" autocomplete="off" class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">分区Id</label>
+            <div class="layui-input-block">
+                <input type="number"  name="queueId" required lay-verType="tips"
+                       placeholder="请输入分区Id" autocomplete="off" class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">db信息</label>
+            <div class="layui-input-block">
+                <input type="text"  name="dbInfo" required lay-verType="tips"
+                       placeholder="请输入分区信息" autocomplete="off" class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">起始偏移</label>
+            <div class="layui-input-block">
+                <input type="number" name="startOffset" required lay-verType="tips" placeholder="请输入偏移" autocomplete="off"
+                       class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">最大Id</label>
+            <div class="layui-input-block">
+                <input type="number" name="maxId" required lay-verType="tips" placeholder="请输入偏移" autocomplete="off"
+                       class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">消费标志</label>
+            <div class="layui-input-block" id="stopFlagDiv">
+                <input type="radio" name="stopFlag" value="0" title="正常消费">
+                <input type="radio" name="stopFlag" value="1" title="停止消费">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit lay-filter="editSubmit" id="editSubmit">提交</button>
+                <!--<button type="reset" class="layui-btn layui-btn-primary">重置</button>-->
+            </div>
+        </div>
+
+    </form>
+
+
+
+
+</div>
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/toEditStopFlag.js}"></script>
+</div>
+</html>

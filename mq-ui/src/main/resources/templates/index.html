@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/layout" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+    <div layout:fragment="content">
+        <div class="layui-tab marg0" lay-filter="bodyTab" id="top_tabs_box" lay-allowClose="true">
+            <ul class="layui-tab-title top_tab" id="top_tabs">
+                <li class="layui-this" lay-id="-10"><i class="iconfont icon-computer"></i> <cite>堆积统计</cite></li>
+            </ul>
+            <div class="layui-tab-content clildFrame">
+                <div class="layui-tab-item layui-show">
+                    <iframe src="/queueOffset/accumulation"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</html>
+

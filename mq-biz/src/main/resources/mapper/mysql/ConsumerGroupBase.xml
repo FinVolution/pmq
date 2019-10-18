@@ -1,0 +1,618 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.ConsumerGroupRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="dpt_name" property="dptName"/>
+        <result column="topic_names" property="topicNames"/>
+        <result column="owner_ids" property="ownerIds"/>
+        <result column="owner_names" property="ownerNames"/>
+        <result column="alarm_emails" property="alarmEmails"/>
+        <result column="tels" property="tels"/>
+        <result column="ip_white_list" property="ipWhiteList"/>
+        <result column="ip_black_list" property="ipBlackList"/>
+        <result column="alarm_flag" property="alarmFlag"/>
+        <result column="trace_flag" property="traceFlag"/>
+        <result column="remark" property="remark"/>
+        <result column="rb_version" property="rbVersion"/>
+        <result column="meta_version" property="metaVersion"/>
+        <result column="version" property="version"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        <result column="app_id" property="appId"/>
+        <result column="consumer_quality" property="consumerQuality"/>
+        <result column="meta_update_time" property="metaUpdateTime"/>
+        <result column="mode" property="mode"/>
+        <result column="origin_name" property="originName"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into consumer_group (
+            `name`,
+            `dpt_name`,
+            `topic_names`,
+            `owner_ids`,
+            `owner_names`,
+            `alarm_emails`,
+            `tels`,
+            `ip_white_list`,
+            `ip_black_list`,
+            `alarm_flag`,
+            `trace_flag`,
+            `remark`,
+            `rb_version`,
+            `meta_version`,
+            `version`,
+            `insert_by`,
+            `update_by`,
+            `app_id`,
+            `consumer_quality`,
+            `meta_update_time`,
+            `mode`,
+            `origin_name`
+        )values(
+            #{name},
+            #{dptName},
+            #{topicNames},
+            #{ownerIds},
+            #{ownerNames},
+            #{alarmEmails},
+            #{tels},
+            #{ipWhiteList},
+            #{ipBlackList},
+            #{alarmFlag},
+            #{traceFlag},
+            #{remark},
+            #{rbVersion},
+            #{metaVersion},
+            #{version},
+            #{insertBy},
+            #{updateBy},
+            #{appId},
+            #{consumerQuality},
+            current_timestamp,
+            #{mode},
+            #{originName}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into consumer_group ( 
+            `name`,
+            `dpt_name`,
+            `topic_names`,
+            `owner_ids`,
+            `owner_names`,
+            `alarm_emails`,
+            `tels`,
+            `ip_white_list`,
+            `ip_black_list`,
+            `alarm_flag`,
+            `trace_flag`,
+            `remark`,
+            `rb_version`,
+            `meta_version`,
+            `version`,
+            `insert_by`,
+            `update_by`,
+            `app_id`,
+            `consumer_quality`,
+            `meta_update_time`,
+            `mode`,
+            `origin_name`
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.name},
+            #{item.dptName},
+            #{item.topicNames},
+            #{item.ownerIds},
+            #{item.ownerNames},
+            #{item.alarmEmails},
+            #{item.tels},
+            #{item.ipWhiteList},
+            #{item.ipBlackList},
+            #{item.alarmFlag},
+            #{item.traceFlag},
+            #{item.remark},
+            #{item.rbVersion},
+            #{item.metaVersion},
+            #{item.version},
+            #{item.insertBy},
+            #{item.updateBy},
+            #{item.appId},
+            #{item.consumerQuality},
+            current_timestamp,
+            #{item.mode},
+            #{item.originName}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from consumer_group where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from consumer_group
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="topicNames != null and topicNames !=''" >
+                and `topic_names` = #{topicNames}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="ipWhiteList != null and ipWhiteList !=''" >
+                and `ip_white_list` = #{ipWhiteList}
+            </if>
+            <if test="ipBlackList != null and ipBlackList !=''" >
+                and `ip_black_list` = #{ipBlackList}
+            </if>
+            <if test="alarmFlag != null and alarmFlag !=''" >
+                and `alarm_flag` = #{alarmFlag}
+            </if>
+            <if test="traceFlag != null and traceFlag !=''" >
+                and `trace_flag` = #{traceFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="rbVersion != null and rbVersion !=''" >
+                and `rb_version` = #{rbVersion}
+            </if>
+            <if test="metaVersion != null and metaVersion !=''" >
+                and `meta_version` = #{metaVersion}
+            </if>
+            <if test="version != null and version !=''" >
+                and `version` = #{version}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            <if test="consumerQuality != null and consumerQuality !=''" >
+                and `consumer_quality` = #{consumerQuality}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="mode != null and mode !=''" >
+                and `mode` = #{mode}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from consumer_group where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity">
+        update consumer_group set
+            `name` = #{name},
+        `dpt_name` = #{dptName},
+        `topic_names` = #{topicNames},
+        `owner_ids` = #{ownerIds},
+        `owner_names` = #{ownerNames},
+        `alarm_emails` = #{alarmEmails},
+        `tels` = #{tels},
+        `ip_white_list` = #{ipWhiteList},
+        `ip_black_list` = #{ipBlackList},
+        `alarm_flag` = #{alarmFlag},
+        `trace_flag` = #{traceFlag},
+        `remark` = #{remark},
+        `rb_version` = #{rbVersion},
+        `meta_version` = #{metaVersion},
+        `version` = #{version},
+        `update_by` = #{updateBy},
+        `is_active` = #{isActive},
+        `app_id` = #{appId},
+        `consumer_quality` = #{consumerQuality},
+        `meta_update_time` = current_timestamp,
+        `mode` = #{mode},
+        `origin_name` = #{originName}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from consumer_group
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="topicNames != null and topicNames !=''" >
+                and `topic_names` = #{topicNames}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="ipWhiteList != null and ipWhiteList !=''" >
+                and `ip_white_list` = #{ipWhiteList}
+            </if>
+            <if test="ipBlackList != null and ipBlackList !=''" >
+                and `ip_black_list` = #{ipBlackList}
+            </if>
+            <if test="alarmFlag != null and alarmFlag !=''" >
+                and `alarm_flag` = #{alarmFlag}
+            </if>
+            <if test="traceFlag != null and traceFlag !=''" >
+                and `trace_flag` = #{traceFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="rbVersion != null and rbVersion !=''" >
+                and `rb_version` = #{rbVersion}
+            </if>
+            <if test="metaVersion != null and metaVersion !=''" >
+                and `meta_version` = #{metaVersion}
+            </if>
+            <if test="version != null and version !=''" >
+                and `version` = #{version}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            <if test="consumerQuality != null and consumerQuality !=''" >
+                and `consumer_quality` = #{consumerQuality}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="mode != null and mode !=''" >
+                and `mode` = #{mode}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from consumer_group
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="topicNames != null and topicNames !=''" >
+                and `topic_names` = #{topicNames}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="ipWhiteList != null and ipWhiteList !=''" >
+                and `ip_white_list` = #{ipWhiteList}
+            </if>
+            <if test="ipBlackList != null and ipBlackList !=''" >
+                and `ip_black_list` = #{ipBlackList}
+            </if>
+            <if test="alarmFlag != null and alarmFlag !=''" >
+                and `alarm_flag` = #{alarmFlag}
+            </if>
+            <if test="traceFlag != null and traceFlag !=''" >
+                and `trace_flag` = #{traceFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="rbVersion != null and rbVersion !=''" >
+                and `rb_version` = #{rbVersion}
+            </if>
+            <if test="metaVersion != null and metaVersion !=''" >
+                and `meta_version` = #{metaVersion}
+            </if>
+            <if test="version != null and version !=''" >
+                and `version` = #{version}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            <if test="consumerQuality != null and consumerQuality !=''" >
+                and `consumer_quality` = #{consumerQuality}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="mode != null and mode !=''" >
+                and `mode` = #{mode}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from consumer_group
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from consumer_group
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="topicNames != null and topicNames !=''" >
+                and `topic_names` = #{topicNames}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="ipWhiteList != null and ipWhiteList !=''" >
+                and `ip_white_list` = #{ipWhiteList}
+            </if>
+            <if test="ipBlackList != null and ipBlackList !=''" >
+                and `ip_black_list` = #{ipBlackList}
+            </if>
+            <if test="alarmFlag != null and alarmFlag !=''" >
+                and `alarm_flag` = #{alarmFlag}
+            </if>
+            <if test="traceFlag != null and traceFlag !=''" >
+                and `trace_flag` = #{traceFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="rbVersion != null and rbVersion !=''" >
+                and `rb_version` = #{rbVersion}
+            </if>
+            <if test="metaVersion != null and metaVersion !=''" >
+                and `meta_version` = #{metaVersion}
+            </if>
+            <if test="version != null and version !=''" >
+                and `version` = #{version}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            <if test="consumerQuality != null and consumerQuality !=''" >
+                and `consumer_quality` = #{consumerQuality}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="mode != null and mode !=''" >
+                and `mode` = #{mode}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from consumer_group
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from consumer_group where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

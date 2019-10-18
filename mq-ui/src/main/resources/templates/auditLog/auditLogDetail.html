@@ -1,0 +1,73 @@
+<form th:fragment="auditLogDetailForm" xmlns:th="http://www.thymeleaf.org">
+    <input type="hidden" name="id" />
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">消息id</label>
+        <div class="layui-input-block">
+            <input type="text" name="id" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">业务Id</label>
+        <div class="layui-input-block">
+            <input type="text" name="bizId" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">tag</label>
+        <div class="layui-input-block">
+            <input type="text" name="tag" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">消息头</label>
+        <div class="layui-input-block">
+            <input type="text" name="header"  class="layui-input" disabled></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">消息体</label>
+        <div class="layui-input-block">
+            <textarea name="body"  class="layui-textarea" disabled></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">跟踪Id</label>
+        <div class="layui-input-block">
+            <input type="text" name="traceId" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">重试次数</label>
+        <div class="layui-input-block">
+            <input type="text" name="retryCount" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">发送Ip</label>
+        <div class="layui-input-block">
+            <input type="text" name="sendIp" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">发送时间</label>
+        <div class="layui-input-block">
+            <input type="text" name="insertTime" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">更新时间</label>
+        <div class="layui-input-block">
+            <input type="text" name="updateTime" required lay-verify="required" autocomplete="off" class="layui-input" disabled>
+        </div>
+    </div>
+</form>

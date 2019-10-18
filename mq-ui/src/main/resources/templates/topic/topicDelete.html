@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+    <fieldset class="layui-elem-field">
+        <legend th:text=" '[ ' +${topicName} + ' ] 消息主题删除'"></legend>
+        <div class="layui-field-box">
+    <button class="layui-btn" id="refresh">刷新内容</button>
+    <input type="hidden" id="topicIdV" th:value="${topicId}">
+    <table id="topicDeleteTable" class="layui-table" lay-filter="topicDeleteTable">
+
+    </table>
+    <button class="layui-btn layui-btn-danger" id="topicDel" type="button">删除该主题</button>
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend>操作说明：</legend>
+            </fieldset>
+            <p style="color: red">Note！ 删除消息主题后，主题下的所有队列都会被移除出主题，同时队列下的消息也会被清空，请谨慎操作！</p>
+            <br />
+            <p>1. 若有消费者组订阅，则主题无法删除。</p>
+            <p>2. 生产环境下，只有管理员有权限直接删除消息主题；其他用户，如果主题下的队列可读，或者有消息未消费完，则无法删除。</p>
+            <p>3. 其他环境，都可以直接删除消息主题。</p>
+        </div>
+    </fieldset>
+
+
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/topicDelete.js}"></script>
+    <script type="text/html" id="topicTypeTpl">
+        {{# if (d.topicType == 1) { }}
+        正常队列
+        {{# } else { }}
+        失败队列
+        {{# } }}
+    </script>
+    <style type="text/css">
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

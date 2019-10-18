@@ -1,0 +1,9 @@
+input:read-only {
+    background: #eaeaea;
+    color: gray;
+}
+
+input.layui-input.layui-unselect {
+    background: white;
+    color: black;
+}

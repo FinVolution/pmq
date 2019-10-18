@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div layout:fragment="content">
+
+    <input type="hidden" name="id" id="topicId" th:value="${topicId}">
+    <form style="max-width: 700px" class="layui-form" id="createTopicForm" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">topic名称*</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" required lay-verType="tips" lay-verify="required|topicName" placeholder="请输入topic名称" autocomplete="off" class="layui-input">
+                <div class="layui-form-mid layui-word-aux">(提交后不可更改)</div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">负责人*</label>
+            <div class="layui-input-block">
+                <select lay-ignore style="width: 100%"  id="ownerIds" required lay-verType="tips" lay-verify="required" class="layui-input" multiple="multiple">
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">AppId</label>
+            <div class="layui-input-block">
+                <input type="text" id="appId" name="appId" required lay-verType="tips" placeholder="请输入AppId"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属部门*</label>
+            <div class="layui-input-block">
+
+                <select lay-ignore style="width: 100%" name="dptName" id="dptName" required lay-verType="tips" lay-verify="required" class="layui-input">
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">预期每日消息量(万)*</label>
+            <div class="layui-input-block" id="expectDayCountDiv">
+                <select name="expectDayCount" lay-verify="required" lay-verType="tips">
+                    <option th:each="option:${options}" th:value="${option}" th:text="${option}+'万条'"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">消息保留天数*</label>
+            <div class="layui-input-block" id="saveDayNum">
+                <select name="saveDayNum" id="saveDayNumSelect" lay-verify="required" lay-verType="tips">
+                    <option th:each="saveDayNum:${saveDayNums}" th:value="${saveDayNum}" th:text="${saveDayNum}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">告警邮件*</label>
+            <div class="layui-input-block">
+                <input type="text" id="emails" name="emails" required lay-verType="tips" lay-verify="required|emailList" placeholder="请输入延迟告警邮件地址，逗号间隔多个" autocomplete="off" class="layui-input" th:value="${userEmail}">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">告警手机号</label>
+            <div class="layui-input-block">
+                <input type="text" name="tels" lay-verType="tips" lay-verify="telList" placeholder="请输入延迟告警手机号，逗号间隔多个" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">业务线</label>
+            <div class="layui-input-block">
+                <select name="businessType" id="businessType">
+
+                </select>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">堆积告警数*</label>
+            <div class="layui-input-block">
+                <input type="number" name="maxLag" required lay-verType="tips" lay-verify="required|positiveInt" placeholder="请输入TOPIC堆积告警条数" value="10000" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">允许所有人订阅*</label>
+            <div class="layui-input-block" id="consumerFlagDiv" required>
+                <input type="radio" name="consumerFlag" value="1" title="是" checked="">
+                <input type="radio" name="consumerFlag" value="0" title="否" >
+            </div>
+
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">允许订阅的消费者组</label>
+            <div class="layui-input-block">
+                <select lay-ignore style="width: 100%" id="consumerGroupList" name="consumerGroupList" required lay-verType="tips" lay-verify="required" class="layui-input" multiple="multiple">
+                </select>
+            </div>
+            <div class="layui-form-mid layui-word-aux">(不允许所有人订阅时，需要指定"允许订阅的消费者组")</div>
+        </div>
+
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea name="remark" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit lay-filter="createSubmit" id="createSubmit">立即提交</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="layui-collapse">
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title">文本模式</h2>
+            <div class="layui-colla-content">
+                <textarea id="textMode" name="textMode"class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <fieldset class="layui-elem-field layui-field-title" style="color: red">
+        <p>只有在新增页面，文本模式才会生效</p>
+    </fieldset>
+
+</div>
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/createTopicForm.js}"></script>
+</div>

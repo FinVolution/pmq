@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div layout:fragment="content">
+    <form class="layui-form layui-form-item1" id="toEditConsumerGroupTopicForm">
+        <input type="hidden" name="id" id="consumerGroupTopicId" th:value="${consumerGroupTopicId}">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">消费者组*</label>
+                <div class="layui-input-block consumerGroup-search-select">
+                    <input type="text" name="consumerGroupName" lay-filter="consumerGroupNamesSelect" id="consumerGroupNamesSelect" autocomplete="off" class="layui-input" readonly>
+                </div>
+            </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">主题名称*</label>
+            <div class="layui-input-block topic-search-select">
+                <input type="text" name="topicName" lay-filter="topicNamesSelect" id="topicNamesSelect" autocomplete="off" class="layui-input" readonly>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['concumerGroupTopicMaxRetryCount']}">重试次数</span></label>
+            <div class="layui-input-block">
+                <input type="number" name="retryCount" required lay-verType="tips" lay-verify="negative|retry" placeholder="请输入重试次数" autocomplete="off" class="layui-input" >
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['consumerGroupTopicMaxlag']}">告警阈值</span></label>
+            <div class="layui-input-block">
+                <input type="number" name="maxLag" required lay-verType="tips" lay-verify="negative|maxLag" placeholder="请输入告警阈值" autocomplete="off" class="layui-input" >
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">tag</label>
+            <div class="layui-input-block">
+                <input type="text" name="tag" required lay-verType="tips"  placeholder="请输入tag" autocomplete="off" class="layui-input" >
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['consumerGroupTopicMaxDelayProcesstime']}">延迟时间(秒)</span></label>
+            <div class="layui-input-block">
+                <input type="number" name="delayProcessTime" required lay-verType="tips" lay-verify="negative|maxDelay" placeholder="请输入延迟处理时间" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['consumerGroupTopicMaxDelayPulltime']}">拉取等待时间(秒)</span></label>
+            <div class="layui-input-block">
+                <input type="number" name="maxPullTime" required lay-verType="tips" lay-verify="maxPullDelay|minPullDelay" placeholder="请输入拉取等待时间" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label layui-form-label">消费熔断时间(秒)</label>
+            <div class="layui-input-block">
+                <input type="number" name="timeOut" required lay-verType="tips" lay-verify="negative" placeholder="请输入消费熔断时间" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['consumerGroupTopicMaxThreadSize']}">线程数</span></label>
+            <div class="layui-input-block">
+                <input type="number" id="threadSize" name="threadSize" required lay-verType="tips" lay-verify="negative|thread|zero" placeholder="请输入线程数" autocomplete="off" class="layui-input" >
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['consumerGroupMaxPullBatchsize']}">批量拉取条数</span></label>
+            <div class="layui-input-block">
+                <input type="number" name="pullBatchSize" required lay-verType="tips" lay-verify="negative|batch|minBatch" placeholder="请输入批量拉取条数" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class='spPromote' th:title="${keysMap['maxConsumerBatchSizeKey']}">批量消费条数</span></label>
+                <div class="layui-input-block">
+                    <input type="number" id="consumerBatchSize" name="consumerBatchSize" required lay-verType="tips" lay-verify="minConsumerBatchSize|batch|maxConsumerSize" placeholder="请输入批量消费条数" autocomplete="off" class="layui-input">
+                </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">告警邮件*</label>
+            <div class="layui-input-block">
+                <input type="text" name="alarmEmails" required lay-verType="tips" lay-verify="required|emailList" placeholder="请输入延迟告警邮件地址，逗号间隔多个" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" type="button" lay-submit lay-filter="editSubmit" id="editSubmit">提交</button>
+            </div>
+        </div>
+
+        <input type="hidden" name="consumerGroupId">
+        <input type="hidden" name="topicId">
+        <input type="hidden" name="originTopicName">
+        <input type="hidden" name="topicType">
+        <input type="hidden" name="insertBy">
+        <input type="hidden" name="updateBy">
+        <input type="hidden" name="isActive">
+    </form>
+
+    <input type="hidden" id="maxThreadSize" th:value="${maxThreadSize}"/>
+    <input type="hidden" id="maxRetryCount" th:value="${maxRetryCount}"/>
+    <input type="hidden" id="maxPullBatchSize" th:value="${maxPullBatchSize}"/>
+    <input type="hidden" id="minPullBatchSize" th:value="${minPullBatchSize}"/>
+    <input type="hidden" id="maxDelayProcessTime" th:value="${maxDelayProcessTime}"/>
+    <input type="hidden" id="topicMaxLag" th:value="${topicMaxLag}"/>
+    <input type="hidden" id="maxConsumerBatchSize" th:value="${maxConsumerBatchSize}"/>
+    <input type="hidden" id="maxDelayPullTime" th:value="${maxDelayPullTime}"/>
+    <input type="hidden" id="minDelayPullTime" th:value="${minDelayPullTime}"/>
+
+</div>
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/toEditConsumerGroupTopic.js}"></script>
+    <style type="text/css">
+        .layui-form-onswitch1 {
+            border-color: #5FB878;
+            background-color: #5FB878;
+        }
+
+        .layui-form-onswitch1 em {
+            left: 5px;
+            right: auto;
+            color: #fff !important;
+        }
+
+        .layui-form-onswitch1 i {
+            left: 32px;
+            background-color: #fff;
+        }
+
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        .layui-table-cell {
+            padding: 0 5px !important;
+        }
+
+        .icon-yes {
+            font-size: 30px;
+            color: #5FB878;
+        }
+
+        .icon-no {
+            font-size: 30px;
+            color: #e60000;
+            font-weight: 900;
+        }
+
+        .spCount {
+            color: #F581B1;
+        }
+
+        .spuerStatusText {
+            color: #F581B1;
+            font-weight: bold;
+        }
+        .layui-form-item1 .layui-form-label{
+            width: 120px!important;
+            text-align: right;
+        }
+
+        .layui-form-item1 .layui-input-block{
+            margin-left: 150px!important;
+        }
+
+    </style>
+</div>
+
+</html>

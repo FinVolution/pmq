@@ -1,0 +1,27 @@
+<form th:fragment="compareMessageTablesForm" xmlns:th="http://www.thymeleaf.org">
+    <input type="hidden" name="id" >
+    <div class="layui-form-item">
+        <label class="layui-form-label">队列表数量</label>
+        <div class="layui-input-block">
+            <input type="text" name="quantityFromQueue" required lay-verify="required" readonly autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">实际表数量</label>
+        <div class="layui-input-block">
+            <input type="text" name="quantityFromDb" required lay-verify="required" readonly autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+
+    <div class="layui-form-item">
+        <div class="layui-input-block" id = "dilatationDiv">
+            <button class="layui-btn" type="button" lay-submit lay-filter="createSubmit" id="dilatationBtn">同步</button>
+        </div>
+        <div class="layui-input-block" id = "tipDiv">
+            <label>数量一致,无需同步。</label>
+        </div>
+    </div>
+
+</form>

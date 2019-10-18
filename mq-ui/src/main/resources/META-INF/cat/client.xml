@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config mode="client" enabled="true">
+    <!-- 配置Domain ID-->
+    <domain id="mqportal4" enabled="true" max-message-size="1000"/>
+    <servers>
+        <server ip="*****" port="2280" http-port="80"></server>
+    </servers>
+</config>

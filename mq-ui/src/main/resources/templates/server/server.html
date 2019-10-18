@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <header th:include="common/header::header" th:remove="tag"></header>
+</head>
+<body>
+    <br/>
+    <button class="layui-btn" type="button" lay-submit lay-filter="refreshList" id="refreshList">刷新</button>
+<table class="layui-table" lay-data="{height:'full', url:'/server/list/data', page:true,limit: 10, id:'serverTableId'}" lay-filter="serverTableId">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'id', align: 'center', sort: true,width:80}" rowspan="2">id</th>
+        <th lay-data="{field: 'ip', align: 'center', sort: true}" rowspan="2">ip</th>
+        <th lay-data="{field: 'port', align: 'center', sort: true}" rowspan="2">port</th>
+        <th lay-data="{field: 'serverType', align: 'center',templet:'#serverTypeFlagTpl', sort: true}" rowspan="2">服务类型</th>
+        <th lay-data="{field: 'statusFlag', align: 'center', templet: '#switchTpl', sort: true}" rowspan="2">statusFlag</th>
+        <th lay-data="{field: 'heartTime', align: 'center', sort: true}" rowspan="2">心跳时间</th>
+        <th lay-data="{field: 'insertTime', align: 'center', sort: true}" rowspan="2">插入时间</th>
+        <th lay-data="{field: 'updateBy', align: 'center', sort: true}" rowspan="2">修改者</th>
+    </tr>
+    </thead>
+</table>
+
+<script th:src="@{/layui/layui.js}"></script>
+<script>
+    layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
+        var table = layui.table,
+            form = layui.form,
+            layer = layui.layer,
+            $ = layui.$,
+            element = layui.element;
+
+        $("body").on("click", "#refreshList", function () {
+            table.reload("serverTableId", {
+                where: {
+                }
+            });
+
+        });
+
+        //监听
+        form.on('switch(statusFlag)', function(obj){
+            changeStatusFlag(this.id);
+        });
+
+        function changeStatusFlag(id) {
+            $.post("/server/changeStatusFlag",'serverId='+id, requestCallback);
+        }
+
+
+        function requestCallback(result, xhr) {
+            if (xhr === 'success') {
+                if (result.code === '0') {
+                    successBox(result.msg);
+                } else {
+                    failBox(result.msg);
+                }
+            } else {
+                failBox("网络异常！"+xhr);
+            }
+        }
+
+        function successBox(msg) {
+            layer.msg(msg, {icon: 1})
+        }
+
+        function failBox(msg) {
+            layer.alert(msg, {icon: 2})
+        }
+
+
+    });
+
+</script>
+
+    <script type="text/html" id="serverTypeFlagTpl">
+        {{#  if(d.serverType == 1){ }}
+        broker
+        {{#  } else { }}
+        portal
+        {{#  } }}
+    </script>
+
+    <script type="text/html" id="switchTpl">
+        <input type="checkbox" name="statusFlag" id="{{d.id}}" value="{{d.statusFlag}}" lay-skin="switch" lay-text="up|down" lay-filter="statusFlag" {{ d.statusFlag == 1 ? 'checked' : '' }}>
+    </script>
+
+</body>
+
+
+</html>

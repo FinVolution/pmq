@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.DbNodeRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.DbNodeEntity">
+        <result column="id" property="id"/>
+        <result column="ip" property="ip"/>
+        <result column="port" property="port"/>
+        <result column="db_name" property="dbName"/>
+        <result column="db_user_name" property="dbUserName"/>
+        <result column="db_pass" property="dbPass"/>
+        <result column="ip_bak" property="ipBak"/>
+        <result column="port_bak" property="portBak"/>
+        <result column="db_user_name_bak" property="dbUserNameBak"/>
+        <result column="db_pass_bak" property="dbPassBak"/>
+        <result column="con_str" property="conStr"/>
+        <result column="read_only" property="readOnly"/>
+        <result column="node_type" property="nodeType"/>
+        <result column="normal_flag" property="normalFlag"/>
+        <result column="remark" property="remark"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.DbNodeEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into db_node (
+            `ip`,
+            `port`,
+            `db_name`,
+            `db_user_name`,
+            `db_pass`,
+            `ip_bak`,
+            `port_bak`,
+            `db_user_name_bak`,
+            `db_pass_bak`,
+            `con_str`,
+            `read_only`,
+            `node_type`,
+            `normal_flag`,
+            `remark`,
+            `insert_by`,
+            `update_by`
+        )values(
+            #{ip},
+            #{port},
+            #{dbName},
+            #{dbUserName},
+            #{dbPass},
+            #{ipBak},
+            #{portBak},
+            #{dbUserNameBak},
+            #{dbPassBak},
+            #{conStr},
+            #{readOnly},
+            #{nodeType},
+            #{normalFlag},
+            #{remark},
+            #{insertBy},
+            #{updateBy}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into db_node ( 
+            `ip`,
+            `port`,
+            `db_name`,
+            `db_user_name`,
+            `db_pass`,
+            `ip_bak`,
+            `port_bak`,
+            `db_user_name_bak`,
+            `db_pass_bak`,
+            `con_str`,
+            `read_only`,
+            `node_type`,
+            `normal_flag`,
+            `remark`,
+            `insert_by`,
+            `update_by`
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.ip},
+            #{item.port},
+            #{item.dbName},
+            #{item.dbUserName},
+            #{item.dbPass},
+            #{item.ipBak},
+            #{item.portBak},
+            #{item.dbUserNameBak},
+            #{item.dbPassBak},
+            #{item.conStr},
+            #{item.readOnly},
+            #{item.nodeType},
+            #{item.normalFlag},
+            #{item.remark},
+            #{item.insertBy},
+            #{item.updateBy}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from db_node where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from db_node
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="port != null and port !=''" >
+                and `port` = #{port}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="dbUserName != null and dbUserName !=''" >
+                and `db_user_name` = #{dbUserName}
+            </if>
+            <if test="dbPass != null and dbPass !=''" >
+                and `db_pass` = #{dbPass}
+            </if>
+            <if test="ipBak != null and ipBak !=''" >
+                and `ip_bak` = #{ipBak}
+            </if>
+            <if test="portBak != null and portBak !=''" >
+                and `port_bak` = #{portBak}
+            </if>
+            <if test="dbUserNameBak != null and dbUserNameBak !=''" >
+                and `db_user_name_bak` = #{dbUserNameBak}
+            </if>
+            <if test="dbPassBak != null and dbPassBak !=''" >
+                and `db_pass_bak` = #{dbPassBak}
+            </if>
+            <if test="conStr != null and conStr !=''" >
+                and `con_str` = #{conStr}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from db_node where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.DbNodeEntity">
+        update db_node set
+            `ip` = #{ip},
+        `port` = #{port},
+        `db_name` = #{dbName},
+        `db_user_name` = #{dbUserName},
+        `db_pass` = #{dbPass},
+        `ip_bak` = #{ipBak},
+        `port_bak` = #{portBak},
+        `db_user_name_bak` = #{dbUserNameBak},
+        `db_pass_bak` = #{dbPassBak},
+        `con_str` = #{conStr},
+        `read_only` = #{readOnly},
+        `node_type` = #{nodeType},
+        `normal_flag` = #{normalFlag},
+        `remark` = #{remark},
+        `update_by` = #{updateBy},
+        `is_active` = #{isActive}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from db_node
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="port != null and port !=''" >
+                and `port` = #{port}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="dbUserName != null and dbUserName !=''" >
+                and `db_user_name` = #{dbUserName}
+            </if>
+            <if test="dbPass != null and dbPass !=''" >
+                and `db_pass` = #{dbPass}
+            </if>
+            <if test="ipBak != null and ipBak !=''" >
+                and `ip_bak` = #{ipBak}
+            </if>
+            <if test="portBak != null and portBak !=''" >
+                and `port_bak` = #{portBak}
+            </if>
+            <if test="dbUserNameBak != null and dbUserNameBak !=''" >
+                and `db_user_name_bak` = #{dbUserNameBak}
+            </if>
+            <if test="dbPassBak != null and dbPassBak !=''" >
+                and `db_pass_bak` = #{dbPassBak}
+            </if>
+            <if test="conStr != null and conStr !=''" >
+                and `con_str` = #{conStr}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from db_node
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="port != null and port !=''" >
+                and `port` = #{port}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="dbUserName != null and dbUserName !=''" >
+                and `db_user_name` = #{dbUserName}
+            </if>
+            <if test="dbPass != null and dbPass !=''" >
+                and `db_pass` = #{dbPass}
+            </if>
+            <if test="ipBak != null and ipBak !=''" >
+                and `ip_bak` = #{ipBak}
+            </if>
+            <if test="portBak != null and portBak !=''" >
+                and `port_bak` = #{portBak}
+            </if>
+            <if test="dbUserNameBak != null and dbUserNameBak !=''" >
+                and `db_user_name_bak` = #{dbUserNameBak}
+            </if>
+            <if test="dbPassBak != null and dbPassBak !=''" >
+                and `db_pass_bak` = #{dbPassBak}
+            </if>
+            <if test="conStr != null and conStr !=''" >
+                and `con_str` = #{conStr}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from db_node
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from db_node
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="port != null and port !=''" >
+                and `port` = #{port}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="dbUserName != null and dbUserName !=''" >
+                and `db_user_name` = #{dbUserName}
+            </if>
+            <if test="dbPass != null and dbPass !=''" >
+                and `db_pass` = #{dbPass}
+            </if>
+            <if test="ipBak != null and ipBak !=''" >
+                and `ip_bak` = #{ipBak}
+            </if>
+            <if test="portBak != null and portBak !=''" >
+                and `port_bak` = #{portBak}
+            </if>
+            <if test="dbUserNameBak != null and dbUserNameBak !=''" >
+                and `db_user_name_bak` = #{dbUserNameBak}
+            </if>
+            <if test="dbPassBak != null and dbPassBak !=''" >
+                and `db_pass_bak` = #{dbPassBak}
+            </if>
+            <if test="conStr != null and conStr !=''" >
+                and `con_str` = #{conStr}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from db_node
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from db_node where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

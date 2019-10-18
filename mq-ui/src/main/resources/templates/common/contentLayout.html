@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<header th:include="common/header::header" th:remove="tag"></header>
+</head>
+<body class="main_body" style="background: #f9f9f9;">
+	<div class="layui-layout layui-layout-admin">
+		<!-- 右侧内容 -->
+		<div style="padding: 5px">
+			<div layout:fragment="content"></div>
+		</div>
+		<!-- 底部 -->
+		<script th:src="@{/layui/layui.js}"></script>
+		<script th:src="@{/js/config.js}"></script>
+		<script th:src="@{/js/jquery-1.11.1.min.js}"></script>
+		<script th:src="@{/js/select2.min.js}"></script>
+		<script type="text/javascript">
+			var yesFlag=0;
+			var noFlag=1;
+			layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ],
+					function() {
+						layui.table.on('row', function(obj) {
+							//obj.tr.addClass('trGreen').siblings().removeClass('trGreen');
+							changeBkColor(obj);
+						});
+					});
+			function changeBkColor(obj) {
+				obj.tr.addClass('trGreen').siblings().removeClass('trGreen');
+			}
+		</script>
+		<div layout:fragment="end-load-files"></div>
+	</div>
+
+</body>
+</html>
+

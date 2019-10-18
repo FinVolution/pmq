@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" id="main">
+<head>
+	<!--<meta name="viewport" content="width=device-width,initial-scale=0.7, minimum-scale=0.7, maximum-scale=0.7, user-scalable=yes"/>-->
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="/layui/css/layui.mobile.css" media="all" />
+	<link rel="stylesheet" href="/layui/css/layui.css" media="all" />
+	<style type="text/css">
+.btnFocus {
+	background-color: #009688;
+	color: #fff;
+}
+</style>
+</head>
+
+<body margintop="10px">
+<br/>
+	<div class="layui-inline">
+		<div class="layui-inline" th:each="urlData:${urlDatas}">
+			<a class="layui-btn monitor" th:value="${urlData.url}"
+			    th:text="${urlData.name}"></a>
+		</div>
+	</div>
+
+</body>
+
+<script th:src="@{/layui/layui.js}"></script>
+<script th:inline="javascript">
+    layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
+        var $ = layui.$;
+        var element = layui.element;
+        $('body').on('click', '.monitor', function () {
+            var ref = $(this).attr("value");
+            parent.window.open(ref);
+            parent.window.addTab(ref, ref,$(this).text());
+        });
+
+    });
+</script>
+
+</html>

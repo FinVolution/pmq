@@ -1,0 +1,90 @@
+<div th:fragment="leftmenu" xmlns:th="http://www.thymeleaf.org">
+	<div id="navMenu" class="layui-nav layui-nav-tree" lay-filter="test"
+		style="cursor: pointer">
+		<ul>
+			<li class="layui-nav-item"><a id="1"
+				data-url="/queueOffset/accumulation"> <i
+					class="iconfont icon-computer"></i>&nbsp;&nbsp;堆积统计
+			</a></li>
+
+			<li class="layui-nav-item"><a id="2" data-url="/dataPanel/panel"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;数据统计</a></li>
+
+			<li class="layui-nav-item"><a id="3" data-url="/topic/list"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;消息主题管理</a></li>
+
+			<li class="layui-nav-item"><a id="4"
+				data-url="consumerGroup/list"><i class="myiconfont icon-daohang"></i>&nbsp;&nbsp;消费者组管理</a></li>
+
+			<li class="layui-nav-item"><a id="5" data-url="queueOffset/list"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;队列消费管理</a></li>
+
+			<li class="layui-nav-item"><a id="6" data-url="/queue/list"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;队列管理</a></li>
+
+			<li class="layui-nav-item"><a id="7" data-url="/message/list"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;消息查询</a></li>
+
+			<li class="layui-nav-item"><a id="8"
+				data-url="/auditLog/listPage"><i class="myiconfont icon-daohang"></i>&nbsp;&nbsp;日志查询</a></li>
+			<li class="layui-nav-item"><a id="9" data-url="/consumer/list"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;消费者查询</a></li>
+
+
+			<li class="layui-nav-item"><a id="11" data-url="/queue/report"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;队列报表</a></li>
+
+			<li class="layui-nav-item"><a id="12" data-url="/topic/report"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;topic报表</a></li>
+
+			<li class="layui-nav-item"><a id="13"
+				data-url="/physical/machine/report"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;物理机报表</a></li>
+		</ul>
+
+		<div id="proHideMessageTool" class="hide">
+			<li class="layui-nav-item"><a id="14" data-url="/message/tool"><i
+					class="myiconfont icon-daohang"></i>&nbsp;&nbsp;发送工具</a></li>
+		</div>
+
+
+
+		<div id="menuAdmin" class="hide">
+			<ul>
+
+				<li class="layui-nav-item"><a id="15" data-url="/dbNode/list2"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;数据节点管理</a></li>
+
+				<li class="layui-nav-item"><a id="16" data-url="/notify/list"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;通知查询</a></li>
+
+				<li class="layui-nav-item"><a id="17" data-url="/mqLock/lock"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;lock</a></li>
+
+				<li class="layui-nav-item"><a id="19" data-url="/server/list"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;server</a></li>
+
+				<li class="layui-nav-item"><a id="20"
+					data-url="/redundance/dataCheck"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;系统检查</a></li>
+
+
+				<li class="layui-nav-item"><a id="22"
+					data-url="/dataBase/connections"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;mysql连接数</a></li>
+
+				<li class="layui-nav-item"><a id="23"
+					data-url="/config/soaConfig"><i class="myiconfont icon-daohang"></i>&nbsp;&nbsp;配置列表</a></li>
+
+				<li class="layui-nav-item"><a id="24"
+					data-url="/syn/envSynTool"><i class="myiconfont icon-daohang"></i>&nbsp;&nbsp;元数据同步</a></li>
+
+				<li class="layui-nav-item"><a id="25"
+											  data-url="/department/departmentReport"><i
+						class="myiconfont icon-daohang"></i>&nbsp;&nbsp;部门消息量统计</a></li>
+
+			</ul>
+		</div>
+
+	</div>
+</div>

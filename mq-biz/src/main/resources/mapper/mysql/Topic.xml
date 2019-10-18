@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.TopicRepository">
+    <!-- 业务逻辑sql请写在这个文件内 -->
+    <resultMap id="LastUpdateMap"
+		type="com.ppdai.infrastructure.mq.biz.entity.LastUpdateEntity">
+		<result column="lastDate" property="lastDate" />
+		<result column="maxId" property="maxId" />
+		<result column="count" property="count" />
+	</resultMap>
+	<select id="getLastUpdate" resultMap="LastUpdateMap"
+		useCache="false">
+		select max(meta_update_time) as lastDate,max(id) as maxId ,count(1) as `count` from topic
+	</select>    
+	<select id="getUpdateData" resultMap="BaseResultMap" useCache="false">
+		select * from topic where update_time>#{updateTime}
+	</select>
+
+	<select id="getTopicByName" resultMap="BaseResultMap" useCache="false">
+		select * from topic where name=#{topicName}
+	</select>
+
+	<select id="getListWithUserName" parameterType="java.util.Map" resultMap="BaseResultMap">
+		select *
+		from topic
+		<where>
+			1=1
+			<if test="id != null and id !=''" >
+				and `id` = #{id}
+			</if>
+			<if test="name != null and name !=''" >
+				and `name` = #{name}
+			</if>
+			<if test="originName != null and originName !=''" >
+				and `origin_name` = #{originName}
+			</if>
+			<if test="dptName != null and dptName !=''" >
+				and `dpt_name` = #{dptName}
+			</if>
+			<if test="ownerIds != null and ownerIds !=''" >
+				and `owner_ids` = CONCAT('%',#{ownerNames},'%')
+			</if>
+			<if test="ownerNames != null and ownerNames !=''" >
+				and `owner_names` like CONCAT('%',#{ownerNames},'%')
+			</if>
+			<if test="emails != null and emails !=''" >
+				and `emails` = #{emails}
+			</if>
+			<if test="tels != null and tels !=''" >
+				and `tels` = #{tels}
+			</if>
+			<if test="expectDayCount != null and expectDayCount !=''" >
+				and `expect_day_count` = #{expectDayCount}
+			</if>
+			<if test="businessType != null and businessType !=''" >
+				and `business_type` = #{businessType}
+			</if>
+			<if test="saveDayNum != null and saveDayNum !=''" >
+				and `save_day_num` = #{saveDayNum}
+			</if>
+			<if test="remark != null and remark !=''" >
+				and `remark` = #{remark}
+			</if>
+			<if test="token != null and token !=''" >
+				and `token` = #{token}
+			</if>
+			<if test="normalFlag != null and normalFlag !=''" >
+				and `normal_flag` = #{normalFlag}
+			</if>
+			<if test="topicType != null and topicType !=''" >
+				and `topic_type` = #{topicType}
+			</if>
+			<if test="maxLag != null and maxLag !=''" >
+				and `max_lag` = #{maxLag}
+			</if>
+			<if test="insertBy != null and insertBy !=''" >
+				and `insert_by` = #{insertBy}
+			</if>
+			<if test="insertTime != null and insertTime !=''" >
+				and `insert_time` = #{insertTime}
+			</if>
+			<if test="updateBy != null and updateBy !=''" >
+				and `update_by` = #{updateBy}
+			</if>
+			<if test="updateTime != null and updateTime !=''" >
+				and `update_time` = #{updateTime}
+			</if>
+			<if test="isActive != null and isActive !=''" >
+				and `is_active` = #{isActive}
+			</if>
+
+			<if test="updateTimeStart != null and updateTimeStart !=''" >
+				and update_time >= #{updateTimeStart}
+			</if>
+			<if test="updateTimeEnd != null and updateTimeEnd !=''" >
+				and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+			</if>
+			<if test="insertTimeStart != null and insertTimeStart !=''" >
+				and insert_time >= #{insertTimeStart}
+			</if>
+			<if test="insertTimeEnd != null and insertTimeEnd !=''" >
+				and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+			</if>
+		</where>
+		order by id desc
+		limit #{start1}, #{offset1}
+	</select>
+
+	<select id="countWithUserName" parameterType="java.util.Map" resultType="java.lang.Long">
+		select count(1)
+		from topic
+		<where>
+			1=1
+			<if test="id != null and id !=''" >
+				and `id` = #{id}
+			</if>
+			<if test="name != null and name !=''" >
+				and `name` = #{name}
+			</if>
+			<if test="originName != null and originName !=''" >
+				and `origin_name` = #{originName}
+			</if>
+			<if test="dptName != null and dptName !=''" >
+				and `dpt_name` = #{dptName}
+			</if>
+			<if test="ownerIds != null and ownerIds !=''" >
+				and `owner_ids` = CONCAT('%',#{ownerNames},'%')
+			</if>
+			<if test="ownerNames != null and ownerNames !=''" >
+				and `owner_names` like CONCAT('%',#{ownerNames},'%')
+			</if>
+			<if test="emails != null and emails !=''" >
+				and `emails` = #{emails}
+			</if>
+			<if test="tels != null and tels !=''" >
+				and `tels` = #{tels}
+			</if>
+			<if test="expectDayCount != null and expectDayCount !=''" >
+				and `expect_day_count` = #{expectDayCount}
+			</if>
+			<if test="businessType != null and businessType !=''" >
+				and `business_type` = #{businessType}
+			</if>
+			<if test="saveDayNum != null and saveDayNum !=''" >
+				and `save_day_num` = #{saveDayNum}
+			</if>
+			<if test="remark != null and remark !=''" >
+				and `remark` = #{remark}
+			</if>
+			<if test="token != null and token !=''" >
+				and `token` = #{token}
+			</if>
+			<if test="normalFlag != null and normalFlag !=''" >
+				and `normal_flag` = #{normalFlag}
+			</if>
+			<if test="topicType != null and topicType !=''" >
+				and `topic_type` = #{topicType}
+			</if>
+			<if test="maxLag != null and maxLag !=''" >
+				and `max_lag` = #{maxLag}
+			</if>
+			<if test="insertBy != null and insertBy !=''" >
+				and `insert_by` = #{insertBy}
+			</if>
+			<if test="insertTime != null and insertTime !=''" >
+				and `insert_time` = #{insertTime}
+			</if>
+			<if test="updateBy != null and updateBy !=''" >
+				and `update_by` = #{updateBy}
+			</if>
+			<if test="updateTime != null and updateTime !=''" >
+				and `update_time` = #{updateTime}
+			</if>
+			<if test="isActive != null and isActive !=''" >
+				and `is_active` = #{isActive}
+			</if>
+
+			<if test="updateTimeStart != null and updateTimeStart !=''" >
+				and update_time >= #{updateTimeStart}
+			</if>
+			<if test="updateTimeEnd != null and updateTimeEnd !=''" >
+				and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+			</if>
+			<if test="insertTimeStart != null and insertTimeStart !=''" >
+				and insert_time >= #{insertTimeStart}
+			</if>
+			<if test="insertTimeEnd != null and insertTimeEnd !=''" >
+				and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+			</if>
+		</where>
+	</select>
+
+</mapper>

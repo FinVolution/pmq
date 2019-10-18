@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+    <h3 th:text=" '该节点下Topic分布情况'"></h3>
+    <input type="hidden" id="dbNodeId" th:value="${dbNodeId}">
+    <table id="analysisTable" class="layui-table" lay-filter="analysisTable">
+
+    </table>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/analysis.js}"></script>
+
+    <style type="text/css">
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+        xmlns:th=http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+
+<div layout:fragment="content">
+    <form class="layui-form" id="consumerForm">
+        <div class="layui-form-item layui-inline">
+            <div class="layui-input-inline">
+                <input type="text" value="" id="consumerId" name="consumerId" placeholder="请输入ID" class="layui-input search_input"/>
+            </div>
+            <div class="layui-input-inline">
+                <input type="text" value="" id="ip" name="ip" placeholder="请输入IP" class="layui-input search_input"/>
+            </div>
+            <div class="layui-input-inline">
+                <input type="text" value="" id="consumerGroupNames" name="consumerGroupNames" placeholder="请输入消费组名称" class="layui-input search_input"/>
+            </div>
+            <div class="layui-input-inline" style="width: 150px">
+                <select id="compareType" name="compareType" lay-verify="">
+                    <option value="0">请选择比较类型</option>
+                    <option value ="1"> > </option>
+                    <option value ="2"> >= </option>
+                    <option value ="3"> = </option>
+                    <option value ="4"> < </option>
+                    <option value ="5"> <= </option>
+                </select>
+            </div>
+
+            <div class="layui-input-inline">
+                <input type="text" value="" id="sdkVersion" name="sdkVersion" placeholder="请输入版本号" class="layui-input search_input"/>
+            </div>
+            <a class="layui-btn" id="consumerList_btn" lay-filter="consumerSearchFilter"><i class="layui-icon">&#xe615;</i>查询</a>
+        </div>
+    </form>
+
+    <table class="layui-table" lay-data="{height:'full', id:'consumerTable',url:'/consumer/list/data',page:true,limits:[10,20,30,40,50,60,70,80,90,100,200,500,1000],limit: 10,toolbar:'#toolbarDemo'}" lay-filter="consumerTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'id', align: 'center', sort: true,width:80,templet:'#idTpl'}">ID</th>
+            <th lay-data="{field: 'ip', align: 'center', sort: true}">ip</th>
+            <th lay-data="{field: 'name', align: 'center', sort: true}">消费者</th>
+            <th lay-data="{field: 'consumerGroupNames', align: 'center', sort: true}">消费组</th>
+            <th lay-data="{field: 'ownerNames', align: 'center', sort: true}">负责人</th>
+            <th lay-data="{field: 'sdkVersion', align: 'center', sort: true}">版本号</th>
+            <th lay-data="{field: 'lan', align: 'center', sort: true}">语言</th>
+            <th lay-data="{field: 'heartTime',  align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">心跳时间</th>
+            <th lay-data="{field: 'insertTime', align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">入库时间</th>
+            <th lay-data="{field: 'updateTime', align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">更新时间</th>
+            <th lay-data="{fixed: 'right', align:'center', width:70, toolbar: '#deleteBar'}">操作</th>
+        </tr>
+        </thead>
+    </table>    
+    <p>
+       说明： </p>
+       <ol>
+         <li>1,消费者正常由四个部分组成[ip+进程号+随机数+端口号(可选)],对于web类型的项目，端口号为当前应用的端口，如果是非web项目可以无端口号</li>
+         <li>2,当在本地测试时，频繁重启，可能会存在多个消费实例，ip和端口一致，随机数不一致。这时会出现一些僵尸实例，占用队列不消费。</li>
+         <li>3,当一个实例心跳超时时，为了防止网络抖动导致的心跳发送失败，如果实例是web项目，根据第一条的端口号回反向检测用户的健康检查接口，ip:port/mq/client/hs,若健康检查接口正常，则表示实例正常，但是心跳超时不能超过最大时间，默认5分钟。可以通过mq.consumer.inactive.max.time配置，单位是秒。</li>
+       </ol>
+   
+</div>
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/consumer.js}"></script>
+    <script type="text/html" id="deleteBar">
+        {{#  if((d.role==0||d.role==1)){ }}
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="deleteConsumer">删除</a>
+        {{#  } else { }}
+
+        {{#  } }}
+
+    </script>
+</div>
+</html>

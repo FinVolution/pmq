@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+
+    <form class="layui-form" id="queryForm">
+        <div class="layui-form-item layui-inline">
+            <div class="layui-inline">
+                <label class="layui-form-label">消费者组：</label>
+                <div class="layui-input-block" style="width: 300px">
+                    <select lay-ignore id="consumerGroupName" name="consumerGroupName"   class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">消息主题：</label>
+
+                <div class="layui-input-block" style="width: 300px">
+                    <select lay-ignore id="topicName" name="topicName"   class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <input type="number" id="queueOffsetId" name="id" placeholder="请输入 ID" class="layui-input search_input"/>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">负责人*</label>
+                <div class="layui-input-block" style="width: 180px">
+                    <select lay-ignore id="ownerIds" required  class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 150px">
+                    <select id="onlineType" class="search-select">
+                        <option value="">请选择堆积类型</option>
+                        <option value ="1" selected>在线堆积</option>
+                        <option value ="2">离线堆积</option>
+                        <option value ="3">负责人异常</option>
+                    </select>
+                </div>
+            </div>
+
+            <a class="layui-btn" id="queueOffsetSearch_btn" lay-filter="queueOffsetFilter"><i class="layui-icon">&#xe615;</i>查询</a>
+        </div>
+
+        <input type="hidden" id="userName" th:value="${userName}"/>
+        <input type="hidden" id="userId" th:value="${userId}"/>
+        <input type="hidden" id="userRole" th:value="${userRole}"/>
+        <input type="hidden" id="proEnv" th:value="${proEnv}"/>
+    </form>
+
+    <table class="layui-table" lay-data="{height:'full', page:true,limits:[10,20,30,40,50,60,70,80,90,100,1000,2000],limit: 10, id:'queueOffsetAccumulationTable',toolbar:'#toolbarDemo'}" lay-filter="queueOffsetAccumulationTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'id', align: 'center', sort: true,width:70}">ID</th>
+            <th lay-data="{field: 'consumerGroupName', align: 'center', sort: true}">消费者组名称</th>
+            <th lay-data="{field: 'topicName', align: 'center', sort: true}">订阅主题</th>
+            <th lay-data="{field: 'pendingMessageNum', align: 'center',templet:'#pendingMessageNumTpl', sort: true}">堆积量</th>
+            <th lay-data="{field: 'maxLag', align: 'center', sort: true}">告警阈值</th>
+            <th lay-data="{field: 'minusMaxLag', align: 'center', sort: true}">堆积量-告警阈值</th>
+            <th lay-data="{field: 'consumerGroupOwners', align: 'center', sort: true}">负责人</th>
+
+        </tr>
+        </thead>
+    </table>
+
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+        <div id="consumerGroupNum" th:text="${consumerGroupNum}"></div>
+        <div id="usingConsumerGroupNum" th:text="${usingConsumerGroupNum}"></div>
+        <div id="uselessConsumerGroupNum" th:text="${uselessConsumerGroupNum}"></div>
+    </fieldset>
+
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/queueOffsetAccumulation.js}"></script>
+
+    <script type="text/html" id="pendingMessageNumTpl">
+        <div style="color:red">{{ d.pendingMessageNum }}</div>
+    </script>
+
+
+    <style type="text/css">
+
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        .marg1{
+            margin-top: -10px;
+        }
+        .layui-table-cell {
+            padding: 0 5px !important;
+        }
+
+        .icon-yes {
+            font-size: 30px;
+            color: #5FB878;
+            font-weight: 900;
+        }
+
+        .icon-no {
+            font-size: 30px;
+            color: #e60000;
+            font-weight: 900;
+        }
+
+        .spCount {
+            color: #F581B1;
+        }
+
+        .spuerStatusText {
+            color: #F581B1;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

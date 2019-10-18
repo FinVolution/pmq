@@ -1,0 +1,89 @@
+<form th:fragment="editDbNodeForm" xmlns:th="http://www.thymeleaf.org">
+    <div class="layui-row">
+        <fieldset class="layui-elem-field layui-field-title layui-input-inline">
+            <input type="hidden" name="id" >
+
+            <legend>主库</legend>
+            <div class="layui-form-item">
+                <label class="layui-form-label">ip*</label>
+                <div class="layui-input-block">
+                    <input type="text" name="ip" required lay-verify="required" placeholder="请输入主库ip" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">端口*</label>
+                <div class="layui-input-block">
+                    <input type="text" name="port" required lay-verify="required" placeholder="请输入主库端口号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名*</label>
+                <div class="layui-input-block">
+                    <input type="text" name="dbUserName" required lay-verify="required" placeholder="请输入主库用户名" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">密码*</label>
+                <div class="layui-input-block">
+                    <input type="text" name="dbPass" required lay-verify="required" placeholder="请输入主库密码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </fieldset>
+        <fieldset class="layui-elem-field layui-field-title layui-input-inline">
+            <legend>从库</legend>
+            <div class="layui-form-item">
+                <label class="layui-form-label">ip_bak</label>
+                <div class="layui-input-block">
+                    <input type="text" name="ipBak" placeholder="请输入从库ip" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">端口_bak</label>
+                <div class="layui-input-block">
+                    <input type="text" name="portBak" placeholder="请输入从库端口号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名_bak</label>
+                <div class="layui-input-block">
+                    <input type="text" name="dbUserNameBak" placeholder="请输入从库用户名" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">密码_bak</label>
+                <div class="layui-input-block">
+                    <input type="text" name="dbPassBak" placeholder="请输入从库密码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">数据库名*</label>
+        <div class="layui-input-block">
+            <input type="text" name="dbName" required lay-verify="required" placeholder="请输入数据库名" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">备注</label>
+        <div class="layui-input-block">
+            <textarea name="remark" placeholder="请输入内容" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" type="button" lay-submit lay-filter="editSubmit" id="editSubmit">提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+    <p>如果设置了从库,消息查询时,会去从库查询</p>
+
+</form>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+    <fieldset class="layui-elem-field">
+        <legend th:text=" '[ ' +${topicName} + ' ] 消息主题扩容'"></legend>
+        <div class="layui-field-box">
+            <input type="hidden" id="topicIdV" th:value="${topicId}">
+            <button class="layui-btn" id="refresh">刷新数据</button>
+            <table id="queueRemoveTable" class="layui-table" lay-filter="queueRemoveTable">
+
+            </table>
+            <button class="layui-btn" id="autoExpand">自动扩容</button>
+            <button th:if="${role} eq '0'" class="layui-btn" id="manualExpand">手动扩容</button>
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend>操作说明：</legend>
+            </fieldset>
+            <p>1.自动扩容 首先满足各个节点都有被分配</p>
+            <p>2.自动扩容 其次以被分配少的节点优先</p>
+            <p>3.手动扩容 用于节点分配极度不平衡时，必须手工介入</p>
+        </div>
+    </fieldset>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/topicExpand.js}"></script>
+
+
+    <script type="text/html" id="queueReadOnlyTpl">
+        {{# if (d.queueReadOnly == 1) { }}
+        可读可写
+        {{# } else if(d.queueReadOnly == 2){ }}
+        只读
+        {{# }else{ }}
+        不可读不可写
+        {{# } }}
+    </script>
+
+    <script type="text/html" id="readStatusTpl">
+        {{# if (d.readStatus == 1) { }}
+        可读可写
+        {{# } else if(d.readStatus == 2){ }}
+        只读
+        {{# }else{ }}
+        不可读不可写
+        {{# } }}
+    </script>
+
+    <script type="text/html" id="dbReadOnlyTpl">
+        {{# if (d.dbReadOnly == 1) { }}
+        可读可写
+        {{# } else if(d.dbReadOnly == 2){ }}
+        只读
+        {{# }else{ }}
+        不可读不可写
+        {{# } }}
+    </script>
+
+    <style type="text/css">
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

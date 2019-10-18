@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.DicRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.DicEntity">
+        <result column="id" property="id"/>
+        <result column="key1" property="key1"/>
+        <result column="value1" property="value1"/>
+        <result column="remark" property="remark"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.DicEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into dic (
+            key1,
+            value1,
+            remark,
+            insert_by,
+            update_by
+        )values(
+            #{key1},
+            #{value1},
+            #{remark},
+            #{insertBy},
+            #{updateBy}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into dic ( 
+            key1,
+            value1,
+            remark,
+            insert_by,
+            update_by
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.key1},
+            #{item.value1},
+            #{item.remark},
+            #{item.insertBy},
+            #{item.updateBy}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from dic where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from dic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="key1 != null and key1 !=''" >
+                and key1 = #{key1}
+            </if>
+            <if test="value1 != null and value1 !=''" >
+                and value1 = #{value1}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and remark = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from dic where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.DicEntity">
+        update dic set
+            key1 = #{key1},
+        value1 = #{value1},
+        remark = #{remark},
+        update_by = #{updateBy},
+        is_active = #{isActive}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from dic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="key1 != null and key1 !=''" >
+                and key1 = #{key1}
+            </if>
+            <if test="value1 != null and value1 !=''" >
+                and value1 = #{value1}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and remark = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from dic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="key1 != null and key1 !=''" >
+                and key1 = #{key1}
+            </if>
+            <if test="value1 != null and value1 !=''" >
+                and value1 = #{value1}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and remark = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from dic
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from dic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="key1 != null and key1 !=''" >
+                and key1 = #{key1}
+            </if>
+            <if test="value1 != null and value1 !=''" >
+                and value1 = #{value1}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and remark = #{remark}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from dic
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from dic where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

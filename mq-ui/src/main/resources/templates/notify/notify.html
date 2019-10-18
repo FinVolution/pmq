@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <header th:include="common/header::header" th:remove="tag"></header>
+</head>
+<body>
+<br/>
+<div class="layui-inline">
+    <a class="layui-btn" id="lockSearchList_btn" lay-filter="lockSearchFilter">刷新数据</a>
+</div>
+<table class="layui-table" lay-data="{height:'full', url:'/notify/list/key', page:true,limit: 10, id:'notifyKeyTableId'}" lay-filter="notifyKeyTableId">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'id', align: 'center', sort: true,width:80}" rowspan="2">id</th>
+        <th lay-data="{field: 'key1', align: 'center'}" rowspan="2">key1</th>
+        <th lay-data="{field: 'notifyMessageId', align: 'center'}" rowspan="2" >消息Id</th>
+        <th lay-data="{field: 'insertTime', align: 'center'}" rowspan="2">插入时间</th>
+        <th lay-data="{field: 'insertBy', align: 'center'}" rowspan="2">操作人</th>
+        <th lay-data="{field: 'updateTime', align: 'center'}" rowspan="2">更新时间</th>
+        <th lay-data="{field: 'updateBy', align: 'center'}" rowspan="2">修改者</th>
+    </tr>
+    </thead>
+</table>
+
+<table class="layui-table" lay-data="{height:'full', url:'/notify/list/data', page:true,limit: 10, id:'notifyTableId'}" lay-filter="notifyTableId">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'id', align: 'center', sort: true,width:80}" rowspan="2">id</th>
+        <th lay-data="{field: 'consumerGroupId', align: 'center'}" rowspan="2">消费者组Id</th>
+        <th lay-data="{field: 'messageType', align: 'center'}" rowspan="2">消息类型</th>
+        <th lay-data="{field: 'insertTime', align: 'center'}" rowspan="2">插入时间</th>
+        <th lay-data="{field: 'insertBy', align: 'center'}" rowspan="2">操作人</th>
+        <th lay-data="{field: 'updateTime', align: 'center'}" rowspan="2">更新时间</th>
+        <th lay-data="{field: 'updateBy', align: 'center'}" rowspan="2">修改者</th>
+    </tr>
+    </thead>
+</table>
+
+<script th:src="@{/layui/layui.js}"></script>
+<script th:src="@{/js/notify.js}"></script>
+<script type="text/html" id="ctrlBar">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+</script>
+</body>
+
+
+</html>

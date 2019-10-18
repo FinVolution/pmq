@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<messageQueue>
+     <consumer groupName="SysFailSub" alarmEmails="****@****.com">
+        <topics>
+            <topic name="SysTopicFailMsg"  receiverType="com.ppdai.infrastructure.ui.util.SysFailSub"></topic>
+        </topics>
+    </consumer>
+</messageQueue>

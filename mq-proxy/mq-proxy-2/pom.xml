@@ -1,0 +1,171 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>mq-proxy</artifactId>
+		<groupId>com.ppdai.infrastructure</groupId>
+		<version>1.0.0</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>mq-proxy-2</artifactId>
+	<packaging>jar</packaging>
+	<properties>
+		<docker.img.name>mqproxy.ppdaicorp.com</docker.img.name>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.ppdai.infrastructure</groupId>
+			<artifactId>mq-client-springboot</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+	    <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>  
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-netty</artifactId>            
+            <version>3.10.4</version>            
+            <scope>test</scope>
+            <exclusions>
+				<exclusion>
+					 <groupId>xerces</groupId>
+ 					 <artifactId>xercesImpl</artifactId>
+				</exclusion>
+			</exclusions>
+        </dependency> 
+	</dependencies>
+	<dependencyManagement>
+		<!-- 依赖管理，解决版本冲突 -->
+		<dependencies>
+<!-- 		    <dependency> -->
+<!-- 				<groupId>org.springframework.cloud</groupId> -->
+<!-- 				<artifactId>spring-cloud-dependencies</artifactId> -->
+<!-- 				<version>Camden.SR7</version> -->
+<!-- 				<type>pom</type> -->
+<!-- 				<scope>import</scope> -->
+<!-- 			</dependency> -->
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>1.5.2.RELEASE</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<build>	
+		<!-- package后的jar包名称-->
+	   <finalName>mqproxy</finalName>
+	   <!-- package的jar包所在目录 -->
+	   <directory>target</directory>	
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>2.8.2</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+<!-- 			<plugin> -->
+<!-- 				<groupId>com.spotify</groupId> -->
+<!-- 				<artifactId>docker-maven-plugin</artifactId> -->
+<!-- 				<version>${docker.plugin.version}</version> -->
+<!-- 				<configuration> -->
+<!-- 					<imageName>${department}/${docker.img.name}</imageName> -->
+<!-- 					镜像版本可指定，推荐以项目本身版本号 -->
+<!-- 					<imageTags>					 -->
+<!-- 						<imageTag>${image.version}</imageTag> -->
+<!-- 					</imageTags> -->
+<!-- 					<baseImage>${docker.jdk8}</baseImage> --> 
+<!-- 					<dockeryardAccessToken>${dockerToken}</dockeryardAccessToken> -->
+<!-- 					<workdir>/ROOT</workdir> -->
+<!-- 					<entryPoint>java -jar -server ${heap.xm} -XX:+UseG1GC	${project.build.finalName}.jar</entryPoint> -->
+<!-- 					<resources> -->
+<!-- 						<resource> -->
+<!-- 							<targetPath>/ROOT</targetPath> -->
+<!-- 							<directory>${project.build.directory}</directory> -->
+<!-- 							<include>${project.build.finalName}.jar</include> -->
+<!-- 						</resource> -->
+<!-- 					</resources> -->
+<!-- 					<env> -->
+<!-- 						<LANG>en_US.UTF-8</LANG> -->
+<!-- 						<LANGUAGE>en_US:en</LANGUAGE> -->
+<!-- 						<LC_ALL>en_US.UTF-8</LC_ALL> -->
+<!-- 						<TZ>Asia/Shanghai</TZ> -->
+<!-- 					</env> -->
+<!-- 				</configuration> -->
+<!-- 				<executions> -->
+<!-- 					<execution> -->
+<!-- 						<id>build-image</id> -->
+<!-- 						<phase>install</phase> -->
+<!-- 						<goals> -->
+<!-- 							<goal>build</goal> -->
+<!-- 						</goals> -->
+<!-- 					</execution> -->
+<!-- 				</executions> -->
+<!-- 			</plugin> -->
+
+
+
+           <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>1.2.3-ppdtoken-release</version>
+                <configuration>
+                    <!--镜像名格式：应用名称-->
+                    <imageName>${docker.img.name}</imageName>
+                    <imageTags>					
+					<imageTag>${image.version}</imageTag> 
+					</imageTags>
+                    <dockeryardAccessToken>
+                        ${dockerToken}
+                    </dockeryardAccessToken>
+                    <entryPoint>java -jar -server ${heap.xm} -XX:+UseG1GC	${project.build.finalName}.jar </entryPoint>
+
+                    <resources>
+                        <resource>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>                   
+                 </configuration>
+                 
+                 <executions>
+					<execution>
+						<id>build-image</id>
+						<phase>install</phase>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+            </plugin>
+   </plugins>
+	</build>
+</project>

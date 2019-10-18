@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+
+    <form class="layui-form" id="queryForm">
+        <div class="layui-form-item layui-inline">
+
+            <div class="layui-inline">
+                <label class="layui-form-label">消费者组：</label>
+                <div class="layui-input-block" style="width: 300px">
+                    <select lay-ignore id="consumerGroupName" name="consumerGroupName" required lay-verType="consumerGroupName" lay-verify="required" class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="layui-inline">
+                <label class="layui-form-label">AppId：</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="appId" name="appId"  class="layui-input search_input"/>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">负责人*</label>
+                <div class="layui-input-block" style="width: 180px">
+                    <select lay-ignore id="ownerIds" required lay-verType="tips" lay-verify="required" class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 150px">
+                    <select name="mode" id="mode" class="search-select">
+                        <option value="">请选择消费模式</option>
+                        <option value="1">集群模式</option>
+                        <option value ="2">广播模式</option>
+                        <option value ="3">代理模式</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">ID：</label>
+                <div class="layui-input-inline">
+                    <input type="number" id="consumerGroupId" name="id" class="layui-input search_input"/>
+                </div>
+            </div>
+
+            <a class="layui-btn" id="consumerGroupSearchList_btn" lay-filter="consumerGroupSearchFilter"><i
+                    class="layui-icon">&#xe615;</i>查询</a>
+        </div>
+    </form>
+
+    <input type="hidden" id="userName" th:value="${userName}"/>
+    <input type="hidden" id="userId" th:value="${userId}"/>
+
+    <table id="consumerGroupTable" class="layui-table"
+           lay-data="{height:'full', page:true,limit: 10, id:'consumerGroupTable',toolbar:'#toolbarDemo'}"
+           lay-filter="consumerGroupTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'id', align: 'center', sort: true,templet:'#idTpl', width:'6%',fixed:'left'}">ID</th>
+            <th lay-data="{field: 'appId', align: 'center',sort: true,fixed:'left', width:'8%'}">AppId</th>
+            <th lay-data="{field: 'name',sort: true, align: 'center',fixed:'left', width:'20%'}">消费者组</th>
+            <th lay-data="{field: 'dptName',sort: true, align: 'center', width:'10%'}">部门</th>
+            <th lay-data="{field: 'topicNames',sort: true, align: 'center', width:'15%'}">订阅主题</th>
+            <th lay-data="{field: 'ownerNames',sort: true, align: 'center',width:'10%'}">负责人</th>
+            <th lay-data="{field: 'alarmFlag', align: 'center',templet:'#alarmFlagTpl',width:'6%'}">是否告警</th>
+            <th lay-data="{field: 'traceFlag', align: 'center',templet:'#traceFlagTpl',width:'6%'}">是否追踪</th>
+            <th lay-data="{field: 'consumerQuality', align: 'center',width:'6%'}">最大实例数</th>
+            <th lay-data="{field: 'ipWhiteList', align: 'center',width:'8%'}">白名单</th>
+            <th lay-data="{field: 'ipBlackList', align: 'center',width:'8%'}">黑名单</th>
+            <th lay-data="{field: 'alarmEmails', align: 'center',width:'8%'}">告警邮件</th>
+            <th lay-data="{field: 'mode', align: 'center',width:'6%',templet:'#modeTpl'}">消费模式</th>
+            <th lay-data="{field: 'tels', align: 'center',width:'8%'}">电话</th>
+            <th lay-data="{field: 'remark', align: 'center',width:'8%'}">备注</th>
+            <th lay-data="{field: 'updateTime',align: 'center',width:'8%'}">更新时间</th>
+            <th lay-data="{fixed: 'right', align:'center', width:300, toolbar: '#ctrlBar'}">操作区</th>
+        </tr>
+        </thead>
+    </table>
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+        <legend>操作说明：</legend>
+        <p>1.点击"创建"按钮，创建消费者组</p>
+        <p>2.点击"订阅管理"，为该消费者组添加/取消订阅</p>
+        <p>3.点击"删除"，删除消费者组和该组的订阅关系</p>
+    </fieldset>
+    <fieldset class="layui-elem-field layui-field-title warn1">
+        <p>"无操作权限，联系"消费者组"负责人。让"消费者组"负责人，把你添加为负责人即可！"</p>
+    </fieldset>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/consumerGroupList.js?v=20190612}"></script>
+
+    <script type="text/html" id="idTpl">
+        <a href onclick="return false"><img src="/images/log.png"  data-id="{{= d.id }}"
+                                          class="logSearch"/></a>&nbsp;&nbsp;{{= d.id }}
+    </script>
+
+    <script type="text/html" id="traceFlagTpl">
+        {{#  if(d.traceFlag == 1){ }}
+        <i class="layui-icon icon-yes">&#xe605;</i>
+        </div>
+        {{#  } else { }}
+        <i class="layui-icon icon-no">&#x1006;</i>
+        {{#  } }}
+    </script>
+    <script type="text/html" id="alarmFlagTpl">
+        {{#  if(d.alarmFlag == 1){ }}
+        <i class="layui-icon icon-yes">&#xe605;</i>
+        </div>
+        {{#  } else { }}
+        <i class="layui-icon icon-no">&#x1006;</i>
+        {{#  } }}
+    </script>
+
+    <script type="text/html" id="modeTpl">
+        {{#  if(d.mode == 1){ }}
+        集群模式
+        {{# } else if (d.mode == 2) { }}
+        广播模式
+        {{# } else if (d.mode == 3) { }}
+        代理模式
+        {{#  } }}
+    </script>
+
+    <script type="text/html" id="ctrlBar">
+        {{#  if((d.role==0||d.role==1)&&d.name==d.originName){ }}
+        <a class="layui-btn layui-btn-xs" lay-event="subscribe">订阅管理</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="refreshMeta">强制刷新</a>
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="rebalence">重平衡</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a>
+        {{# } else if (d.role==0&&d.name!=d.originName) { }}
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete">删除</a>
+        {{# } else{ }}
+        无操作权限
+        {{# } }}
+
+    </script>
+
+    <script type="text/html" id="toolbarDemo">
+        <a class="layui-btn" id="createConsumerGroup"><i class="layui-icon">&#xe608;</i>创建</a>
+    </script>
+    <style type="text/css">
+
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        .layui-table-cell {
+            padding: 0 5px !important;
+        }
+
+        .icon-yes {
+            font-size: 30px;
+            color: #5FB878;
+            font-weight: 900;
+        }
+
+        .icon-no {
+            font-size: 30px;
+            color: #e60000;
+            font-weight: 900;
+        }
+
+        .spCount {
+            color: #F581B1;
+        }
+
+        .spuerStatusText {
+            color: #F581B1;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

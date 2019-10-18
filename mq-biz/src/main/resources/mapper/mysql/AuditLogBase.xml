@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.AuditLogRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.AuditLogEntity">
+        <result column="id" property="id"/>
+        <result column="tb_name" property="tbName"/>
+        <result column="ref_id" property="refId"/>
+        <result column="content" property="content"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.AuditLogEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into audit_log (
+            tb_name,
+            ref_id,
+            content,
+            insert_by,
+            update_by
+        )values(
+            #{tbName},
+            #{refId},
+            #{content},
+            #{insertBy},
+            #{updateBy}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into audit_log ( 
+            tb_name,
+            ref_id,
+            content,
+            insert_by,
+            update_by
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.tbName},
+            #{item.refId},
+            #{item.content},
+            #{item.insertBy},
+            #{item.updateBy}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from audit_log where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from audit_log
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and tb_name = #{tbName}
+            </if>
+            <if test="refId != null and refId !=''" >
+                and ref_id = #{refId}
+            </if>
+            <if test="content != null and content !=''" >
+                and content = #{content}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from audit_log where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.AuditLogEntity">
+        update audit_log set
+            tb_name = #{tbName},
+        ref_id = #{refId},
+        content = #{content},
+        update_by = #{updateBy},
+        is_active = #{isActive}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from audit_log
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and tb_name = #{tbName}
+            </if>
+            <if test="refId != null and refId !=''" >
+                and ref_id = #{refId}
+            </if>
+            <if test="content != null and content !=''" >
+                and content like '%${content}%'
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from audit_log
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and tb_name = #{tbName}
+            </if>
+            <if test="refId != null and refId !=''" >
+                and ref_id = #{refId}
+            </if>
+            <if test="content != null and content !=''" >
+                and content like '%${content}%'
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from audit_log
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from audit_log
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and tb_name = #{tbName}
+            </if>
+            <if test="refId != null and refId !=''" >
+                and ref_id = #{refId}
+            </if>
+            <if test="content != null and content !=''" >
+                and content like '%${content}%'
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from audit_log
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from audit_log where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

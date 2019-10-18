@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/layout.html-->
+<div layout:fragment="content">
+    <form class="layui-form">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <a class="layui-btn" id="imitate" lay-filter="imitate">模拟</a>
+                <a class="layui-btn" id="checkAll" lay-filter="checkAll">检测</a>
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text" style="margin-top: 20px;" id="checkResult" name="checkResult">
+        </div>
+
+        <text id="synResultData"></text>
+    </form>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:inline="javascript">
+        layui.use(['element', 'table', 'jquery', 'layer', 'form','util'], function () {
+            var $ = layui.$;
+            var isPro=[[${isPro}]];
+            var form=layui.form;
+
+            $("body").on("click", "#imitate", function () {
+                layer.confirm("确定要模拟吗？", {icon: 3}, function (index) {
+                    $("#checkResult").html("正在执行中。。。");
+                    $.post("/redundance/imitate", requestCallback);
+                    layer.close(index);
+                })
+            });
+
+            $("body").on("click", "#checkAll", function () {
+                layer.confirm("确定要检测吗？", {icon: 3}, function (index) {
+                    $("#checkResult").html("正在执行中。。。");
+                    $.post("/redundance/checkAll",requestCallback);
+                    layer.close(index);
+                })
+            });
+
+
+            function requestCallback(result, xhr) {
+                if (xhr === 'success') {
+                    if (result.code ==yesFlag) {
+                        $("#checkResult").html(result.data)
+                        successBox(result.msg);
+                    } else {
+                        failBox(result.msg);
+                    }
+                } else {
+                    failBox("网络异常！"+xhr);
+                }
+            }
+
+            function successBox(msg) {
+
+                layer.msg(msg, {icon: 1})
+            }
+
+            function failBox(msg) {
+                layer.alert(msg, {icon: 2})
+            }
+
+        });
+    </script>
+</div>
+</html>

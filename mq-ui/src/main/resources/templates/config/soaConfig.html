@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title></title>
+    <header th:include="common/header::header" th:remove="tag"></header>
+</head>
+<body>
+&nbsp;
+<table class="layui-table" lay-data="{height:'full', url:'/config/soaConfig/data', id:'configTable'}" lay-filter="configTable">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'key', align: 'left', width:'15%'}">配置项</th>
+        <th lay-data="{field: 'defaultValue', align: 'left', width:'10%'}">默认值</th>
+        <th lay-data="{field: 'currentValue', align: 'left', width:'10%'}">当前值</th>
+        <th lay-data="{field: 'description', align: 'left',width:'64%'}">说明</th>
+    </tr>
+    </thead>
+</table>
+
+<script th:src="@{/layui/layui.js}"></script>
+<script>
+    layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
+        var table = layui.table,
+            form = layui.form,
+            layer = layui.layer,
+            $ = layui.$,
+            element = layui.element;
+
+    });
+
+</script>
+</body>
+
+
+</html>

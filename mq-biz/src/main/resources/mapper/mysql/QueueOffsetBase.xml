@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.QueueOffsetRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity">
+        <result column="id" property="id"/>
+        <result column="consumer_group_id" property="consumerGroupId"/>
+        <result column="consumer_group_name" property="consumerGroupName"/>
+        <result column="consumer_name" property="consumerName"/>
+        <result column="consumer_id" property="consumerId"/>
+        <result column="topic_id" property="topicId"/>
+        <result column="topic_name" property="topicName"/>
+        <result column="origin_topic_name" property="originTopicName"/>
+        <result column="topic_type" property="topicType"/>
+        <result column="queue_id" property="queueId"/>
+        <result column="offset" property="offset"/>
+        <result column="start_offset" property="startOffset"/>
+        <result column="offset_version" property="offsetVersion"/>
+        <result column="stop_flag" property="stopFlag"/>
+        <result column="db_info" property="dbInfo"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        <result column="meta_update_time" property="metaUpdateTime"/>
+        <result column="origin_consumer_group_name" property="originConsumerGroupName"/>
+        <result column="consumer_group_mode" property="consumerGroupMode"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into queue_offset (
+            `consumer_group_id`,
+            `consumer_group_name`,
+            `consumer_name`,
+            `consumer_id`,
+            `topic_id`,
+            `topic_name`,
+            `origin_topic_name`,
+            `topic_type`,
+            `queue_id`,
+            `offset`,
+            `start_offset`,
+            `offset_version`,
+            `stop_flag`,
+            `db_info`,
+            `insert_by`,
+            `update_by`,
+            `meta_update_time`,
+            `origin_consumer_group_name`,
+            `consumer_group_mode`
+        )values(
+            #{consumerGroupId},
+            #{consumerGroupName},
+            #{consumerName},
+            #{consumerId},
+            #{topicId},
+            #{topicName},
+            #{originTopicName},
+            #{topicType},
+            #{queueId},
+            #{offset},
+            #{startOffset},
+            #{offsetVersion},
+            #{stopFlag},
+            #{dbInfo},
+            #{insertBy},
+            #{updateBy},
+            #{metaUpdateTime},
+            #{originConsumerGroupName},
+            #{consumerGroupMode}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into queue_offset ( 
+            `consumer_group_id`,
+            `consumer_group_name`,
+            `consumer_name`,
+            `consumer_id`,
+            `topic_id`,
+            `topic_name`,
+            `origin_topic_name`,
+            `topic_type`,
+            `queue_id`,
+            `offset`,
+            `start_offset`,
+            `offset_version`,
+            `stop_flag`,
+            `db_info`,
+            `insert_by`,
+            `update_by`,
+            `meta_update_time`,
+            `origin_consumer_group_name`,
+            `consumer_group_mode`
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.consumerGroupId},
+            #{item.consumerGroupName},
+            #{item.consumerName},
+            #{item.consumerId},
+            #{item.topicId},
+            #{item.topicName},
+            #{item.originTopicName},
+            #{item.topicType},
+            #{item.queueId},
+            #{item.offset},
+            #{item.startOffset},
+            #{item.offsetVersion},
+            #{item.stopFlag},
+            #{item.dbInfo},
+            #{item.insertBy},
+            #{item.updateBy},
+            #{item.metaUpdateTime},
+            #{item.originConsumerGroupName},
+            #{item.consumerGroupMode}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from queue_offset where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from queue_offset
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="consumerName != null and consumerName !=''" >
+                and `consumer_name` = #{consumerName}
+            </if>
+            <if test="consumerId != null and consumerId !=''" >
+                and `consumer_id` = #{consumerId}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="queueId != null and queueId !=''" >
+                and `queue_id` = #{queueId}
+            </if>
+            <if test="offset != null and offset !=''" >
+                and `offset` = #{offset}
+            </if>
+            <if test="startOffset != null and startOffset !=''" >
+                and `start_offset` = #{startOffset}
+            </if>
+            <if test="offsetVersion != null and offsetVersion !=''" >
+                and `offset_version` = #{offsetVersion}
+            </if>
+            <if test="stopFlag != null and stopFlag !=''" >
+                and `stop_flag` = #{stopFlag}
+            </if>
+            <if test="dbInfo != null and dbInfo !=''" >
+                and `db_info` = #{dbInfo}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="originConsumerGroupName != null and originConsumerGroupName !=''" >
+                and `origin_consumer_group_name` = #{originConsumerGroupName}
+            </if>
+            <if test="consumerGroupMode != null and consumerGroupMode !=''" >
+                and `consumer_group_mode` = #{consumerGroupMode}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from queue_offset where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity">
+        update queue_offset set
+            `consumer_group_id` = #{consumerGroupId},
+        `consumer_group_name` = #{consumerGroupName},
+        `consumer_name` = #{consumerName},
+        `consumer_id` = #{consumerId},
+        `topic_id` = #{topicId},
+        `topic_name` = #{topicName},
+        `origin_topic_name` = #{originTopicName},
+        `topic_type` = #{topicType},
+        `queue_id` = #{queueId},
+        `offset` = #{offset},
+        `start_offset` = #{startOffset},
+        `offset_version` = #{offsetVersion},
+        `stop_flag` = #{stopFlag},
+        `db_info` = #{dbInfo},
+        `update_by` = #{updateBy},
+        `is_active` = #{isActive},
+        `meta_update_time` = #{metaUpdateTime},
+        `origin_consumer_group_name` = #{originConsumerGroupName},
+        `consumer_group_mode` = #{consumerGroupMode}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from queue_offset
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="consumerName != null and consumerName !=''" >
+                and `consumer_name` = #{consumerName}
+            </if>
+            <if test="consumerId != null and consumerId !=''" >
+                and `consumer_id` = #{consumerId}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="queueId != null and queueId !=''" >
+                and `queue_id` = #{queueId}
+            </if>
+            <if test="offset != null and offset !=''" >
+                and `offset` = #{offset}
+            </if>
+            <if test="startOffset != null and startOffset !=''" >
+                and `start_offset` = #{startOffset}
+            </if>
+            <if test="offsetVersion != null and offsetVersion !=''" >
+                and `offset_version` = #{offsetVersion}
+            </if>
+            <if test="stopFlag != null and stopFlag !=''" >
+                and `stop_flag` = #{stopFlag}
+            </if>
+            <if test="dbInfo != null and dbInfo !=''" >
+                and `db_info` = #{dbInfo}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="originConsumerGroupName != null and originConsumerGroupName !=''" >
+                and `origin_consumer_group_name` = #{originConsumerGroupName}
+            </if>
+            <if test="consumerGroupMode != null and consumerGroupMode !=''" >
+                and `consumer_group_mode` = #{consumerGroupMode}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from queue_offset
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="consumerName != null and consumerName !=''" >
+                and `consumer_name` = #{consumerName}
+            </if>
+            <if test="consumerId != null and consumerId !=''" >
+                and `consumer_id` = #{consumerId}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="queueId != null and queueId !=''" >
+                and `queue_id` = #{queueId}
+            </if>
+            <if test="offset != null and offset !=''" >
+                and `offset` = #{offset}
+            </if>
+            <if test="startOffset != null and startOffset !=''" >
+                and `start_offset` = #{startOffset}
+            </if>
+            <if test="offsetVersion != null and offsetVersion !=''" >
+                and `offset_version` = #{offsetVersion}
+            </if>
+            <if test="stopFlag != null and stopFlag !=''" >
+                and `stop_flag` = #{stopFlag}
+            </if>
+            <if test="dbInfo != null and dbInfo !=''" >
+                and `db_info` = #{dbInfo}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="originConsumerGroupName != null and originConsumerGroupName !=''" >
+                and `origin_consumer_group_name` = #{originConsumerGroupName}
+            </if>
+            <if test="consumerGroupMode != null and consumerGroupMode !=''" >
+                and `consumer_group_mode` = #{consumerGroupMode}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from queue_offset
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from queue_offset
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="consumerName != null and consumerName !=''" >
+                and `consumer_name` = #{consumerName}
+            </if>
+            <if test="consumerId != null and consumerId !=''" >
+                and `consumer_id` = #{consumerId}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="queueId != null and queueId !=''" >
+                and `queue_id` = #{queueId}
+            </if>
+            <if test="offset != null and offset !=''" >
+                and `offset` = #{offset}
+            </if>
+            <if test="startOffset != null and startOffset !=''" >
+                and `start_offset` = #{startOffset}
+            </if>
+            <if test="offsetVersion != null and offsetVersion !=''" >
+                and `offset_version` = #{offsetVersion}
+            </if>
+            <if test="stopFlag != null and stopFlag !=''" >
+                and `stop_flag` = #{stopFlag}
+            </if>
+            <if test="dbInfo != null and dbInfo !=''" >
+                and `db_info` = #{dbInfo}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="originConsumerGroupName != null and originConsumerGroupName !=''" >
+                and `origin_consumer_group_name` = #{originConsumerGroupName}
+            </if>
+            <if test="consumerGroupMode != null and consumerGroupMode !=''" >
+                and `consumer_group_mode` = #{consumerGroupMode}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from queue_offset
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from queue_offset where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

@@ -1,0 +1,21 @@
+<form th:fragment="changeStatusForm" xmlns:th="http://www.thymeleaf.org">
+    <input type="hidden" name="id" >
+    <input type="hidden" name="oldStatus" >
+    <input type="hidden" name="oldStatusTitle" >
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">读写状态*</label>
+        <div class="layui-input-block">
+            <input type="radio" name="readOnly" value="1" title="可读可写">
+            <input type="radio" name="readOnly" value="2" title="只读">
+            <input type="radio" name="readOnly" value="3" title="不可读不可写">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" type="button" lay-submit lay-filter="statusSubmit" id="statusSubmit">确认修改</button>
+        </div>
+    </div>
+
+</form>

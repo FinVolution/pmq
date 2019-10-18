@@ -1,0 +1,19 @@
+<form th:fragment="confirmCreateSqlForm" xmlns:th="http://www.thymeleaf.org">
+    <input type="hidden" name="dbNodeId" >
+    <input type="hidden" name="dbNodeName" >
+    <input type="hidden" name="nodeType">
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">表数量*</label>
+        <div class="layui-input-block">
+            <input type="text" name="quantity" value ="100" required lay-verify="required" placeholder="请输入要创建的表数量" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" type="button" lay-submit lay-filter="createSqlSubmit" id="createSqlSubmit">生成</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+
+</form>

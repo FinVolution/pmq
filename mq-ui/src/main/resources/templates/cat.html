@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" id="main">
+<head>
+	<!--<meta name="viewport" content="width=device-width,initial-scale=0.7, minimum-scale=0.7, maximum-scale=0.7, user-scalable=yes"/>-->
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="/layui/css/layui.mobile.css" media="all" />
+	<link rel="stylesheet" href="/layui/css/layui.css" media="all" />
+	<style type="text/css">
+.btnFocus {
+	background-color: #009688;
+	color: #fff;
+}
+</style>
+</head>
+
+<body margintop="10px">
+<br />
+	<div class="layui-inline">
+		<div class="layui-inline" th:each="dom:${domains}">
+			<button th:id="${dom}"
+				th:class="(${dom}==${domain})?'layui-btn layui-btn-primary layui-btn-xs domainClass btnFocus':'layui-btn layui-btn-primary layui-btn-xs domainClass'"
+				th:text="${dom}"></button>
+		</div>
+		<a class="layui-btn layui-btn-xs" id="catSearch_btn">返回</a> <a
+			class="layui-btn layui-btn-xs" id="refresh_btn">刷新</a>
+	</div>
+	
+	<br />
+	<br class="clear"/>
+	<div class="layui-inline">
+		<div class="layui-inline" th:each="ip1:${ipList}">
+			<button th:id="${ip1}"
+				th:class="(${ip}==${ip1})?'layui-btn layui-btn-primary layui-btn-xs ipClass btnFocus':'layui-btn layui-btn-primary layui-btn-xs ipClass'"
+				th:text="${ip1}"></button>
+		</div>
+</div>
+
+		<table id="catTable" lay-filter="catTable"></table>
+
+		<input type="hidden" id="type" th:value="${type}" /> <input
+			type="hidden" id="pageLevel" th:value="${pageLevel}" /> <input
+			type="hidden" id="domain" th:value="${domain}" />
+
+		<script th:src="@{/layui/layui.js}"></script>
+		<script th:src="@{/js/cat.js}"></script>
+
+		<script type="text/html" id="typeTpl">
+
+        {{#  if(d.pageLevel==2){ }}
+
+        {{ d.id }}
+
+        {{#  } else { }}
+
+        <a onclick="return false" id="typeSearch" data-id="{{d.id }}" class="layui-table-link " target="_blank">{{ d.id }}</a>
+
+        {{#  } }}
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.DbNodeRepository">
+    <!-- 业务逻辑sql请写在这个文件内 -->
+    <resultMap id="LastUpdateMap"
+		type="com.ppdai.infrastructure.mq.biz.entity.LastUpdateEntity">
+		<result column="lastDate" property="lastDate" />
+		<result column="maxId" property="maxId" />
+		<result column="count" property="count" />
+	</resultMap>
+	<select id="getLastUpdate" resultMap="LastUpdateMap"
+		useCache="false">
+		select max(update_time) as lastDate,max(id) as maxId ,count(1) as `count` from db_node
+	</select>   
+	<select id="getUpdateData" resultMap="BaseResultMap" useCache="false">
+		select * from db_node where update_time>#{updateTime}
+	</select>
+
+	<select id="findConnStr" resultMap="BaseResultMap" useCache="false">
+		select * from db_node
+	</select>
+
+</mapper>

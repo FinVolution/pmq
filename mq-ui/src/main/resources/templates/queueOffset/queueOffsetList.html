@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+
+    <form class="layui-form" id="queryForm">
+        <div class="layui-form-item layui-inline">
+            <div class="layui-inline">
+                <label class="layui-form-label">消费者组：</label>
+                <div class="layui-input-block" style="width: 250px">
+                    <select lay-ignore id="consumerGroupName" name="consumerGroupName" required lay-verType="consumerGroupSelect" lay-verify="required" class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">消息主题：</label>
+                <div class="layui-input-block" style="width: 250px">
+                    <select lay-ignore id="topicName" name="topicName" required lay-verType="consumerGroupSelect" lay-verify="required" class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 100px">
+                    <input type="text" value="" id="consumerName" placeholder="请输入消费者" name="consumerName" class="layui-input search_input"/>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 150px">
+                    <select id="isReadOnly" class="search-select">
+                        <option value="">请选择读写状态</option>
+                        <option value ="1">读写</option>
+                        <option value ="2">只读</option>
+                        <option value ="3">不可读写</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 150px">
+                    <select id="topicType" class="search-select">
+                        <option value="">请选择topic类型</option>
+                        <option value ="1">正常topic</option>
+                        <option value ="2">失败topic</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 150px">
+                    <select name="mode" id="mode" class="search-select">
+                        <option value="">请选择消费模式</option>
+                        <option value="1">集群模式</option>
+                        <option value ="2">广播模式</option>
+                        <option value ="3">代理模式</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 100px">
+                    <input type="number" id="queueOffsetId" name="id" placeholder="请输入ID" class="layui-input search_input"/>
+                </div>
+            </div>
+
+            <a class="layui-btn" id="queueOffsetSearch_btn" lay-filter="queueOffsetFilter"><i class="layui-icon">&#xe615;</i>查询</a>
+        </div>
+    </form>
+    <table class="layui-table" lay-data="{height:'full', url:'/queueOffset/list/data', page:true,limits:[10,20,30,40,50,60,70,80,90,100,200,500,1000,2000],limit: 10, id:'queueOffsetTable',toolbar:'#toolbarDemo'}" lay-filter="queueOffsetTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'id', align: 'center', sort: true,width:'5%',templet:'#idTpl',fixed:'left'}">ID</th>
+            <th lay-data="{field: 'consumerGroupName',sort: true,width:'15%', align: 'center',fixed:'left'}">消费者组名称</th>
+            <th lay-data="{field: 'topicName',sort: true,width:'15%', align: 'center',fixed:'left'}">订阅主题</th>
+            <th lay-data="{field: 'consumerName',sort: true, align: 'center',width:'10%',fixed:'left'}">消费者</th>
+            <th lay-data="{field: 'offset', align: 'center',templet:'#offsetTpl',width:'6%',sort: true}">偏移量</th>
+            <th lay-data="{field: 'pendingMessageNum', align: 'center',templet:'#pendingMessageNumTpl',width:'7%',sort: true}">待处理消息数</th>
+            <th lay-data="{field: 'readOnly', align: 'center', templet:'#queueTypeTpl',width:'6%'}">读写类型</th>
+            <th lay-data="{field: 'stopFlag', align: 'center', templet:'#stopFlagTpl',width:'6%'}">消费标志</th>
+            <th lay-data="{field: 'messageNum', align: 'center',width:'6%',sort: true}">消息总数</th>
+            <th lay-data="{field: 'startOffset', align: 'center',width:'6%',sort: true}">起始偏移</th>
+            <th lay-data="{field: 'minId', align: 'center',width:'6%',sort: true}">最小Id</th>
+            <th lay-data="{field: 'topicType', align: 'center',templet:'#topicTypeTpl',width:'6%'}">topic类型</th>
+            <th lay-data="{field: 'queueId', sort: true,align: 'center',width:'6%'}">分区Id</th>
+            <th lay-data="{field: 'nodeType', align: 'center',templet:'#nodeTypeTpl',width:'6%'}">存储类型</th>
+            <th lay-data="{field: 'dbInfo',align: 'center',width:'10%'}">db节点</th>
+            <th lay-data="{field: 'insertTime',align: 'center',width:'10%'}">创建时间</th>
+            <th lay-data="{fixed: 'right', align:'center', width:150, toolbar: '#ctrlBar'}">编辑</th>
+        </tr>
+        </thead>
+    </table>
+    <div class="layui-collapse" lay-accordion="">
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title">问题说明</h2>
+            <div class="layui-colla-content layui-show">
+                <p style="color: red">1.偏移值小于最小Id时，偏移字段显示为红色。影响消费，需要及时处理！</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;问题原因：消息会被定期清理，数据表的最小Id越来越大。如果你的消费者一直不消费（即偏移一直不变），就会出现偏移值小于最小Id的问题。</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;解决办法：手动修改偏移，让偏移值大于当前数据表的最小Id。</p>
+                <br/>
+                <p style="color: red">2.待处理消息数为负时，待处理消息数显示为红色。影响消费，需要及时处理！</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;问题原因：当偏移值大于数据表的最大Id时，会出现待处理消息数为负的问题。</p>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;解决办法：手动修改偏移，让偏移值小于当前数据表的最大Id。</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/queueOffsetList.js?t=12312}"></script>
+
+    <script type="text/html" id="offsetTpl">
+        {{#  if(d.offset < d.minId){ }}
+        <div style="background-color: #f52117;color: white">{{ d.offset }}</div>
+        {{#  } else { }}
+        {{ d.offset }}
+        {{#  } }}
+    </script>
+
+    <script type="text/html" id="pendingMessageNumTpl">
+        {{#  if(d.pendingMessageNum < 0){ }}
+        <div style="background-color: #f52117;color: white">{{ d.pendingMessageNum }}</div>
+        {{#  } else { }}
+        <div style="color: blue">{{ d.pendingMessageNum }}</div>
+        {{#  } }}
+    </script>
+
+    <script type="text/html" id="idTpl">
+        <a href onclick="return false" >
+<img src="/images/log.png"  data-id="{{= d.consumerGroupId }}"
+                                          class="logSearch"/></a>&nbsp;&nbsp;{{= d.id }}
+    </script>
+    <script type="text/html" id="ctrlBar">
+        {{#  if((d.role==0||d.role==1)){ }}
+            {{#  if(d.topicType == 1||(d.role==0&&d.topicType == 2)){ }}
+                <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="updateQueueOffset">偏移</a>
+            {{#  } }}
+
+            {{#  if(d.consumerName!=""&&d.consumerName.startsWith("mq2-")){ }}
+                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="clearConsumerId">下线</a>
+            {{#  } }}
+
+            {{#  if(d.consumerName!=""&&!d.consumerName.startsWith("mq2-")){ }}
+               <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="clientMonitor">监控</a>
+            {{#  } }}
+        {{#  } else { }}
+
+        {{#  } }}
+
+    </script>
+    <script type="text/html" id="topicTypeTpl">
+        {{#  if(d.topicType == 1){ }}
+        <label><span class="layui-badge layui-bg-green">正常</span></label>
+        </div>
+        {{#  } else { }}
+        <label><span class="layui-badge">失败</span></label>
+        {{#  } }}
+    </script>
+    <script type="text/html" id="nodeTypeTpl">
+        {{#  if(d.topicType == 1){ }}
+        <label><span class="layui-badge layui-bg-green">正常</span></label>
+        </div>
+        {{#  } else { }}
+        <label><span class="layui-badge">失败</span></label>
+        {{#  } }}
+    </script>
+    <script type="text/html" id="queueTypeTpl">
+        <div class="layui-inline">
+
+            {{#  if(d.readOnly == 1){ }}
+            <label><span class="layui-badge layui-bg-green">读写</span></label>
+        {{#  } else { }}
+
+        {{#  if(d.readOnly == 2){ }}
+        <label><span class="layui-badge">只读</span></label>
+        {{#  } else { }}
+        <label><span class="layui-badge layui-bg-orange">不可读写</span></label>
+        {{#  } }}
+
+        {{#  } }}
+
+            {{#  if((d.role==0||d.role==1)){ }}
+        &nbsp;
+        <button class="layui-btn layui-btn-primary layui-btn-xs " lay-event="updateReadOnly">
+            <i class="layui-icon">&#xe642;</i>
+        </button>
+            {{#  } else { }}
+
+            {{#  } }}
+
+        </div>
+    </script>
+    <script type="text/html" id="stopFlagTpl">
+
+        <div class="layui-inline">
+
+            <label><span class='spPromote' title="绿色表示'正常消费'，红色表示'停止消费'">
+        {{#  if(d.stopFlag == 0){ }}
+        <i class="layui-icon icon-yes">&#xe605;</i>
+        {{#  } else { }}
+        <i class="layui-icon icon-no">&#x1006;</i>
+        {{#  } }}
+
+        </span></label>
+
+            {{#  if((d.role==0||d.role==1)){ }}
+        &nbsp;
+        <button class="layui-btn layui-btn-primary layui-btn-xs marg1"  lay-event="updateStopFlag">
+            <i class="layui-icon">&#xe642;</i>
+        </button>
+            {{#  } else { }}
+
+            {{#  } }}
+
+        </div>
+
+    </script>
+
+    <style type="text/css">
+
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        .marg1{
+            margin-top: -10px;
+        }
+        .layui-table-cell {
+            padding: 0 5px !important;
+        }
+
+        .icon-yes {
+            font-size: 30px;
+            color: #5FB878;
+            font-weight: 900;
+        }
+
+        .icon-no {
+            font-size: 30px;
+            color: #e60000;
+            font-weight: 900;
+        }
+
+        .spCount {
+            color: #F581B1;
+        }
+
+        .spuerStatusText {
+            color: #F581B1;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

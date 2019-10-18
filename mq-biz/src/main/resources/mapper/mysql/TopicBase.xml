@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.TopicRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.TopicEntity">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="origin_name" property="originName"/>
+        <result column="dpt_name" property="dptName"/>
+        <result column="owner_ids" property="ownerIds"/>
+        <result column="owner_names" property="ownerNames"/>
+        <result column="emails" property="emails"/>
+        <result column="tels" property="tels"/>
+        <result column="expect_day_count" property="expectDayCount"/>
+        <result column="business_type" property="businessType"/>
+        <result column="save_day_num" property="saveDayNum"/>
+        <result column="remark" property="remark"/>
+        <result column="token" property="token"/>
+        <result column="normal_flag" property="normalFlag"/>
+        <result column="topic_type" property="topicType"/>
+        <result column="max_lag" property="maxLag"/>
+        <result column="consumer_flag" property="consumerFlag"/>
+        <result column="consumer_group_names" property="consumerGroupNames"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        <result column="meta_update_time" property="metaUpdateTime"/>
+        <result column="app_id" property="appId"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.TopicEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into topic (
+            `name`,
+            `origin_name`,
+            `dpt_name`,
+            `owner_ids`,
+            `owner_names`,
+            `emails`,
+            `tels`,
+            `expect_day_count`,
+            `business_type`,
+            `save_day_num`,
+            `remark`,
+            `token`,
+            `normal_flag`,
+            `topic_type`,
+            `max_lag`,
+            `consumer_flag`,
+            `consumer_group_names`,
+            `insert_by`,
+            `update_by`,
+            `meta_update_time`,
+            `app_id`
+        )values(
+            #{name},
+            #{originName},
+            #{dptName},
+            #{ownerIds},
+            #{ownerNames},
+            #{emails},
+            #{tels},
+            #{expectDayCount},
+            #{businessType},
+            #{saveDayNum},
+            #{remark},
+            #{token},
+            #{normalFlag},
+            #{topicType},
+            #{maxLag},
+            #{consumerFlag},
+            #{consumerGroupNames},
+            #{insertBy},
+            #{updateBy},
+            current_timestamp,
+            #{appId}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into topic ( 
+            `name`,
+            `origin_name`,
+            `dpt_name`,
+            `owner_ids`,
+            `owner_names`,
+            `emails`,
+            `tels`,
+            `expect_day_count`,
+            `business_type`,
+            `save_day_num`,
+            `remark`,
+            `token`,
+            `normal_flag`,
+            `topic_type`,
+            `max_lag`,
+            `consumer_flag`,
+            `consumer_group_names`,
+            `insert_by`,
+            `update_by`,
+            `meta_update_time`,
+            `app_id`
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.name},
+            #{item.originName},
+            #{item.dptName},
+            #{item.ownerIds},
+            #{item.ownerNames},
+            #{item.emails},
+            #{item.tels},
+            #{item.expectDayCount},
+            #{item.businessType},
+            #{item.saveDayNum},
+            #{item.remark},
+            #{item.token},
+            #{item.normalFlag},
+            #{item.topicType},
+            #{item.maxLag},
+            #{item.consumerFlag},
+            #{item.consumerGroupNames},
+            #{item.insertBy},
+            #{item.updateBy},
+            current_timestamp,
+            #{item.appId}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from topic where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="emails != null and emails !=''" >
+                and `emails` = #{emails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="expectDayCount != null and expectDayCount !=''" >
+                and `expect_day_count` = #{expectDayCount}
+            </if>
+            <if test="businessType != null and businessType !=''" >
+                and `business_type` = #{businessType}
+            </if>
+            <if test="saveDayNum != null and saveDayNum !=''" >
+                and `save_day_num` = #{saveDayNum}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="token != null and token !=''" >
+                and `token` = #{token}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="consumerFlag != null and consumerFlag !=''" >
+                and `consumer_flag` = #{consumerFlag}
+            </if>
+            <if test="consumerGroupNames != null and consumerGroupNames !=''" >
+                and `consumer_group_names` = #{consumerGroupNames}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from topic where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.TopicEntity">
+        update topic set
+            `name` = #{name},
+        `origin_name` = #{originName},
+        `dpt_name` = #{dptName},
+        `owner_ids` = #{ownerIds},
+        `owner_names` = #{ownerNames},
+        `emails` = #{emails},
+        `tels` = #{tels},
+        `expect_day_count` = #{expectDayCount},
+        `business_type` = #{businessType},
+        `save_day_num` = #{saveDayNum},
+        `remark` = #{remark},
+        `token` = #{token},
+        `normal_flag` = #{normalFlag},
+        `topic_type` = #{topicType},
+        `max_lag` = #{maxLag},
+        `consumer_flag` = #{consumerFlag},
+        `consumer_group_names` = #{consumerGroupNames},
+        `update_by` = #{updateBy},
+        `is_active` = #{isActive},
+        `meta_update_time` = current_timestamp,
+        `app_id` = #{appId}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="emails != null and emails !=''" >
+                and `emails` = #{emails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="expectDayCount != null and expectDayCount !=''" >
+                and `expect_day_count` = #{expectDayCount}
+            </if>
+            <if test="businessType != null and businessType !=''" >
+                and `business_type` = #{businessType}
+            </if>
+            <if test="saveDayNum != null and saveDayNum !=''" >
+                and `save_day_num` = #{saveDayNum}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="token != null and token !=''" >
+                and `token` = #{token}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="consumerFlag != null and consumerFlag !=''" >
+                and `consumer_flag` = #{consumerFlag}
+            </if>
+            <if test="consumerGroupNames != null and consumerGroupNames !=''" >
+                and `consumer_group_names` = #{consumerGroupNames}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="emails != null and emails !=''" >
+                and `emails` = #{emails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="expectDayCount != null and expectDayCount !=''" >
+                and `expect_day_count` = #{expectDayCount}
+            </if>
+            <if test="businessType != null and businessType !=''" >
+                and `business_type` = #{businessType}
+            </if>
+            <if test="saveDayNum != null and saveDayNum !=''" >
+                and `save_day_num` = #{saveDayNum}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="token != null and token !=''" >
+                and `token` = #{token}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="consumerFlag != null and consumerFlag !=''" >
+                and `consumer_flag` = #{consumerFlag}
+            </if>
+            <if test="consumerGroupNames != null and consumerGroupNames !=''" >
+                and `consumer_group_names` = #{consumerGroupNames}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from topic
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="name != null and name !=''" >
+                and `name` = #{name}
+            </if>
+            <if test="originName != null and originName !=''" >
+                and `origin_name` = #{originName}
+            </if>
+            <if test="dptName != null and dptName !=''" >
+                and `dpt_name` = #{dptName}
+            </if>
+            <if test="ownerIds != null and ownerIds !=''" >
+                and `owner_ids` = #{ownerIds}
+            </if>
+            <if test="ownerNames != null and ownerNames !=''" >
+                and `owner_names` = #{ownerNames}
+            </if>
+            <if test="emails != null and emails !=''" >
+                and `emails` = #{emails}
+            </if>
+            <if test="tels != null and tels !=''" >
+                and `tels` = #{tels}
+            </if>
+            <if test="expectDayCount != null and expectDayCount !=''" >
+                and `expect_day_count` = #{expectDayCount}
+            </if>
+            <if test="businessType != null and businessType !=''" >
+                and `business_type` = #{businessType}
+            </if>
+            <if test="saveDayNum != null and saveDayNum !=''" >
+                and `save_day_num` = #{saveDayNum}
+            </if>
+            <if test="remark != null and remark !=''" >
+                and `remark` = #{remark}
+            </if>
+            <if test="token != null and token !=''" >
+                and `token` = #{token}
+            </if>
+            <if test="normalFlag != null and normalFlag !=''" >
+                and `normal_flag` = #{normalFlag}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="consumerFlag != null and consumerFlag !=''" >
+                and `consumer_flag` = #{consumerFlag}
+            </if>
+            <if test="consumerGroupNames != null and consumerGroupNames !=''" >
+                and `consumer_group_names` = #{consumerGroupNames}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="appId != null and appId !=''" >
+                and `app_id` = #{appId}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from topic
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from topic where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

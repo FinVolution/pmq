@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/layout.html-->
+<div layout:fragment="content">
+    <form class="layui-form">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <div class="layui-input-inline">
+                    <select id="synType" name="synType" lay-filter="synType">
+                        <option value="">请选择同步类型</option>
+                        <option value="1">同步topic</option>
+                        <option value="2">同步consumerGroup</option>
+                        <option value="3">同步订阅关系</option>
+                    </select>
+                </div>
+                <a class="layui-btn" id="generateAll" lay-filter="generateAll">生成</a>
+                <a class="layui-btn" id="synAll" lay-filter="synAll">同步</a>
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text" style="margin-top: 30px">
+            <textarea id="jsonMessage1" name="jsonMessage1" class="layui-textarea" style="height: 500px"></textarea>
+        </div>
+
+        <p>同步说明：</p>
+        <p style="color: red">1.先同步topic</p>
+        <p style="color: red">2.然后同步consumerGroup</p>
+        <p style="color: red">3.最后同步订阅关系</p>
+        <br/>
+        <div id="synResultData"></div>
+    </form>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:inline="javascript">
+        layui.use(['element', 'table', 'jquery', 'layer', 'form','util'], function () {
+            var $ = layui.$;
+            var isPro=[[${isPro}]];
+            var form=layui.form;
+
+            $(function() {
+                if(isPro){
+                    $("#synAll").hide();
+                }
+            });
+
+
+            $("body").on("click", "#generateAll", function () {
+                layer.confirm("确定要生成Json？", {icon: 3}, function (index) {
+                    $("#jsonMessage1").val("正在执行中。。。");
+                    $("#synResultData").html("");
+                    $.post("/envSyn/generateAll",'synType='+$("#synType").val(), requestCallback);
+                    layer.close(index);
+                })
+            });
+
+            $("body").on("click", "#synAll", function () {
+                layer.confirm("确定要同步？", {icon: 3}, function (index) {
+                    $("#synResultData").html("正在执行中。。。");
+                    $.post("/envSyn/synAll",'synType='+$("#synType").val()+'&synMessage='+encodeURIComponent($("#jsonMessage1").val()), synRequestCallback);
+                    layer.close(index);
+                })
+            });
+
+
+            function requestCallback(result, xhr) {
+                if (xhr === 'success') {
+                    if (result.code ==yesFlag) {
+                        $("#jsonMessage1").val(result.data)
+                        successBox(result.msg);
+                    } else {
+                        failBox(result.msg);
+                    }
+                } else {
+                    failBox("网络异常！"+xhr);
+                }
+            }
+
+            function successBox(msg) {
+
+                layer.msg(msg, {icon: 1})
+            }
+
+            function failBox(msg) {
+                layer.alert(msg, {icon: 2})
+            }
+
+
+            function synRequestCallback(result, xhr) {
+                if (xhr === 'success') {
+                    if (result.code ==yesFlag) {
+                        $("#synResultData").html("<pre>"+result.msg+"</pre>");
+                        successBox("同步结束");
+                    } else {
+                        failBox("同步异常");
+                    }
+                } else {
+                    failBox("网络异常！"+xhr);
+                }
+            }
+        });
+    </script>
+</div>
+</html>

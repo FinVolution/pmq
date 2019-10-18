@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/contentLayout.html-->
+
+<div layout:fragment="content">
+    <a class="layui-btn" id="refresh_btn">刷新</a>
+    <table id="departmentReportTable" class="layui-table"
+           lay-data="{height:'full',url:'/department/report',id:'departmentReportTable',totalRow:true,toolbar:'#toolbarDemo'}"
+           lay-filter="departmentReportTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'name',sort: true, align: 'center'}">部门</th>
+            <th lay-data="{field: 'publishNum',totalRow: true,sort: true, align: 'center'}">每周发送量</th>
+            <th lay-data="{field: 'consumerNum',totalRow: true,sort: true, align: 'center'}">每周消费量</th>
+        </tr>
+        </thead>
+    </table>
+
+
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom，用于展示每个部门使用consumerGroup的情况 -->
+    <div id="group1" style="width: 1500px;height:600px;"></div>
+
+    <div id="group2" style="width: 1500px;height:600px;"></div>
+
+</div>
+
+
+
+<div layout:fragment="end-load-files">
+
+    <script>
+        layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
+            var table = layui.table,
+                form = layui.form,
+                layer = layui.layer,
+                $ = layui.$,
+                element = layui.element;
+
+            $("body").on("click", "#refresh_btn", function () {
+                table.reload('departmentReportTable');
+                getReport();
+            });
+
+            // 基于准备好的dom，初始化echarts实例
+            var groupChart1 = echarts.init(document.getElementById('group1'));
+
+            var groupChart2 = echarts.init(document.getElementById('group2'));
+            getReport();
+
+
+            // 指定group图表的配置项和数据
+            function getReport(){
+                $.post("/department/report", groupRequestCallback);
+            }
+
+            function groupRequestCallback(result, xhr) {
+                initEchart(result);
+            }
+
+
+
+            function initEchart(data){
+                var dbNames = [];
+                var pubishNum = [];
+                var consumerNum=[];
+
+                if (data.count > 0) {
+                    $.each(data.data, function (k, v) {
+                        dbNames.push(v.name);
+                        pubishNum.push(v.publishNum);
+                        consumerNum.push(v.consumerNum);
+                    });
+
+                }
+
+                var groupOption1=getOption("每周消息发送量",dbNames,"每周消息发送量",pubishNum);
+                var groupOption2=getOption("每周消息消费量",dbNames,"每周消息消费量",consumerNum);
+
+                function getOption(text,xAxisData,seriesName,seriesData) {
+                    var option={
+                        title: {
+                            text: text
+                        },
+
+                        toolbox: {//图片下载
+                            show: true,
+
+                            feature: {
+
+                                saveAsImage: {
+
+                                    show:true,
+
+                                    excludeComponents :['toolbox'],
+
+                                    title:'下载',
+
+                                    pixelRatio: 2
+
+                                }
+
+                            }
+
+                        },
+                        color: ['#3398DB'],
+                        tooltip : {
+                            trigger: 'axis',
+                            axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+                                type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        xAxis : [
+                            {
+                                type : 'category',
+                                data : xAxisData,
+                                axisTick: {
+                                    alignWithLabel: true
+                                },
+                                axisLabel:{
+                                    interval: 0,
+                                    formatter: function (value) {
+                                        //x轴的文字改为竖版显示
+                                        var str = value.split("");
+                                        return str.join("\n");
+                                    }
+                                }
+
+                            }
+                        ],
+                        yAxis : [
+                            {
+                                type : 'value'
+                            }
+                        ],
+                        series : [
+                            {
+                                name:seriesName,
+                                type:'bar',
+                                barWidth: '10%',
+                                data:seriesData
+                            }
+                        ]
+                    };
+
+                    return option;
+                }
+
+                // 使用指定的group1配置项和数据显示图表。
+                groupChart1.setOption(groupOption1);
+
+                groupChart2.setOption(groupOption2);
+
+            }
+
+        });
+
+    </script>
+
+</div>
+</html>
+
+
+

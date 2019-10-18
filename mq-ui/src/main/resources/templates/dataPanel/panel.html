@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/layout.html-->
+<div layout:fragment="content">
+    <div class="layui-row layui-col-space10" >
+        <div class="layui-col-md6">
+            <div class="layui-card">
+                <div class="layui-card-header">数据节点统计</div>
+                <div class="layui-card-body" style="min-height: 100px">
+                    <table id="nodeDataPanel" class="layui-table" lay-filter="nodeDataPanel" lay-data="{height:'full', url:'/dataPanel/node', page:false, id:'nodeDataPanel'}">
+                        <thead>
+                            <tr>
+                                <th lay-data="{field: 'id', align: 'center',width:'16%', sort: true}">节点ID</th>
+                                <th lay-data="{field: 'nodeType', align: 'center', width:'17%', sort: true}">节点类型</th>
+                                <th lay-data="{field: 'normalFlag', align: 'center', width:'17%', sort: true}">特殊节点</th>
+                                <th lay-data="{field: 'readOnly', align: 'center', width:'16%', sort: true}">读写</th>
+                                <th lay-data="{field: 'distributedCount', align: 'center', width:'16%', sort: true}">已分配队列</th>
+                                <th lay-data="{field: 'undistributedCount', align: 'center', sort: true}">未分配队列</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/panel.js}"></script>
+</div>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/layout.html-->
+<div layout:fragment="content">
+    <form class="layui-form" id="queryForm">
+        <div class="layui-form-item layui-inline">
+
+            <div class="layui-inline">
+                <label class="layui-form-label">消息主题：</label>
+                <div class="layui-input-block" style="width: 190px">
+                    <select lay-ignore id="topicName" name="topicName" required lay-verType="topicName" lay-verify="required" class="layui-input">
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline" style="width: 160px">
+                <select id="queueId" name="queueId" lay-filter="queueId">
+                </select>
+            </div>
+            <div class="layui-inline" style="width: 100px">
+                <input type="number" value="" id="id" name="id" placeholder="消息ID" class="layui-input search_input"/>
+            </div>
+
+            <div class="layui-inline" style="width: 100px">
+                <input type="text" value="" id="bizId" name="bizId" placeholder="业务ID" class="layui-input search_input"/>
+            </div>
+
+            <div class="layui-inline" style="width: 100px">
+                <input type="text" value="" id="traceId" name="traceId" placeholder="跟踪ID" class="layui-input search_input"/>
+            </div>
+
+            <div class="layui-inline" style="width: 100px">
+                <input type="text" value="" id="header" name="header" placeholder="消息头" class="layui-input search_input"/>
+            </div>
+
+            <div class="layui-inline" style="width: 100px">
+                <input type="text" value="" id="body" name="body" placeholder="消息体" class="layui-input search_input"/>
+            </div>
+
+            <div class="layui-inline" style="width: 160px">
+                <input type="text" class="layui-input" id="startTime" placeholder="起始时间">
+            </div>
+
+            <div class="layui-inline" style="width: 160px">
+                <input type="text" class="layui-input" id="endTime" placeholder="截止时间">
+            </div>
+
+            <div class="layui-inline" style="width: 100px">
+                <select name="retryStatus" id="retryStatus" class="search-select">
+                    <option value="">重试结果</option>
+                    <option value="1">重试成功</option>
+                    <option value="2">重试失败</option>
+                </select>
+            </div>
+
+            <div class="layui-inline">
+                <input type="hidden" value="" id="minId" name="minId" placeholder="最大ID" class="layui-input search_input" />
+            </div>
+
+            <div class="layui-inline">
+                <input type="hidden" value="" id="maxId" name="maxId" placeholder="最小ID" class="layui-input search_input"/>
+            </div>
+
+            <a class="layui-btn" id="messageSearchList_btn" lay-filter="messageSearchFilter"><i class="layui-icon">&#xe615;</i>查询</a>
+
+        </div>
+
+        <input type="hidden" id="maxNumber" th:value="${maxNumber}"/>
+    </form>
+
+    <table id="messageTable" class="layui-table"
+           lay-data="{height:'full', url:'/message/list/data', page:true,limits:[10,20,30,40,50,60,70,80,90,100,200],
+           limit: 10,id:'messageTable',toolbar:'#toolbarDemo'}"
+           lay-filter="messageTable">
+        <thead>
+        <tr>
+            <th lay-data="{type:'checkbox', align: 'center'}"></th>
+            <th lay-data="{field: 'id', align: 'center', sort: true,width:'8%'}">ID</th>
+            <th lay-data="{field: 'bizId', align: 'center',width:'8%', sort: true}">业务ID</th>
+            <th lay-data="{field: 'head', align: 'center',width:'8%', sort: true}">消息头</th>
+            <th lay-data="{field: 'body', align: 'center',width:'35%', sort: true}">消息体</th>
+            <th lay-data="{field: 'sendIp', align: 'center',width:'10%', sort: true}">发送Ip</th>
+            <th lay-data="{field: 'sendTime', align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">入库时间</th>
+            <th lay-data="{field: 'failMsgRetryStatus', align: 'center',width:'8%', sort: true}">重试结果</th>
+            <th lay-data="{field: 'traceId', align: 'center',width:'10%', sort: true}">跟踪id</th>
+            <th lay-data="{fixed: 'right', align:'center', width:'10%', toolbar: '#ctrlBar', sort: true}">操作</th>
+        </tr>
+        </thead>
+    </table>
+
+    <fieldset class="layui-elem-field layui-field-title warn1">
+        <p>"根据业务ID、跟踪ID、消息头和消息体查询时，需要设置起始时间和截止时间。"</p>
+        <p>"当查询的消息量特别大时，需要缩小时间范围。"</p>
+        <p>"当消息体超长被压缩时，不能根据消息体模糊查询。"</p>
+    </fieldset>
+    <p>"重试状态只对4.1.5之后的版本生效，4.1.5之前的版本不用关注"</p>
+
+    <div style="display: none">
+        <div id="messageDetailFormDiv">
+            <form th:include="message/messageDetail::messageDetailForm" class="layui-form" id="messageDetailForm" action="" ></form>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/message.js}"></script>
+    <script type="text/html" id="ctrlBar">
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="detail">详情</a>
+        {{# if(d.type==2){ }}
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="sendFailMessage">重新发送</a>
+        {{# } }}
+    </script>
+
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container layui-inline">
+            <button class="layui-btn layui-btn-danger hide" lay-event="sendAllFailMessage" id="sendAllFailMessage">批量重新发送</button>
+            <span id="topicBuffer"></span>
+        </div>
+
+    </script>
+</div>
+</html>

@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.QueueRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.QueueEntity">
+        <result column="id" property="id"/>
+        <result column="topic_id" property="topicId"/>
+        <result column="topic_name" property="topicName"/>
+        <result column="db_node_id" property="dbNodeId"/>
+        <result column="node_type" property="nodeType"/>
+        <result column="ip" property="ip"/>
+        <result column="db_name" property="dbName"/>
+        <result column="tb_name" property="tbName"/>
+        <result column="read_only" property="readOnly"/>
+        <result column="min_id" property="minId"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        <result column="lock_version" property="lockVersion"/>
+        <result column="meta_update_time" property="metaUpdateTime"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into queue (
+            `topic_id`,
+            `topic_name`,
+            `db_node_id`,
+            `node_type`,
+            `ip`,
+            `db_name`,
+            `tb_name`,
+            `read_only`,
+            `min_id`,
+            `insert_by`,
+            `update_by`,
+            `lock_version`,
+            `meta_update_time`
+        )values(
+            #{topicId},
+            #{topicName},
+            #{dbNodeId},
+            #{nodeType},
+            #{ip},
+            #{dbName},
+            #{tbName},
+            #{readOnly},
+            #{minId},
+            #{insertBy},
+            #{updateBy},
+            #{lockVersion},
+            current_timestamp
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into queue ( 
+            `topic_id`,
+            `topic_name`,
+            `db_node_id`,
+            `node_type`,
+            `ip`,
+            `db_name`,
+            `tb_name`,
+            `read_only`,
+            `min_id`,
+            `insert_by`,
+            `update_by`,
+            `lock_version`,
+            `meta_update_time`
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.topicId},
+            #{item.topicName},
+            #{item.dbNodeId},
+            #{item.nodeType},
+            #{item.ip},
+            #{item.dbName},
+            #{item.tbName},
+            #{item.readOnly},
+            #{item.minId},
+            #{item.insertBy},
+            #{item.updateBy},
+            #{item.lockVersion},
+            current_timestamp
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from queue where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from queue
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="dbNodeId != null and dbNodeId !=''" >
+                and `db_node_id` = #{dbNodeId}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and `tb_name` = #{tbName}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="minId != null and minId !=''" >
+                and `min_id` = #{minId}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="lockVersion != null and lockVersion !=''" >
+                and `lock_version` = #{lockVersion}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from queue where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueEntity">
+        update queue set
+            `topic_id` = #{topicId},
+        `topic_name` = #{topicName},
+        `db_node_id` = #{dbNodeId},
+        `node_type` = #{nodeType},
+        `ip` = #{ip},
+        `db_name` = #{dbName},
+        `tb_name` = #{tbName},
+        `read_only` = #{readOnly},
+        `min_id` = #{minId},
+        `update_by` = #{updateBy},
+        `is_active` = #{isActive},
+        `lock_version` = #{lockVersion},
+        `meta_update_time` = current_timestamp
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from queue
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="dbNodeId != null and dbNodeId !=''" >
+                and `db_node_id` = #{dbNodeId}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and `tb_name` = #{tbName}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="minId != null and minId !=''" >
+                and `min_id` = #{minId}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="lockVersion != null and lockVersion !=''" >
+                and `lock_version` = #{lockVersion}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+
+            <if test="distributeType == 1" >
+                and topic_name != ''
+            </if>
+            <if test="distributeType == 2" >
+                and topic_name = null or topic_name = ''
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from queue
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="dbNodeId != null and dbNodeId !=''" >
+                and `db_node_id` = #{dbNodeId}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and `tb_name` = #{tbName}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="minId != null and minId !=''" >
+                and `min_id` = #{minId}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="lockVersion != null and lockVersion !=''" >
+                and `lock_version` = #{lockVersion}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from queue
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from queue
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="dbNodeId != null and dbNodeId !=''" >
+                and `db_node_id` = #{dbNodeId}
+            </if>
+            <if test="nodeType != null and nodeType !=''" >
+                and `node_type` = #{nodeType}
+            </if>
+            <if test="ip != null and ip !=''" >
+                and `ip` = #{ip}
+            </if>
+            <if test="dbName != null and dbName !=''" >
+                and `db_name` = #{dbName}
+            </if>
+            <if test="tbName != null and tbName !=''" >
+                and `tb_name` = #{tbName}
+            </if>
+            <if test="readOnly != null and readOnly !=''" >
+                and `read_only` = #{readOnly}
+            </if>
+            <if test="minId != null and minId !=''" >
+                and `min_id` = #{minId}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="lockVersion != null and lockVersion !=''" >
+                and `lock_version` = #{lockVersion}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            <if test="distributeType == 1" >
+                and topic_name != ''
+            </if>
+            <if test="distributeType == 2" >
+                and topic_name = null or topic_name = ''
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from queue
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from queue where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

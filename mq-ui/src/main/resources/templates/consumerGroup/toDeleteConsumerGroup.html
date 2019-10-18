@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!--页面内容 继承自common/contentLayout.html-->
+<div layout:fragment="content">
+    <h3 th:text=" '[ ' +${consumerGroupName} + ' ] 消费者组删除'"></h3>
+    <br/>
+    <table class="layui-table" lay-data="{height:'full', page:true,limit: 10, id:'toDeleteConsumerGroupTable'}" lay-filter="toDeleteConsumerGroupTable">
+        <thead>
+        <tr>
+            <th lay-data="{field: 'id', align: 'center', sort: true,width:'5%'}">ID</th>
+            <th lay-data="{field: 'consumerGroupName', align: 'center',width:'8%'}">消费者组名称</th>
+            <th lay-data="{field: 'topicName', align: 'center',width:'15%'}">订阅主题</th>
+            <th lay-data="{field: 'consumerName', align: 'center',width:'15%'}">消费者</th>
+            <th lay-data="{field: 'topicType', align: 'center',width:'15%',templet:'#topicTypeTpl'}">topic类型</th>
+            <th lay-data="{field: 'queueId', align: 'center',width:'10%'}">分区Id</th>
+            <th lay-data="{field: 'offset', align: 'center',width:'8%'}">偏移量</th>
+            <th lay-data="{field: 'pendingMessageNum', align: 'center',width:'8%'}">待处理消息数</th>
+            <th lay-data="{field: 'messageNum', align: 'center',width:'8%'}">消息总数</th>
+            <th lay-data="{field: 'nodeType', align: 'center',width:'8%',templet:'#nodeTypeTpl'}">存储类型</th>
+            <th lay-data="{field: 'readOnly', align: 'center',width:'8%',templet:'#queueTypeTpl'}">读写类型</th>
+            <th lay-data="{field: 'stopFlag', align: 'center',width:'8%',templet:'#stopFlagTpl'}">消费标志</th>
+            <th lay-data="{field: 'dbInfo',align: 'center',width:'8%'}">db节点</th>
+            <th lay-data="{field: 'insertTime',align: 'center',width:'8%'}">创建时间</th>
+            <th lay-data="{field: 'updateTime',align: 'center',width:'10%'}">更新时间</th>
+        </tr>
+        </thead>
+    </table>
+    <input type="hidden" id="consumerGroupName" th:value="${consumerGroupName}"/>
+    <input type="hidden" id="consumerGroupId" th:value="${consumerGroupId}"/>
+    <div class="layui-inline">
+        <button class="layui-btn layui-btn-danger" id="consumerGroupDel" type="button">删除消费者组</button>
+        <button class="layui-btn" id="refresh" style="float: right">刷新内容</button>
+    </div>
+    <br/>
+    <p>上表是该消费者组的所有订阅关系、以及偏移信息</p>
+    <p style="color: red">删除消费者后，将会删除该消费者组的所有订阅关系，同时删除该消费者组的失败topic、偏移信息等，请谨慎操作！</p>
+
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/toDeleteConsumerGroup.js}"></script>
+    <script type="text/html" id="topicTypeTpl">
+        {{#  if(d.topicType == 1){ }}
+        正常topic
+        </div>
+        {{#  } else { }}
+        失败topic
+        {{#  } }}
+    </script>
+    <script type="text/html" id="nodeTypeTpl">
+        {{#  if(d.topicType == 1){ }}
+        正常消息
+        </div>
+        {{#  } else { }}
+        失败消息
+        {{#  } }}
+    </script>
+    <script type="text/html" id="queueTypeTpl">
+        {{#  if(d.readOnly == 1){ }}
+        读写
+        </div>
+        {{#  } else { }}
+        只读
+        {{#  } }}
+    </script>
+    <script type="text/html" id="stopFlagTpl">
+        {{#  if(d.stopFlag == 0){ }}
+        正常消费
+        </div>
+        {{#  } else { }}
+        停止消费
+        {{#  } }}
+    </script>
+    <style type="text/css">
+        .layui-form-onswitch1 {
+            border-color: #5FB878;
+            background-color: #5FB878;
+        }
+
+        .layui-form-onswitch1 em {
+            left: 5px;
+            right: auto;
+            color: #fff !important;
+        }
+
+        .layui-form-onswitch1 i {
+            left: 32px;
+            background-color: #fff;
+        }
+
+        .warn1 {
+            color: red;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        .layui-table-cell {
+            padding: 0 5px !important;
+        }
+
+        .icon-yes {
+            font-size: 30px;
+            color: #5FB878;
+        }
+
+        .icon-no {
+            font-size: 30px;
+            color: #e60000;
+            font-weight: 900;
+        }
+
+        .spCount {
+            color: #F581B1;
+        }
+
+        .spuerStatusText {
+            color: #F581B1;
+            font-weight: bold;
+        }
+    </style>
+</div>
+</html>

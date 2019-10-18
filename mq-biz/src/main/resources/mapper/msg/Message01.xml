@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.msg.Message01Repository">
+	<resultMap id="TableInfoMap"
+		type="com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity">
+		<result column="auto_increment" property="autoIncrement" />
+		<result column="table_name" property="tbName" />
+		<result column="table_schema" property="tableSchema" />
+	</resultMap>
+	<!-- 业务逻辑sql请写在这个文件内 -->
+	<insert id="insertBatchDy" useGeneratedKeys="false">
+		insert into ${tbName} (
+		biz_id,
+		tag,
+		head,
+		body,
+		send_ip,
+		trace_id,
+		retry_count
+		)
+		values
+		<foreach collection="entityList" item="item" index="index"
+			separator=",">
+			(
+			#{item.bizId},
+			#{item.tag},
+			#{item.head},
+			#{item.body},
+			#{item.sendIp},
+			#{item.traceId},
+			#{item.retryCount}
+			)
+		</foreach>
+	</insert>
+
+	<select id="getListDy" resultMap="BaseResultMap" statementType="STATEMENT"
+		useCache="false">
+	        <![CDATA[
+			select *
+			from ${tbName} where id>${start} and id<=${end}
+	         ]]>
+	</select>
+
+	<select id="getListByTime" parameterType="java.util.Map"
+		resultMap="BaseResultMap" useCache="false">
+		select *
+		from ${tbName}
+		<where>
+			1=1
+			<if test="sendTime != null and sendTime !=''">
+				and sendTime <![CDATA[ <= ]]>
+				'${sendTime}'
+			</if>
+		</where>
+		order by id desc
+		limit 1
+	</select>
+
+	<select id="getListByPageSize" resultMap="BaseResultMap"
+		parameterType="java.util.Map" statementType="STATEMENT" useCache="false">
+		select *
+		from ${tbName}
+		<where>
+			1=1
+			<if test="minId != null and minId !=''">
+				and id <![CDATA[ > ]]>'${minId}'
+			</if>
+			<if test="maxId != null and maxId !=''">
+				and id <![CDATA[ < ]]>'${maxId}'
+			</if>
+
+			<if test="bizId != null and bizId !=''">
+				and biz_id = '${bizId}'
+			</if>
+			<if test="traceId != null and traceId !=''">
+				and trace_id = '${traceId}'
+			</if>
+			<if test="head != null and head !=''">
+				and head like '%${head}%'
+			</if>
+			<if test="body != null and body !=''">
+				and body like '%${body}%'
+			</if>
+			<if
+				test="retryStatus ==1 and failMsgRetryCountSuc !='' and failMsgRetryCountSuc!=null">
+				and retry_count <![CDATA[ > ]]>'${failMsgRetryCountSuc}'
+			</if>
+			<if
+				test="retryStatus ==2 and failMsgRetryCountSuc !='' and failMsgRetryCountSuc!=null">
+				and retry_count <![CDATA[ < ]]>'${failMsgRetryCountSuc}'
+			</if>
+		</where>
+		order by id desc
+		limit ${start1}, ${offset1}
+	</select>
+
+	<select id="countByPage" parameterType="java.util.Map"
+		resultType="java.lang.Long" statementType="STATEMENT" useCache="false">
+		select count(1)
+		from ${tbName}
+		<where>
+			1=1
+			<if test="minId != null and minId !=''">
+				and id <![CDATA[ > ]]>'${minId}'
+			</if>
+			<if test="maxId != null and maxId !=''">
+				and id <![CDATA[ < ]]>'${maxId}'
+			</if>
+			<if test="bizId != null and bizId !=''">
+				and biz_Id = '${bizId}'
+			</if>
+			<if test="traceId != null and traceId !=''">
+				and trace_id = '${traceId}'
+			</if>
+			<if test="head != null and head !=''">
+				and head like '%${head}%'
+			</if>
+			<if test="body != null and body !=''">
+				and body like '%${body}%'
+			</if>
+		</where>
+	</select>
+
+
+	<delete id="deleteDy" parameterType="java.util.Map"
+		statementType="STATEMENT">
+	     <![CDATA[
+	       delete from ${tbName} where id<=${end}
+	      ]]>
+	</delete>
+	<delete id="deleteByIds">
+		delete from ${tbName} where id in
+		(
+		<foreach collection="ids" item="item" index="index" separator=",">
+			#{item}</foreach>
+		)
+	</delete>
+
+	<delete id="truncate" statementType="STATEMENT">
+	     <![CDATA[
+	       truncate table ${tbName}
+	      ]]>
+	</delete>
+	<select id="getMaxId" resultType="java.lang.Long" useCache="false">
+		select auto_increment from
+		information_schema.tables where
+		table_schema=#{dbName} and
+		table_name=#{tbName}
+	</select>
+
+	<select id="getMaxIdByDb" resultMap="TableInfoMap" useCache="false">
+		select
+		table_schema,table_name,auto_increment from
+		information_schema.tables
+		where table_type='BASE TABLE'
+	</select>
+	<!-- <select id="getMaxIdByTb" resultType="java.lang.Long" useCache="false"> -->
+	<!-- select max(id) from ${tbName} -->
+	<!-- </select> -->
+	<select id="getMessageById" resultMap="BaseResultMap" useCache="false">
+		select *
+		from ${tbName}
+		<where>
+			id = ${id}
+		</where>
+	</select>
+
+	<select id="getTableMinId" resultType="java.lang.Long" useCache="false">
+		select min(id)
+		from ${tbName}
+	</select>
+
+	<select id="getMessageByIds" resultMap="BaseResultMap" useCache="false">
+		select *
+		from ${tbName} where id in
+		(
+		<foreach collection="ids" item="item" index="index" separator=",">
+			#{item}</foreach>
+		)
+	</select>
+
+	<update id="updateFailMsgResult">
+		update ${tbName} set retry_count=${retryCount}+retry_count where id in
+		(
+		<foreach collection="ids" item="item" index="index" separator=",">
+			#{item}</foreach>
+		)
+
+	</update>
+	<delete id="deleteOldFailMsg">
+	     <![CDATA[
+	       delete from ${tbName} where id=#{id} and retry_count=${retryCount}
+	      ]]>
+	</delete>
+	<select id="getNearByMessageById" resultMap="BaseResultMap"
+		useCache="false">
+		select *
+		from ${tbName} where id > ${id} order by id asc limit
+		1
+	</select>
+	<select id="getMaxConnectionsCount" resultType="java.util.Map">
+		show variables
+		like 'max_connections'
+	</select>
+
+	<select id="getConnectionsCount" resultType="java.lang.Integer">
+		select count(1) from
+		information_schema.processlist;
+	</select>
+
+	<update id="createMessageTable">
+		create table IF NOT EXISTS ${tbName} (
+		`id` bigint(20)
+		NOT NULL AUTO_INCREMENT COMMENT '主键',
+		`biz_id` varchar(50) DEFAULT NULL COMMENT '业务id',
+		`tag` varchar(1000) DEFAULT NULL COMMENT
+		'标记',
+		`head` varchar(1000)  DEFAULT NULL COMMENT '消息头',
+		`body` text  COMMENT '消息体',
+		`trace_id`
+		varchar(200)  NOT NULL COMMENT '发送的ip',
+		`retry_count` int(11) NOT NULL COMMENT '失败重试次数',
+		`send_ip` varchar(20)
+		 NOT NULL COMMENT '发送的ip',		
+		`send_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT
+		'创建时间',
+		PRIMARY KEY (`id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+		COLLATE=utf8mb4_unicode_ci COMMENT='消息'
+	</update>
+
+</mapper>

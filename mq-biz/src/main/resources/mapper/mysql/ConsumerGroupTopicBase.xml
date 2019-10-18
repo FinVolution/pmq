@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.ConsumerGroupTopicRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity">
+        <result column="id" property="id"/>
+        <result column="consumer_group_id" property="consumerGroupId"/>
+        <result column="consumer_group_name" property="consumerGroupName"/>
+        <result column="topic_id" property="topicId"/>
+        <result column="topic_name" property="topicName"/>
+        <result column="origin_topic_name" property="originTopicName"/>
+        <result column="topic_type" property="topicType"/>
+        <result column="retry_count" property="retryCount"/>
+        <result column="thread_size" property="threadSize"/>
+        <result column="max_lag" property="maxLag"/>
+        <result column="tag" property="tag"/>
+        <result column="delay_process_time" property="delayProcessTime"/>
+        <result column="pull_batch_size" property="pullBatchSize"/>
+        <result column="consumer_batch_size" property="consumerBatchSize"/>
+        <result column="max_pull_time" property="maxPullTime"/>
+        <result column="alarm_emails" property="alarmEmails"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        <result column="meta_update_time" property="metaUpdateTime"/>
+        <result column="time_out" property="timeOut"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into consumer_group_topic (
+            `consumer_group_id`,
+            `consumer_group_name`,
+            `topic_id`,
+            `topic_name`,
+            `origin_topic_name`,
+            `topic_type`,
+            `retry_count`,
+            `thread_size`,
+            `max_lag`,
+            `tag`,
+            `delay_process_time`,
+            `pull_batch_size`,
+            `consumer_batch_size`,
+            `max_pull_time`,
+            `alarm_emails`,
+            `insert_by`,
+            `update_by`,
+            `meta_update_time`,
+            `time_out`
+        )values(
+            #{consumerGroupId},
+            #{consumerGroupName},
+            #{topicId},
+            #{topicName},
+            #{originTopicName},
+            #{topicType},
+            #{retryCount},
+            #{threadSize},
+            #{maxLag},
+            #{tag},
+            #{delayProcessTime},
+            #{pullBatchSize},
+            #{consumerBatchSize},
+            #{maxPullTime},
+            #{alarmEmails},
+            #{insertBy},
+            #{updateBy},
+            current_timestamp,
+            #{timeOut}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into consumer_group_topic ( 
+            `consumer_group_id`,
+            `consumer_group_name`,
+            `topic_id`,
+            `topic_name`,
+            `origin_topic_name`,
+            `topic_type`,
+            `retry_count`,
+            `thread_size`,
+            `max_lag`,
+            `tag`,
+            `delay_process_time`,
+            `pull_batch_size`,
+            `consumer_batch_size`,
+            `max_pull_time`,
+            `alarm_emails`,
+            `insert_by`,
+            `update_by`,
+            `meta_update_time`,
+            `time_out`
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.consumerGroupId},
+            #{item.consumerGroupName},
+            #{item.topicId},
+            #{item.topicName},
+            #{item.originTopicName},
+            #{item.topicType},
+            #{item.retryCount},
+            #{item.threadSize},
+            #{item.maxLag},
+            #{item.tag},
+            #{item.delayProcessTime},
+            #{item.pullBatchSize},
+            #{item.consumerBatchSize},
+            #{item.maxPullTime},
+            #{item.alarmEmails},
+            #{item.insertBy},
+            #{item.updateBy},
+            current_timestamp,
+            #{item.timeOut}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from consumer_group_topic where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from consumer_group_topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="retryCount != null and retryCount !=''" >
+                and `retry_count` = #{retryCount}
+            </if>
+            <if test="threadSize != null and threadSize !=''" >
+                and `thread_size` = #{threadSize}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="tag != null and tag !=''" >
+                and `tag` = #{tag}
+            </if>
+            <if test="delayProcessTime != null and delayProcessTime !=''" >
+                and `delay_process_time` = #{delayProcessTime}
+            </if>
+            <if test="pullBatchSize != null and pullBatchSize !=''" >
+                and `pull_batch_size` = #{pullBatchSize}
+            </if>
+            <if test="consumerBatchSize != null and consumerBatchSize !=''" >
+                and `consumer_batch_size` = #{consumerBatchSize}
+            </if>
+            <if test="maxPullTime != null and maxPullTime !=''" >
+                and `max_pull_time` = #{maxPullTime}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="timeOut != null and timeOut !=''" >
+                and `time_out` = #{timeOut}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from consumer_group_topic where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity">
+        update consumer_group_topic set
+            `consumer_group_id` = #{consumerGroupId},
+        `consumer_group_name` = #{consumerGroupName},
+        `topic_id` = #{topicId},
+        `topic_name` = #{topicName},
+        `origin_topic_name` = #{originTopicName},
+        `topic_type` = #{topicType},
+        `retry_count` = #{retryCount},
+        `thread_size` = #{threadSize},
+        `max_lag` = #{maxLag},
+        `tag` = #{tag},
+        `delay_process_time` = #{delayProcessTime},
+        `pull_batch_size` = #{pullBatchSize},
+        `consumer_batch_size` = #{consumerBatchSize},
+        `max_pull_time` = #{maxPullTime},
+        `alarm_emails` = #{alarmEmails},
+        `update_by` = #{updateBy},
+        `is_active` = #{isActive},
+        `meta_update_time` = current_timestamp,
+        `time_out` = #{timeOut}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from consumer_group_topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="retryCount != null and retryCount !=''" >
+                and `retry_count` = #{retryCount}
+            </if>
+            <if test="threadSize != null and threadSize !=''" >
+                and `thread_size` = #{threadSize}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="tag != null and tag !=''" >
+                and `tag` = #{tag}
+            </if>
+            <if test="delayProcessTime != null and delayProcessTime !=''" >
+                and `delay_process_time` = #{delayProcessTime}
+            </if>
+            <if test="pullBatchSize != null and pullBatchSize !=''" >
+                and `pull_batch_size` = #{pullBatchSize}
+            </if>
+            <if test="consumerBatchSize != null and consumerBatchSize !=''" >
+                and `consumer_batch_size` = #{consumerBatchSize}
+            </if>
+            <if test="maxPullTime != null and maxPullTime !=''" >
+                and `max_pull_time` = #{maxPullTime}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="timeOut != null and timeOut !=''" >
+                and `time_out` = #{timeOut}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from consumer_group_topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="retryCount != null and retryCount !=''" >
+                and `retry_count` = #{retryCount}
+            </if>
+            <if test="threadSize != null and threadSize !=''" >
+                and `thread_size` = #{threadSize}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="tag != null and tag !=''" >
+                and `tag` = #{tag}
+            </if>
+            <if test="delayProcessTime != null and delayProcessTime !=''" >
+                and `delay_process_time` = #{delayProcessTime}
+            </if>
+            <if test="pullBatchSize != null and pullBatchSize !=''" >
+                and `pull_batch_size` = #{pullBatchSize}
+            </if>
+            <if test="consumerBatchSize != null and consumerBatchSize !=''" >
+                and `consumer_batch_size` = #{consumerBatchSize}
+            </if>
+            <if test="maxPullTime != null and maxPullTime !=''" >
+                and `max_pull_time` = #{maxPullTime}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="timeOut != null and timeOut !=''" >
+                and `time_out` = #{timeOut}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from consumer_group_topic
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from consumer_group_topic
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and `id` = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and `consumer_group_id` = #{consumerGroupId}
+            </if>
+            <if test="consumerGroupName != null and consumerGroupName !=''" >
+                and `consumer_group_name` = #{consumerGroupName}
+            </if>
+            <if test="topicId != null and topicId !=''" >
+                and `topic_id` = #{topicId}
+            </if>
+            <if test="topicName != null and topicName !=''" >
+                and `topic_name` = #{topicName}
+            </if>
+            <if test="originTopicName != null and originTopicName !=''" >
+                and `origin_topic_name` = #{originTopicName}
+            </if>
+            <if test="topicType != null and topicType !=''" >
+                and `topic_type` = #{topicType}
+            </if>
+            <if test="retryCount != null and retryCount !=''" >
+                and `retry_count` = #{retryCount}
+            </if>
+            <if test="threadSize != null and threadSize !=''" >
+                and `thread_size` = #{threadSize}
+            </if>
+            <if test="maxLag != null and maxLag !=''" >
+                and `max_lag` = #{maxLag}
+            </if>
+            <if test="tag != null and tag !=''" >
+                and `tag` = #{tag}
+            </if>
+            <if test="delayProcessTime != null and delayProcessTime !=''" >
+                and `delay_process_time` = #{delayProcessTime}
+            </if>
+            <if test="pullBatchSize != null and pullBatchSize !=''" >
+                and `pull_batch_size` = #{pullBatchSize}
+            </if>
+            <if test="consumerBatchSize != null and consumerBatchSize !=''" >
+                and `consumer_batch_size` = #{consumerBatchSize}
+            </if>
+            <if test="maxPullTime != null and maxPullTime !=''" >
+                and `max_pull_time` = #{maxPullTime}
+            </if>
+            <if test="alarmEmails != null and alarmEmails !=''" >
+                and `alarm_emails` = #{alarmEmails}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and `insert_by` = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and `insert_time` = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and `update_by` = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and `update_time` = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and `is_active` = #{isActive}
+            </if>
+            <if test="metaUpdateTime != null and metaUpdateTime !=''" >
+                and `meta_update_time` = #{metaUpdateTime}
+            </if>
+            <if test="timeOut != null and timeOut !=''" >
+                and `time_out` = #{timeOut}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from consumer_group_topic
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from consumer_group_topic where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>

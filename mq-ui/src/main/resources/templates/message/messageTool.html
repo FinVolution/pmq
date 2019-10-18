@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<!--页面内容 继承自common/layout.html-->
+<div layout:fragment="content">
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">Topic</label>
+                <div class="layui-input-block" style="width: 400px">
+                    <select lay-ignore id="topics" name="topics" required lay-verType="topics" lay-verify="required" class="layui-input">
+                    </select>
+                    <div id="topicBuffer" class="layui-form-mid layui-word-aux" lay-filter="topicBuffer"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="layui-form-item" style="display:none">
+            <div class="layui-inline">
+                <label class="layui-form-label">发送方式</label>
+                <div class="layui-input-inline" style="width: 400px">
+                    <select id="sendType" name="sendType" lay-filter="sendType">                       
+                        <option value="3">MQ3.0</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">业务Id</label>
+            <div class="layui-input-block" style="width: 400px">
+                <input type="text" id="bizId" name="bizId" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">tag</label>
+            <div class="layui-input-block" style="width: 400px">
+                <input type="text" id="tag" name="tag" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">消息头</label>
+            <div class="layui-input-inline" style="width: 400px">
+                <input type="text" class="layui-input" id="head" name="head" placeholder="请输入内容" lay-verType="tips"/>
+            </div>
+            <div class="layui-form-mid layui-word-aux">格式：{"key1":"value1","key2":"value2"}</div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">消息体</label>
+            <div class="layui-input-block">
+                <textarea id="body" name="body" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">地址</label>
+            <div class="layui-input-block">
+                <input id="url" name="url" class="layui-input" disabled value="/message/tool/sendMessage">
+            </div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">json格式化</label>
+            <div class="layui-input-block">
+                <textarea id="formatMessage" name="formatMessage" readonly="readonly" class="layui-input"  lay-filter="formatMessage"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <a class="layui-btn" id="toolSendMessage_btn" lay-filter="toolSendMessage_btn"><i class="layui-icon">&#xe615;</i>发送</a>
+               <!-- <button id="toolSendMessage" name="toolSendMessage" class="layui-btn" lay-submit lay-filter="toolSendMessage">立即提交</button>-->
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/messageTool.js}"></script>
+</div>
+</html>

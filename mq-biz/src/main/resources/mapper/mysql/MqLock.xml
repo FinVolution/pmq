@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.MqLockRepository">
+	<!-- 业务逻辑sql请写在这个文件内 -->
+	<update id="updateHeartTimeByKey1">
+    <![CDATA[
+		update mq_lock set heart_time=CURRENT_TIMESTAMP , ip=#{ip} where key1=#{key1} and	heart_time< TIMESTAMPADD(second, -#{lockInterval}, current_timestamp )
+		]]>
+	</update>
+	<update id="updateHeartTimeByIdAndIp">
+		update mq_lock set heart_time=CURRENT_TIMESTAMP where
+		id=#{id} and
+		ip=#{ip}
+	</update>
+
+	<delete id="deleteOld">
+	<![CDATA[
+		delete from mq_lock where heart_time<TIMESTAMPADD(SECOND,  -#{lockInterval}, CURRENT_TIMESTAMP
+		) and key1 = #{key1}
+	]]>
+	</delete>
+	<insert id="insert1" parameterType="com.ppdai.infrastructure.mq.biz.entity.MqLockEntity"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into mq_lock (
+		ip,
+		key1
+		)values(
+		#{ip},
+		#{key1}
+		)
+	</insert>
+</mapper>

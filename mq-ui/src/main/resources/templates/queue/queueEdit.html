@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorator="common/contentLayout"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div layout:fragment="content">
+    <form class="layui-form" id="queueEditForm">
+        <input  type="hidden" id="qId" name="qId" th:value="${queueId}"/>
+        <div>
+            <select id="tId" name="tId" lay-verify="required" lay-search>
+                <option value="">请选择Topic</option>
+                <option th:each="topic:${topicList}" th:value="${topic.value.id}" th:text="${topic.value.name}"></option>
+            </select>
+        </div>
+    </form>
+
+    <div class="layui-form-item" style="margin-top:60px;margin-left:auto;margin-right:auto;width:100px;">
+        <div>
+            <button class="layui-btn layui-btn-lg layui-btn-normal" type="button" lay-submit lay-filter="queueSubmit" id="queueSubmit">分配</button>
+        </div>
+    </div>
+
+</div>
+<div layout:fragment="end-load-files">
+    <script th:src="@{/js/queue.js}"></script>
+</div>
+</html>

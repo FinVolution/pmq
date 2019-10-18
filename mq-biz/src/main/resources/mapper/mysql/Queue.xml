@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.QueueRepository">
+	<!-- 业务逻辑sql请写在这个文件内 -->
+	<resultMap id="LastUpdateMap"
+		type="com.ppdai.infrastructure.mq.biz.entity.LastUpdateEntity">
+		<result column="lastDate" property="lastDate" />
+		<result column="maxId" property="maxId" />
+		<result column="count" property="count" />
+	</resultMap>
+	<select id="getLastUpdate" resultMap="LastUpdateMap"
+		useCache="false">
+		select max(meta_update_time) as lastDate,max(id) as maxId ,count(1) as `count` from queue
+	</select>
+	<select id="getAllLocated" resultMap="BaseResultMap">
+		select *
+		from queue where topic_id>0
+	</select>	
+	<select id="getAllBasic" resultMap="BaseResultMap">
+		select id, topic_id, topic_name, db_node_id, node_type, ip, db_name, tb_name, read_only, min_id, lock_version,update_time
+		from queue where topic_id>0
+	</select>
+	
+	<select id="getTopUndistributedNodes" parameterType="java.util.Map"
+		resultMap="BaseResultMap" useCache="false">
+		select db_node_id,ip from queue
+		where node_type = #{nodeType}
+		and topic_id = 0
+		and db_node_id in (
+		<foreach collection="nodeIds" item="item" index="index"
+			separator=",">#{item}</foreach>
+		)
+		group by db_node_id,ip
+		having count(*) > 0
+		order by count(*)
+		desc	
+	</select>
+
+
+	<select id="getTopDistributedNodes" parameterType="java.util.Map"
+		resultType="java.lang.Long" useCache="false">
+		select db_node_id from queue
+		WHERE db_node_id in (
+		select db_node_id from queue
+		WHERE topic_id = #{topicId}
+		group by db_node_id
+		)
+		and topic_id != 0
+		group by db_node_id
+		order by count(*)
+		desc
+	</select>
+
+	<select id="getUndistributedListByNodeIds" resultMap="BaseResultMap"
+		useCache="false">
+		select *
+		from queue where db_node_id in
+		(
+		<foreach collection="nodeIds" item="item" index="index"
+			separator=",">#{item}</foreach>
+		) and topic_id = 0 and node_type = #{nodeType}
+	</select>
+
+	<select id="getDistributedList" resultMap="BaseResultMap"
+		useCache="false">
+		select *
+		from queue where db_node_id in
+		(
+		<foreach collection="nodeIds" item="item" index="index"
+			separator=",">#{item}</foreach>
+		) and topic_id = #{topicId}
+	</select>
+
+	<update id="updateWithLock" parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueEntity">
+		update queue set
+		topic_id = #{topicId},
+		topic_name = #{topicName},
+		db_node_id = #{dbNodeId},
+		node_type = #{nodeType},
+		ip = #{ip},
+		db_name = #{dbName},
+		tb_name = #{tbName},
+		read_only = #{readOnly},
+		min_id = #{minId},
+		insert_by = #{insertBy},
+		update_by = #{updateBy},
+		is_active = #{isActive},
+		lock_version = #{lockVersion} + 1,
+		meta_update_time = current_timestamp
+		where id = #{id}
+		and lock_version = #{lockVersion}
+	</update>
+	
+	<update id="updateMinId">
+	 <![CDATA[
+		update queue set min_id = #{minId}	where id = #{id} and min_id < #{minId}
+		]]>
+	</update>
+
+	<update id="updateForDbNodeChange">
+		update queue set
+		ip = #{ip},
+		db_name = #{dbName},
+		meta_update_time = current_timestamp
+		<where>
+			and ip = #{oldIp}
+			and db_name = #{oldDbName}
+			and is_active = 0
+		</where>
+	</update>
+
+	<select id="countTopicByNodeId" resultType="com.ppdai.infrastructure.mq.biz.dto.AnalyseDto">
+		SELECT
+		topic_id topicId,
+		topic_name topicName,
+		COUNT(DISTINCT topic_id, db_node_id) quantity
+		from queue
+		where topic_id in
+		(SELECT topic_id FROM queue WHERE db_node_id = #{id} AND topic_id &lt;&gt; 0)
+		GROUP BY topic_id, topic_name
+		ORDER BY quantity
+		limit #{start}, #{offset}
+	</select>
+
+	<select id="getDistributedNodes" resultType="com.ppdai.infrastructure.mq.biz.dto.AnalyseDto">
+		SELECT DISTINCT topic_id topicId, db_node_id dbNodeId, ip, db_name dbName
+		from queue
+		where topic_id in
+		(SELECT topic_id FROM queue WHERE db_node_id = #{dbNodeId} AND topic_id
+		&lt;&gt; 0)
+	</select>
+
+	<select id="getQueueQuantity" resultType="com.ppdai.infrastructure.mq.biz.dto.AnalyseDto">
+		SELECT
+		a.topic_id topicId, a.queueQuantity, b.writeableQueueQuantity
+		FROM
+		(
+		SELECT topic_id, count(1) queueQuantity
+		FROM queue
+		WHERE topic_id &lt;&gt; 0
+		GROUP BY topic_id
+		) a
+		LEFT JOIN (
+		SELECT topic_id,count(1) writeableQueueQuantity
+		FROM queue q
+		WHERE q.topic_id &lt;&gt; 0 AND q.read_only = 1
+		GROUP BY topic_id
+		) b ON a.topic_id = b.topic_id
+	</select>
+
+</mapper>

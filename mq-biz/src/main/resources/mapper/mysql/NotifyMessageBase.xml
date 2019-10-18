@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.NotifyMessageRepository">
+    
+    <resultMap id="BaseResultMap"
+        type="com.ppdai.infrastructure.mq.biz.entity.NotifyMessageEntity">
+        <result column="id" property="id"/>
+        <result column="consumer_group_id" property="consumerGroupId"/>
+        <result column="message_type" property="messageType"/>
+        <result column="insert_by" property="insertBy"/>
+        <result column="insert_time" property="insertTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_active" property="isActive"/>
+        
+    </resultMap>	
+
+    
+    <insert id="insert"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.NotifyMessageEntity"
+        useGeneratedKeys="true" keyProperty="id">
+        insert into notify_message (
+            consumer_group_id,
+            message_type,
+            insert_by,
+            update_by
+        )values(
+            #{consumerGroupId},
+            #{messageType},
+            #{insertBy},
+            #{updateBy}
+        )
+    </insert>
+
+    
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into notify_message ( 
+            consumer_group_id,
+            message_type,
+            insert_by,
+            update_by
+        )
+        values
+        <foreach collection="entityList" item="item" index="index"
+            separator=",">
+        (
+            #{item.consumerGroupId},
+            #{item.messageType},
+            #{item.insertBy},
+            #{item.updateBy}
+        )
+        </foreach>
+    </insert>
+
+    
+    <select id="getById" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from notify_message where
+        id=#{id}
+    </select>
+
+    
+    <select id="get" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from notify_message
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and consumer_group_id = #{consumerGroupId}
+            </if>
+            <if test="messageType != null and messageType !=''" >
+                and message_type = #{messageType}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            limit 1
+        </where>
+    </select>
+
+    
+    <select id="getByIds" resultMap="BaseResultMap"
+        useCache="false">
+        select *
+        from notify_message where id in 
+        (
+            <foreach collection="ids" item="item" index="index"
+            separator=",">#{item}</foreach>
+        )
+    </select>
+
+    
+    <update id="update"
+        parameterType="com.ppdai.infrastructure.mq.biz.entity.NotifyMessageEntity">
+        update notify_message set
+            consumer_group_id = #{consumerGroupId},
+        message_type = #{messageType},
+        update_by = #{updateBy},
+        is_active = #{isActive}
+        where id = #{id}
+    </update>
+
+    
+    <select id="count" parameterType="java.util.Map" resultType="java.lang.Long">
+        select count(1)
+        from notify_message
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and consumer_group_id = #{consumerGroupId}
+            </if>
+            <if test="messageType != null and messageType !=''" >
+                and message_type = #{messageType}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getList" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from notify_message
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and consumer_group_id = #{consumerGroupId}
+            </if>
+            <if test="messageType != null and messageType !=''" >
+                and message_type = #{messageType}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+    </select>
+
+    
+    <select id="getAll" resultMap="BaseResultMap">
+        select *
+        from notify_message
+    </select>
+
+    
+    <select id="getListByPage" parameterType="java.util.Map" resultMap="BaseResultMap">
+        select *
+        from notify_message
+        <where>
+            1=1
+            <if test="id != null and id !=''" >
+                and id = #{id}
+            </if>
+            <if test="consumerGroupId != null and consumerGroupId !=''" >
+                and consumer_group_id = #{consumerGroupId}
+            </if>
+            <if test="messageType != null and messageType !=''" >
+                and message_type = #{messageType}
+            </if>
+            <if test="insertBy != null and insertBy !=''" >
+                and insert_by = #{insertBy}
+            </if>
+            <if test="insertTime != null and insertTime !=''" >
+                and insert_time = #{insertTime}
+            </if>
+            <if test="updateBy != null and updateBy !=''" >
+                and update_by = #{updateBy}
+            </if>
+            <if test="updateTime != null and updateTime !=''" >
+                and update_time = #{updateTime}
+            </if>
+            <if test="isActive != null and isActive !=''" >
+                and is_active = #{isActive}
+            </if>
+            
+            <if test="updateTimeStart != null and updateTimeStart !=''" >
+                and update_time >= #{updateTimeStart}
+            </if>
+            <if test="updateTimeEnd != null and updateTimeEnd !=''" >
+                and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+            </if>
+            <if test="insertTimeStart != null and insertTimeStart !=''" >
+                and insert_time >= #{insertTimeStart}
+            </if>
+            <if test="insertTimeEnd != null and insertTimeEnd !=''" >
+                and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+        </where>
+        order by id desc
+        limit #{start1}, #{offset1}
+    </select>
+
+    
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from notify_message
+        where id = #{id}
+    </delete>
+
+    
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from notify_message where id in 
+        <foreach collection="ids" item="id" index="index" open="("  
+            separator="," close=")">  
+            #{id}  
+        </foreach>  
+    </delete>
+
+</mapper>
