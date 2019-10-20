@@ -8,7 +8,7 @@ PMQ是拍拍贷研发一款分布式消息队列，能够保证消息的不丢�
 
 消息队列原生客户端不依赖任何框架，能够运行于所有Java1.8+运行时环境，同时对Spring Mvc/Spring Boot环境也有额外支持。
 
-本地快速部署请参见 wiki `快速部署`
+本地快速部署请参见 [wiki](https://github.com/ppdaicorp/pmq/wiki) [`快速部署`](https://github.com/ppdaicorp/pmq/wiki/QuickStart)
 
 # Screenshots
 
