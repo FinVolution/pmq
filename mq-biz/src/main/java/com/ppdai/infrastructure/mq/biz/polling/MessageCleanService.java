@@ -207,6 +207,11 @@ public class MessageCleanService extends AbstractTimerService {
 		int cleanSize = soaConfig.getCleanBatchSize();
 		log.info("clean queue {} of {} ,ip is {}", count, tcount, ip);
 		while (true && super.isMaster && soaConfig.isEnbaleMessageClean()) {
+			QueueEntity temp = queueService.getAllQueueMap().get(queueEntity.getId());
+			if (temp != null && temp.getTopicId() != queueEntity.getTopicId()) {
+				// 说明队列分配发生了变化
+				break;
+			}
 			Transaction transaction = Tracer.newTransaction("mq-msg", "clear-msg");
 			transaction.setStatus(Transaction.SUCCESS);
 			try {
@@ -283,15 +288,15 @@ public class MessageCleanService extends AbstractTimerService {
 
 	private long deleteData(TopicEntity topicEntity, QueueEntity queueEntity, int count, int tcount, String ip,
 			long minId, Message01Entity message01Entity) {
-		//是否在skip时间
+		// 是否在skip时间
 		long sleepTime = getSkipTime();
 		if (sleepTime != 0) {
-			log.info("当前时间在skip时间内，需要等待"+sleepTime+"ms");
+			log.info("当前时间在skip时间内，需要等待" + sleepTime + "ms");
 			Util.sleep(sleepTime);
 		}
 		long lastId = minId;
 		minId = message01Entity.getId();
-		queueService.updateMinId(queueEntity.getId(), minId);		
+		queueService.updateMinId(queueEntity.getId(), minId);
 		// 说明数据已经过期需要删除
 		message01Service.setDbId(queueEntity.getDbNodeId());
 		message01Service.deleteDy(queueEntity.getTbName(), lastId, message01Entity.getId());
@@ -326,8 +331,8 @@ public class MessageCleanService extends AbstractTimerService {
 				String content = "在消费者组" + queueMinOffset.getConsumerGroupName() + ",topic:"
 						+ queueMinOffset.getTopicName() + ",queue:" + queueMinOffset.getQueueId() + "的偏移量("
 						+ queueMinOffset.getOffset() + ")超过topic保留期限(最小id为" + message01Entity.getId() + ",对应时间为"
-						+ Util.formateDate(message01Entity.getSendTime()) + ",保留天数为"
-						+ (topicEntity.getSaveDayNum() + 2) + ")，还未消费,请足够重视，提高消费速度，否则会在两天后，过期消息会被清除！";
+						+ Util.formateDate(message01Entity.getSendTime()) + ",保留天数为" + (topicEntity.getSaveDayNum() + 2)
+						+ ")，还未消费,请足够重视，提高消费速度，否则会在两天后，过期消息会被清除！";
 				if (env.getProperty("mq.message.warn", "0").equals("1")) {
 					// 说明出现了历史堆积的消息太长时间没有被消费了，需要发送告警邮件提醒
 					sendWarnMail(queueMinOffset, groupCache, content, queueMinOffset.getConsumerGroupName() + ",topic:"
