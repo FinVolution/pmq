@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import com.ppdai.infrastructure.mq.biz.ui.dto.response.QueueOffsetIntelligentDetectionResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -619,6 +620,44 @@ public class UiQueueOffsetService implements TimerService {
 			}
 		}
 		return null;
+	}
+
+	public QueueOffsetIntelligentDetectionResponse intelligentDetection(long queueOffsetId){
+		QueueOffsetEntity queueOffsetEntity = queueOffsetService.get(queueOffsetId);;
+		Map<Long, QueueEntity> queueMap=queueService.getAllQueueMap();
+		QueueEntity queueEntity=queueMap.get(queueOffsetEntity.getQueueId());
+		long minId=queueEntity.getMinId();
+		Map<String, ConsumerGroupTopicEntity> groupTopicMap=consumerGroupTopicService.getGroupTopic();
+		String consumerGroupName=queueOffsetEntity.getConsumerGroupName();
+		String topicName=queueOffsetEntity.getTopicName();
+		ConsumerGroupTopicEntity consumerGroupTopic=groupTopicMap.get(consumerGroupName+"_"+topicName);
+		message01Service.setDbId(queueEntity.getDbNodeId());
+		Long tableMinId=message01Service.getTableMinId(queueEntity.getTbName());
+		String result="正常，无需修复";
+		if(tableMinId!=null){
+			if((queueOffsetEntity.getOffset()+consumerGroupTopic.getPullBatchSize())<(tableMinId-1)){
+				if((tableMinId-1)!=minId){
+					//schema表引起的最小id不准确问题
+					queueEntity.setMinId(tableMinId-1);
+					queueService.update(queueEntity);
+				}
+				queueOffsetEntity.setOffset(tableMinId-1);
+				queueOffsetService.update(queueOffsetEntity);
+				result="修复成功";
+
+				consumerGroupService.notifyMeta(queueOffsetEntity.getConsumerGroupId());
+			}
+		}
+
+		if(queueOffsetEntity.getOffset()<minId){
+			queueOffsetEntity.setOffset(minId);
+			queueOffsetService.update(queueOffsetEntity);
+			result="修复成功";
+			consumerGroupService.notifyMeta(queueOffsetEntity.getConsumerGroupId());
+		}
+
+		return new QueueOffsetIntelligentDetectionResponse("0",result);
+
 	}
 
 	public long getUselessConsumerGroupNum() {

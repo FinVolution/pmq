@@ -2,6 +2,7 @@ package com.ppdai.infrastructure.ui.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.ppdai.infrastructure.mq.biz.ui.dto.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
 import com.ppdai.infrastructure.mq.biz.ui.dto.request.QueueOffsetAccumulationRequest;
 import com.ppdai.infrastructure.mq.biz.ui.dto.request.QueueOffsetGetListRequest;
-import com.ppdai.infrastructure.mq.biz.ui.dto.response.QueueOffsetGetListResponse;
-import com.ppdai.infrastructure.mq.biz.ui.dto.response.QueueOffsetUpdateResponse;
-import com.ppdai.infrastructure.mq.biz.ui.dto.response.QueueOffsetUpdateStopFlagResponse;
-import com.ppdai.infrastructure.mq.biz.ui.dto.response.QueueOffsetgetByIdResponse;
-import com.ppdai.infrastructure.mq.biz.ui.dto.response.QueueOffsetgetConsumerGroupTopicResponse;
 import com.ppdai.infrastructure.ui.service.UiQueueOffsetService;
 
 /**
@@ -70,6 +66,11 @@ public class QueueOffsetController {
     @GetMapping("/getByConsumerGroupTopic")
     public QueueOffsetgetConsumerGroupTopicResponse getByConsumerGroupTopic(Long consumerGroupTopicId) {
         return new QueueOffsetgetConsumerGroupTopicResponse(uiQueueOffsetService.getByConsumerGroupTopic(consumerGroupTopicId));
+    }
+
+    @RequestMapping("/intelligentDetection")
+    public QueueOffsetIntelligentDetectionResponse intelligentDetection(long queueOffsetId) {
+        return uiQueueOffsetService.intelligentDetection(queueOffsetId);
     }
 
 }

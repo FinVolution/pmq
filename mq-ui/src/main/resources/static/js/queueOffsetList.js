@@ -53,6 +53,9 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 		}if(layEvent === 'clientMonitor'){
 			getClientMonitor(data)
 		}
+        if(layEvent === 'intelligentDetection'){
+            doIntelligentDetection(data)
+        }
 		if (layEvent === 'clearConsumerId') {
 			var consumerId = data.consumerName.substring(4,
 					data.consumerName.length);
@@ -128,6 +131,18 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
                 + encodeURI(queueOffset.consumerName)+"&consumerGroupName="+queueOffset.consumerGroupName+"&queueId="+
                 queueOffset.queueId, 'yes' ], // iframe的url，no代表不显示滚动条
         });
+    }
+
+    function doIntelligentDetection(queueOffset){
+        layer.confirm("确认要检测该队列？", {
+            icon : 3,
+            title : '智能检测！'
+        }, function(index) {
+            $.post('/queueOffset/intelligentDetection', 'queueOffsetId=' + queueOffset.id,
+                requestCallback);
+            layer.close(index);
+        });
+
     }
 
 	function updateStopFlag(queueOffset) {
