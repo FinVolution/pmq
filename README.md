@@ -33,3 +33,9 @@ PMQ是拍拍贷研发一款分布式消息队列，能够保证消息的不丢�
 13. 失败消息重新消费
 14. 支持消息无缝迁移
 
+# PMQ技术交流群
+
+<img src="doc/assets/qq.png"  alt="QQ" align=center />
+
+# 参考资料
+相关文档请参考 <a href='doc/最终版+李乘胜+拍拍贷消息系统架构演进.pptx'>ppt</a> 和 <a href='https://mp.weixin.qq.com/s/5e-yC0r18FZ04vMvGxIL-w'>在线介绍</a>
