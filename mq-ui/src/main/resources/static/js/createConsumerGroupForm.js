@@ -89,7 +89,12 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     }
 
     form.on('radio(ipFlag)', function(data){
-        $('#ipList').val('');
+        if($(this).attr("id")=="ipWhite"){
+            $("#ipBlack").data("ipPre",$("#ipList").val());
+        }else{
+            $("#ipWhite").data("ipPre",$("#ipList").val());
+        }
+        $('#ipList').val($(this).data("ipPre"));
     });
 
 

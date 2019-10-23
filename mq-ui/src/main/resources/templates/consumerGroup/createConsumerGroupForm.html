@@ -72,8 +72,8 @@
         <div class="layui-form-item">
             <label class="layui-form-label">黑/白名单</label>
             <div class="layui-input-block" id="ipFlagDiv">
-                <input type="radio" name="ipFlag" value="1" title="黑名单" lay-filter="ipFlag">
-                <input type="radio" name="ipFlag" value="0" title="白名单" lay-filter="ipFlag">
+                <input type="radio" id="ipBlack" name="ipFlag" value="1" title="黑名单" lay-filter="ipFlag">
+                <input type="radio" id="ipWhite" name="ipFlag" value="0" title="白名单" lay-filter="ipFlag">
             </div>
             <div class="layui-input-block">
                 <input type="text" id="ipList" name="ipList"  lay-verType="tips" lay-verify="ip" placeholder="请输入特殊ip，多个ip用英文逗号分开" autocomplete="off"
