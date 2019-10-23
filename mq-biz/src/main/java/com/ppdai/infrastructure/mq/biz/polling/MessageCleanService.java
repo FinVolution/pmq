@@ -207,6 +207,10 @@ public class MessageCleanService extends AbstractTimerService {
 		int cleanSize = soaConfig.getCleanBatchSize();
 		log.info("clean queue {} of {} ,ip is {}", count, tcount, ip);
 		while (true && super.isMaster && soaConfig.isEnbaleMessageClean()) {
+			topicEntity=topicService.getCache().get(topicEntity.getName());
+			if(topicEntity==null) {
+				break;
+			}
 			QueueEntity temp = queueService.getAllQueueMap().get(queueEntity.getId());
 			if (temp != null && temp.getTopicId() != queueEntity.getTopicId()) {
 				// 说明队列分配发生了变化
