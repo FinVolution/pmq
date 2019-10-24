@@ -63,7 +63,7 @@ public class ConsumerGroupTopicEntity {
      private String tag;
     
     /**
-     * 默认为0，毫秒为单位。延迟处理时间，相对于发送时间的延迟，例如希望发送一条消息后10秒后被订阅，就需要设置该参数为10000。
+     * 默认为0，秒为单位。延迟处理时间，相对于发送时间的延迟，例如希望发送一条消息后10秒后被订阅，就需要设置该参数为10000。
      */
      private int delayProcessTime;
     
