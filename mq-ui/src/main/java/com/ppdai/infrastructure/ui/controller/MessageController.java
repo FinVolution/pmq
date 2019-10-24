@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.service.RoleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,8 @@ public class MessageController {
     private UserInfoHolder userInfoHolder;
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private SoaConfig soaConfig;
 
     @RequestMapping("/list/data")
     public MessageGetListResponse getMessageByPage(MessageGetListRequest messageGetListRequest) {
@@ -96,11 +99,14 @@ public class MessageController {
         Map<String,TopicEntity> topicMap=topicService.getCache();
         TopicEntity topicEntity=topicMap.get(messageToolRequest.getTopicName());
         int userRole=roleService.getRole(userInfoHolder.getUserId(),topicEntity.getOwnerIds());
-        if(userRole!=0&&userRole!=1){
-            //用户不是系统管理员，也不是topic负责人，则不能往该topic发送消息
-            publishMessageResponse.setCode("1");
-            publishMessageResponse.setMsg("你不是topic负责人，不能发送消息");
-            return publishMessageResponse;
+        boolean isPro = soaConfig.isPro();
+        if(isPro){
+            //生产环境中，如果用户不是系统管理员，也不是topic负责人，则不能往该topic发送消息
+            if(userRole!=0&&userRole!=1){
+                publishMessageResponse.setCode("1");
+                publishMessageResponse.setMsg("你不是topic负责人，不能发送消息");
+                return publishMessageResponse;
+            }
         }
         boolean result = false;
         if (messageToolRequest != null) {
