@@ -22,18 +22,6 @@
 		<slf4j.version>1.7.24</slf4j.version>		
 	</properties>
 
-    <distributionManagement>
-        <repository>
-            <id>ppdai-Releases</id>
-            <name>Internal Releases</name>
-            <url>http://maven.repo.ppdai.com/nexus/content/repositories/releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>ppdai-Snapshots</id>
-            <name>Internal Snapshots</name>
-            <url>http://maven.repo.ppdai.com/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 	<dependencyManagement>
 		<dependencies>  
 		    <!--dependency>
