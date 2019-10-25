@@ -128,7 +128,7 @@ CREATE TABLE `consumer_group_topic` (
   `thread_size` int(11) DEFAULT '10',
   `max_lag` int(11) DEFAULT '1000' COMMENT '可以自定义此topic下topic 告警条数',
   `tag` varchar(100) DEFAULT NULL COMMENT '用来做消息tag 过滤,规则是只要包含在消息体tag中就算符合',
-  `delay_process_time` int(11) DEFAULT '0' COMMENT '默认为0，毫秒为单位。延迟处理时间，相对于发送时间的延迟，例如希望发送一条消息后10秒后被订阅，就需要设置该参数为10000。',
+  `delay_process_time` int(11) DEFAULT '0' COMMENT '默认为0，秒为单位。延迟处理时间，相对于发送时间的延迟，例如希望发送一条消息后10秒后被订阅，就需要设置该参数为10000。',
   `pull_batch_size` int(11) DEFAULT '50' COMMENT '批量拉取条数',
   `consumer_batch_size` int(11) DEFAULT '1' COMMENT '批量消费条数',
   `max_pull_time` int(11) DEFAULT '5' COMMENT '最大拉取等待时间，单位是秒默认5秒，最小值1秒',
