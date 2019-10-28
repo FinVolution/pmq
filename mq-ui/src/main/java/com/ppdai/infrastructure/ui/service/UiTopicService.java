@@ -756,7 +756,9 @@ public class UiTopicService implements TimerService {
 					if (topicSubscribeMap.containsKey(topicVo.getOriginName())) {// 过滤已经被订阅的topic
 						continue;
 					}
-					if (topicVo.getInsertTime().getTime() - System.currentTimeMillis() < 3 * 24 * 60 * 60 * 1000) {
+					//排除创建时间不到三天的topic
+					if (System.currentTimeMillis()-topicVo.getInsertTime().getTime() < 3 * 24 * 60 * 60
+							* 1000) {
 						continue;
 					}
 				}
@@ -765,6 +767,13 @@ public class UiTopicService implements TimerService {
 				if ("2".equals(topicGetListRequest.getTopicExceptionType())) {
 					List<String> ownerIds = Arrays.asList(topicVo.getOwnerIds().split(","));
 					if (uiQueueOffsetService.isOwnerAvailable(ownerIds)) {
+						continue;
+					}
+				}
+
+				//过滤掉已经被订阅的topic
+				if("3".equals(topicGetListRequest.getTopicExceptionType())){
+					if (topicSubscribeMap.containsKey(topicVo.getOriginName())) {// 过滤已经被订阅的topic
 						continue;
 					}
 				}
