@@ -105,64 +105,64 @@ public class ConsumerGroupTopicCheckServiceImpl implements RedundanceCheckServic
             if(consumerGroupTopicEntity.getRetryCount()<0){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的重试次数不能小于零"+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的重试次数为："+consumerGroupTopicEntity.getRetryCount()+"，不能小于零"+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getRetryCount()>soaConfig.getConsumerGroupTopicMaxRetryCount()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的重试次数不能大于最大值："+soaConfig.getConsumerGroupTopicMaxRetryCount()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的重试次数为："+consumerGroupTopicEntity.getRetryCount()+"，不能大于最大值："+soaConfig.getConsumerGroupTopicMaxRetryCount()+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getThreadSize()<=0){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的处理线程数不能小于等于零"+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的处理线程数为："+consumerGroupTopicEntity.getThreadSize()+"，不能小于等于零"+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getThreadSize()>soaConfig.getConsumerGroupTopicMaxThreadSize()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的处理线程数不能大于"+soaConfig.getConsumerGroupTopicMaxThreadSize()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的处理线程数为："+consumerGroupTopicEntity.getThreadSize()+"，不能大于"+soaConfig.getConsumerGroupTopicMaxThreadSize()+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getPullBatchSize()<soaConfig.getMinPullBatchSize()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的批量拉取条数不能小于"+soaConfig.getMinPullBatchSize()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的批量拉取条数为："+consumerGroupTopicEntity.getPullBatchSize()+"，不能小于"+soaConfig.getMinPullBatchSize()+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getPullBatchSize()>soaConfig.getMaxPullBatchSize()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的批量拉取条数不能大于"+soaConfig.getMaxPullBatchSize()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的批量拉取条数为："+consumerGroupTopicEntity.getPullBatchSize()+"，不能大于"+soaConfig.getMaxPullBatchSize()+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getDelayProcessTime()<0){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的延迟处理时间不能小于零"+"\n");
+                        +consumerGroupTopicEntity.getTopicName()+")的延迟处理时间为："+consumerGroupTopicEntity.getDelayProcessTime()+"，不能小于零"+"<br/>");
             }
             if(consumerGroupTopicEntity.getDelayProcessTime()>soaConfig.getMaxDelayProcessTime()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的延迟处理时间不能大于"+soaConfig.getMaxDelayProcessTime()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的延迟处理时间为："+consumerGroupTopicEntity.getDelayProcessTime()+"，不能大于"+soaConfig.getMaxDelayProcessTime()+"<br/>");
             }
 
             if(consumerGroupTopicEntity.getMaxPullTime()<soaConfig.getMinDelayPullTime()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的拉取等待时间不能小于"+soaConfig.getMinDelayPullTime()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的拉取等待时间为："+consumerGroupTopicEntity.getMaxPullTime()+"，不能小于"+soaConfig.getMinDelayPullTime()+"<br/>");
             }
             if(consumerGroupTopicEntity.getMaxPullTime()>soaConfig.getMaxDelayPullTime()){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的拉取等待时间不能大于"+soaConfig.getMaxDelayPullTime()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的拉取等待时间为："+consumerGroupTopicEntity.getMaxPullTime()+"，不能大于"+soaConfig.getMaxDelayPullTime()+"<br/>");
             }
             if(consumerGroupTopicEntity.getTimeOut()<0){
                 resultBuilder.append("consumer_group_topic表中的id为："+consumerGroupTopicEntity.getId()+"的记录"+
                         "(consumerGroup为:"+consumerGroupTopicEntity.getConsumerGroupName()+",topic为:"
-                        +consumerGroupTopicEntity.getTopicName()+")的消费熔断时间不能小于零"+soaConfig.getMaxDelayPullTime()+"<br/>");
+                        +consumerGroupTopicEntity.getTopicName()+")的消费熔断时间为："+consumerGroupTopicEntity.getTimeOut()+"，不能小于零"+"<br/>");
             }
 
         }
