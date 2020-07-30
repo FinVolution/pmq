@@ -115,6 +115,9 @@
 			<if test="mode != null and mode !=''">
 				and `mode` = #{mode}
 			</if>
+			<if test="subEnv != null and subEnv !=''" >
+				and `sub_env` = #{subEnv}
+			</if>
 		</where>
 	</select>
 
@@ -204,6 +207,9 @@
 			</if>
             <if test="mode != null and mode !=''">
 				and `mode` = #{mode}
+			</if>
+			<if test="subEnv != null and subEnv !=''" >
+				and `sub_env` = #{subEnv}
 			</if>
 		</where>
 		order by id desc

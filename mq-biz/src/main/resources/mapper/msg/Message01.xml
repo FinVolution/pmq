@@ -48,7 +48,7 @@
 		<where>
 			1=1
 			<if test="sendTime != null and sendTime !=''">
-				and sendTime <![CDATA[ <= ]]>
+				and send_time <![CDATA[ <= ]]>
 				'${sendTime}'
 			</if>
 		</where>
@@ -67,6 +67,14 @@
 			</if>
 			<if test="maxId != null and maxId !=''">
 				and id <![CDATA[ < ]]>'${maxId}'
+			</if>
+
+			<if test="startTime != null and startTime !=''">
+				and send_time <![CDATA[ > ]]>'${startTime}'
+			</if>
+
+			<if test="endTime != null and endTime !=''">
+				and send_time <![CDATA[ < ]]>'${endTime}'
 			</if>
 
 			<if test="bizId != null and bizId !=''">
@@ -106,6 +114,15 @@
 			<if test="maxId != null and maxId !=''">
 				and id <![CDATA[ < ]]>'${maxId}'
 			</if>
+
+			<if test="startTime != null and startTime !=''">
+				and send_time <![CDATA[ > ]]>'${startTime}'
+			</if>
+
+			<if test="endTime != null and endTime !=''">
+				and send_time <![CDATA[ < ]]>'${endTime}'
+			</if>
+
 			<if test="bizId != null and bizId !=''">
 				and biz_Id = '${bizId}'
 			</if>

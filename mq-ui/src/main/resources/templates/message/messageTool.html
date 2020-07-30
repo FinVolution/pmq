@@ -45,6 +45,21 @@
             </div>
         </div>
 
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">子环境</label>
+                <div class="layui-input-block" style="width: 150px">
+                    <select id="subEnv" name="subEnv" lay-filter="dbNodeSelect" lay-search>
+                        <option th:each="subEnv:${subEnvList}" th:value="${subEnv}" th:text="${subEnv}"></option>
+                    </select>
+                </div>
+
+            </div>
+
+        </div>
+
+
         <div class="layui-form-item">
             <label class="layui-form-label">消息头</label>
             <div class="layui-input-inline" style="width: 400px">

@@ -6,8 +6,10 @@ public class MqConst {
 	public static final int WARN = 2;
 	public static final int INFO = 3;
 	public static final int DEBUG = 4;
-	
-	public static final int MAX_LENGTH=40000;
-	
-	//public static final String HD_MQ_QUEUEID="mq-queueId";
+
+	public static final int MAX_LENGTH = 40000;
+	public static String DEFAULT_SUBENV = "default";
+
+	public final static String MQ_SUB_ENV_KEY = "mq_sub_env";
+	// public static final String HD_MQ_QUEUEID="mq-queueId";
 }

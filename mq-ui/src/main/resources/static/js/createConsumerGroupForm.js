@@ -29,6 +29,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
             initSelectedDpts();
             initUser();
             initConsumerQuality()
+            if(!isAdmin()){//如果不是超级管理员 不能编辑实时消息
+                var co = $("form");
+                co.find("input[name='pushFlag']").attr('disabled', true);
+            }
             form.render();
         }
     }
@@ -43,6 +47,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         submitArray.push({name: 'ipFlag', value: component.find("input[name='ipFlag']:checked").val()});
         submitArray.push({name: 'alarmFlag', value: component.find("input[name='alarmFlag']:checked").val()});
         submitArray.push({name: 'traceFlag', value: component.find("input[name='traceFlag']:checked").val()});
+        submitArray.push({name: 'pushFlag', value: component.find("input[name='pushFlag']:checked").val()});
         submitArray.push({name: 'ownerIds', value: getItemIds($('#ownerIds').select2("data"))});
         submitArray.push({name: 'ownerNames', value: getItemNames($('#ownerIds').select2("data"))});
         submitArray.push({name: 'mode', value:consumerMode});
@@ -156,7 +161,8 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     function getItemIds (ownerList){
         var itemIds = [];
         $.each(ownerList, function (k, v) {
-            itemIds.push( v.text.split('|')[0]);
+            //itemIds.push( v.text.split('|')[0]);
+        	itemIds.push(v.id);
         });
         return itemIds.join(",");
     }
@@ -164,6 +170,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     function getOwnerEmails (ownerList){
         var itemIds = [];
         $.each(ownerList, function (k, v) {
+            //itemIds.push( v.text.split('|')[0]+"@ppdai.com");
             itemIds.push(v.id);
         });
         return itemIds.join(",");
@@ -208,12 +215,15 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         }
         co.find("input[name='alarmFlag'][value='"+consumerGroup.alarmFlag+"']").attr('checked', true);
         co.find("input[name='traceFlag'][value='"+consumerGroup.traceFlag+"']").attr('checked', true);
+        co.find("input[name='pushFlag'][value='"+consumerGroup.pushFlag+"']").attr('checked', true);
         co.find("input[name='name']").attr('readonly', true);
         co.find("textarea[name='remark']").val(consumerGroup.remark);
         $("input[name=name]").css('background-color','#CCCCCC');
         if(!isAdmin()){//如果不是超级管理员 不能编辑消费模式
             $("#mode").attr('disabled', true);
+            co.find("input[name='pushFlag']").attr('disabled', true);
         }
+
         form.render();
     }
 
@@ -222,18 +232,20 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     }
 
     function initOwners(consumerGroup){
-
         var ownerIds=consumerGroup.ownerIds;
         var ownerNames=consumerGroup.ownerNames;
+        var alarmEmails=consumerGroup.alarmEmails;
         if(ownerIds!=null&&ownerIds!=undefined){
             var ownerIdArr=ownerIds.split(",");
-            var ownerNameArr = ownerNames.split(",");
+	        var alarmEmailArr=alarmEmails.split(",");
+            var ownerNameArr = ownerNames.split(","); 				
             var ownerList = [];
+            var textVal=[];
             $.each(ownerIdArr, function (k, v) {
-                ownerList.push(v +"|"+ ownerNameArr[k]);
-            });
-
-            $("#ownerIds").select2({data:ownerList}).val(ownerList).trigger("change");
+                ownerList.push({"id":alarmEmailArr[k] ,text:(v +"|"+ ownerNameArr[k])});
+				textVal.push(alarmEmailArr[k]);
+	        });
+            $("#ownerIds").select2({data:ownerList}).val(textVal).trigger("change");
             $("#alarmEmails").val(consumerGroup.alarmEmails);
             initOwnerIdsSelect2();
 
@@ -270,7 +282,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
 
 
     function initDptNameSelect2(){
-        parent.window.initSelect2($("#dptName"),'/user/getDepartmentsBySearch');
+		try{
+			 parent.window.initSelect2($("#dptName"),'/user/getDepartmentsBySearch');
+		}catch(e){}
+       
     }
 
     function initSelectedDpts() {
@@ -297,8 +312,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                 if (result.code == yesFlag) {
                     var user=result.data;
                     var ownerList = [];
-                    ownerList.push(user.userId+"|"+user.name)
-                    $("#ownerIds").select2({data:ownerList}).val(ownerList).trigger("change");
+					var ownerEmail=[];
+                    ownerList.push({id:user.email,text:user.userId+"|"+user.name})	;
+                    ownerEmail.push(user.email);
+                    $("#ownerIds").select2({data:ownerList}).val(ownerEmail).trigger("change");
                     $("#alarmEmails").val(user.email);
                     initOwnerIdsSelect2();
                 }

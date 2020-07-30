@@ -2,9 +2,11 @@ package com.ppdai.infrastructure.mq.biz.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.ppdai.infrastructure.mq.biz.MqEnv;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.inf.BrokerTimerService;
 import com.ppdai.infrastructure.mq.biz.common.inf.TimerService;
@@ -53,6 +56,7 @@ import com.ppdai.infrastructure.mq.biz.service.QueueService;
 import com.ppdai.infrastructure.mq.biz.service.UserInfoHolder;
 import com.ppdai.infrastructure.mq.biz.service.common.AbstractBaseService;
 import com.ppdai.infrastructure.mq.biz.service.common.MqReadMap;
+import com.ppdai.infrastructure.mq.client.MqClient;
 
 /**
  * @author dal-generator
@@ -75,7 +79,7 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 	private UserInfoHolder userInfoHolder;
 	@Autowired
 	private Message01Service message01Service;
-	
+
 	private volatile boolean isRunning = true;
 	private volatile boolean isPortal = true;
 	private AtomicBoolean startFlag = new AtomicBoolean(false);
@@ -89,7 +93,14 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 	private AtomicReference<Map<String, QueueOffsetEntity>> offsetUqMap = new AtomicReference<>(new HashMap<>(10000));
 	private AtomicReference<Map<Long, OffsetVersionEntity>> idOffsetMap = new AtomicReference<>(
 			new ConcurrentHashMap<>(10000));
+	private AtomicReference<Map<String, List<QueueOffsetEntity>>> consumerGroupQueueOffsetMap = new AtomicReference<>(
+			new ConcurrentHashMap<>(10000));
+
+	private AtomicReference<Map<Long, List<QueueOffsetEntity>>> queueIdQueueOffsetMap = new AtomicReference<>(
+			new ConcurrentHashMap<>(10000));
 	private AtomicReference<List<QueueOffsetEntity>> cacheDataList = new AtomicReference<>(new LinkedList<>());
+	private AtomicReference<Map<String, Set<String>>> consumerGroupEnvsMapRef = new AtomicReference<>(
+			new ConcurrentHashMap<>(500));
 	private AtomicLong lastVersion = new AtomicLong(0);
 	private TraceMessage queueOffsetCacheTrace = TraceFactory.getInstance("queueOffsetCache");
 
@@ -112,8 +123,8 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 	}
 
 	@Override
-	public int commitOffset(QueueOffsetEntity entity) {		
-		int flag = queueOffsetRepository.commitOffset(entity);	
+	public int commitOffset(QueueOffsetEntity entity) {
+		int flag = queueOffsetRepository.commitOffset(entity);
 		return flag;
 	}
 
@@ -171,6 +182,52 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 	}
 
 	@Override
+	public Map<Long, List<QueueOffsetEntity>> getQueueIdQueueOffsetMap() {
+		// TODO Auto-generated method stub
+		// return offsetUqMap.get();
+
+		Map<Long, List<QueueOffsetEntity>> rs = queueIdQueueOffsetMap.get();
+		if (rs.size() == 0) {
+			cacheLock.lock();
+			try {
+				rs = queueIdQueueOffsetMap.get();
+				if (rs.size() == 0) {
+					if (first.compareAndSet(true, false)) {
+						updateCache();
+					}
+					rs = queueIdQueueOffsetMap.get();
+				}
+			} finally {
+				cacheLock.unlock();
+			}
+		}
+		return rs;
+	}
+
+	@Override
+	public Map<String, List<QueueOffsetEntity>> getConsumerGroupQueueOffsetMap() {
+		// TODO Auto-generated method stub
+		// return offsetUqMap.get();
+
+		Map<String, List<QueueOffsetEntity>> rs = consumerGroupQueueOffsetMap.get();
+		if (rs.size() == 0) {
+			cacheLock.lock();
+			try {
+				rs = consumerGroupQueueOffsetMap.get();
+				if (rs.size() == 0) {
+					if (first.compareAndSet(true, false)) {
+						updateCache();
+					}
+					rs = consumerGroupQueueOffsetMap.get();
+				}
+			} finally {
+				cacheLock.unlock();
+			}
+		}
+		return rs;
+	}
+
+	@Override
 	public void start() {
 		if (startFlag.compareAndSet(false, true)) {
 			// updateCache();
@@ -211,7 +268,10 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 			}
 			MqReadMap<String, Map<String, List<QueueOffsetEntity>>> cacheMap = new MqReadMap<>(2000);
 			MqReadMap<String, QueueOffsetEntity> offsetUqMap1 = new MqReadMap<>(data.size());
+			MqReadMap<Long, List<QueueOffsetEntity>> queueIdQueueOffsetMap1 = new MqReadMap<>(data.size());
+			MqReadMap<String, List<QueueOffsetEntity>> consumerGroupQueueOffsetMap1 = new MqReadMap<>(data.size());
 			// Map<String, QueueOffsetEntity> offsetUqMap1 = offsetUqMap.get();
+			Map<String, Set<String>> consumerGroupEnvs = new HashMap<>();
 			if (!CollectionUtils.isEmpty(data)) {
 				data.forEach(t1 -> {
 					if (!StringUtils.isEmpty(t1.getConsumerGroupName()) && !StringUtils.isEmpty(t1.getTopicName())) {
@@ -224,13 +284,54 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 						cacheMap.get(t1.getConsumerGroupName()).get(t1.getTopicName()).add(t1);
 					}
 					offsetUqMap1.put(t1.getConsumerGroupName() + "_" + t1.getTopicName() + "_" + t1.getQueueId(), t1);
+
+					if (!queueIdQueueOffsetMap1.containsKey(t1.getQueueId())) {
+						queueIdQueueOffsetMap1.put(t1.getQueueId(), new ArrayList<>());
+					}
+					queueIdQueueOffsetMap1.get(t1.getQueueId()).add(t1);
+
+					if (!consumerGroupQueueOffsetMap1.containsKey(t1.getConsumerGroupName())) {
+						consumerGroupQueueOffsetMap1.put(t1.getConsumerGroupName(), new ArrayList<>());
+					}
+					consumerGroupQueueOffsetMap1.get(t1.getConsumerGroupName()).add(t1);
+
+					if (!soaConfig.isPro() && MqClient.getMqEnvironment().getEnv() == MqEnv.FAT) {
+						if (t1.getConsumerId() > 0 && !Util.isEmpty(t1.getOriginConsumerGroupName())) {
+							if (t1.getConsumerGroupMode() == 2) {
+								if (!consumerGroupEnvs.containsKey(t1.getConsumerGroupName())) {
+									consumerGroupEnvs.put(t1.getConsumerGroupName(), new HashSet<>());
+								}
+								consumerGroupEnvs.get(t1.getConsumerGroupName()).add(t1.getSubEnv());
+							} else {
+								if (!consumerGroupEnvs.containsKey(t1.getOriginConsumerGroupName())) {
+									consumerGroupEnvs.put(t1.getOriginConsumerGroupName(), new HashSet<>());
+								}
+								consumerGroupEnvs.get(t1.getOriginConsumerGroupName()).add(t1.getSubEnv());
+							}
+						}
+					}
 				});
+			}
+			if (!soaConfig.isPro() && MqClient.getMqEnvironment().getEnv() == MqEnv.FAT) {
+				consumerGroupEnvsMapRef.set(consumerGroupEnvs);
 			}
 			cacheMap.setOnlyRead();
 			offsetUqMap1.setOnlyRead();
-			cacheDataMap.set(cacheMap);
-			cacheDataList.set(data);
-			offsetUqMap.set(offsetUqMap1);
+//			cacheDataMap.set(cacheMap);
+//			cacheDataList.set(data);
+//			offsetUqMap.set(offsetUqMap1);
+//			queueIdQueueOffsetMap.set(queueIdQueueOffsetMap1);
+//			consumerGroupQueueOffsetMap.set(consumerGroupQueueOffsetMap1);
+			if (cacheMap.size() > 0 && data.size() > 0 && offsetUqMap1.size() > 0 && queueIdQueueOffsetMap1.size() > 0
+					&& consumerGroupQueueOffsetMap1.size() > 0) {
+				cacheDataMap.set(cacheMap);
+				cacheDataList.set(data);
+				offsetUqMap.set(offsetUqMap1);
+				queueIdQueueOffsetMap.set(queueIdQueueOffsetMap1);
+				consumerGroupQueueOffsetMap.set(consumerGroupQueueOffsetMap1);
+			}else {
+				lastUpdateEntity = null;
+			}
 			traceMessageItem.status = "count-" + offsetUqMap1.size();
 			queueOffsetCacheTrace.add(traceMessageItem);
 			lastVersion.incrementAndGet();
@@ -253,19 +354,21 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 	}
 
 	private volatile LastUpdateEntity lastUpdateEntity = null;
-	private long lastTime=System.currentTimeMillis();
-	private boolean checkChanged() {		
-		boolean flag= doCheckChanged();
-		if(!flag){
-			if(System.currentTimeMillis()-lastTime>soaConfig.getMqMetaRebuildMaxInterval()){
-				lastTime=System.currentTimeMillis();
+	private long lastTime = System.currentTimeMillis();
+
+	private boolean checkChanged() {
+		boolean flag = doCheckChanged();
+		if (!flag) {
+			if (System.currentTimeMillis() - lastTime > soaConfig.getMqMetaRebuildMaxInterval()) {
+				lastTime = System.currentTimeMillis();
 				return true;
 			}
-		}else{
-			lastTime=System.currentTimeMillis();
+		} else {
+			lastTime = System.currentTimeMillis();
 		}
 		return flag;
 	}
+
 	private boolean doCheckChanged() {
 		Transaction transaction = Tracer.newTransaction("Timer", "QueueOffset-checkChanged");
 		updateOffsetCache();
@@ -288,8 +391,8 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 		} finally {
 			transaction.complete();
 		}
-		if(!flag && cacheDataMap.get().size()==0){
-			log.warn("queueOffset数据为空，请注意！");			
+		if (!flag && cacheDataMap.get().size() == 0) {
+			log.warn("queueOffset数据为空，请注意！");
 			return true;
 		}
 		return flag;
@@ -329,10 +432,10 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 				"删除consumerGroup在queueOffset表中的信息");
 	}
 
-
 	@Override
 	public void deleteByConsumerGroupIdAndOriginTopicName(ConsumerGroupTopicEntity consumerGroupTopicEntity) {
-		queueOffsetRepository.deleteByConsumerGroupIdAndOriginTopicName(consumerGroupTopicEntity.getConsumerGroupId(), consumerGroupTopicEntity.getOriginTopicName());
+		queueOffsetRepository.deleteByConsumerGroupIdAndOriginTopicName(consumerGroupTopicEntity.getConsumerGroupId(),
+				consumerGroupTopicEntity.getOriginTopicName());
 		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME, consumerGroupTopicEntity.getConsumerGroupId(),
 				"取消" + consumerGroupTopicEntity.getConsumerGroupName() + "对" + consumerGroupTopicEntity.getTopicName()
 						+ "订阅时，删除queueOffset，对应的consumerGroupTopic为：" + JsonUtil.toJson(consumerGroupTopicEntity));
@@ -382,8 +485,6 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 		return queueOffsetRepository.getAllBasic();
 	}
 
-	
-
 	@Override
 	public long getLastVersion() {
 		// TODO Auto-generated method stub
@@ -430,7 +531,6 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 
 	}
 
-
 	@Override
 	public BaseUiResponse createQueueOffset(ConsumerGroupTopicEntity consumerGroupTopicEntity) {
 
@@ -445,15 +545,16 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 			QueueOffsetEntity queueOffsetEntity = new QueueOffsetEntity();
 			queueOffsetEntity.setConsumerGroupId(consumerGroup.getId());
 			queueOffsetEntity.setConsumerGroupName(consumerGroup.getName());
-			//设置消费者组的原始name
+			// 设置消费者组的原始name
 			queueOffsetEntity.setOriginConsumerGroupName(consumerGroup.getOriginName());
-			//设置消费者组的消费模式
+			// 设置消费者组的消费模式
 			queueOffsetEntity.setConsumerGroupMode(consumerGroup.getMode());
 			queueOffsetEntity.setTopicId(consumerGroupTopicEntity.getTopicId());
 			queueOffsetEntity.setTopicName(consumerGroupTopicEntity.getTopicName());
 			queueOffsetEntity.setOriginTopicName(consumerGroupTopicEntity.getOriginTopicName());
 			queueOffsetEntity.setTopicType(consumerGroupTopicEntity.getTopicType());
 			queueOffsetEntity.setQueueId(queueEntity.getId());
+			queueOffsetEntity.setSubEnv(consumerGroup.getSubEnv());
 			queueOffsetEntity
 					.setDbInfo(queueEntity.getIp() + " | " + queueEntity.getDbName() + " | " + queueEntity.getTbName());
 			String userId = userInfoHolder.getUserId();
@@ -475,7 +576,7 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 								+ consumerGroupTopicEntity.getTopicName() + "时的起始偏移："
 								+ queueOffsetEntity.getStartOffset() + "。添加订阅时增加queueOffset："
 								+ JsonUtil.toJson(queueOffsetEntity) + " 同时queue信息为：" + JsonUtil.toJson(queueEntity));
-		
+
 			} else {
 				uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,
 						consumerGroupTopicEntity.getConsumerGroupId(), consumerGroupTopicEntity.getConsumerGroupName()
@@ -487,23 +588,31 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 	}
 
 	@Override
-	public long countBy(Map<String, Object> conditionMap){
+	public long countBy(Map<String, Object> conditionMap) {
 		return queueOffsetRepository.countBy(conditionMap);
 	}
 
 	@Override
-	public List<QueueOffsetEntity> getListBy(Map<String, Object> conditionMap, long page, long pageSize){
+	public List<QueueOffsetEntity> getListBy(Map<String, Object> conditionMap, long page, long pageSize) {
 		conditionMap.put("start1", (page - 1) * pageSize);
 		conditionMap.put("offset1", pageSize);
-		return  queueOffsetRepository.getListBy(conditionMap);
+		return queueOffsetRepository.getListBy(conditionMap);
 	}
 
 	@Override
 	public long getOffsetSumByIds(List<Long> ids) {
-		if(CollectionUtils.isEmpty(ids))return 0;
-		Long sum=queueOffsetRepository.getOffsetSumByIds(ids);
-		if(sum==null)return 0;
+		if (CollectionUtils.isEmpty(ids))
+			return 0;
+		Long sum = queueOffsetRepository.getOffsetSumByIds(ids);
+		if (sum == null)
+			return 0;
 		return sum;
+	}
+
+	@Override
+	public Map<String, Set<String>> getSubEnvs() {
+		// TODO Auto-generated method stub
+		return consumerGroupEnvsMapRef.get();
 	}
 
 }

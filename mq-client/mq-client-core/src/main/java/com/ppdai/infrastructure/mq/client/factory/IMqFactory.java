@@ -1,7 +1,6 @@
 package com.ppdai.infrastructure.mq.client.factory;
 
 import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerQueueDto;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
 import com.ppdai.infrastructure.mq.client.core.IConsumerPollingService;
 import com.ppdai.infrastructure.mq.client.core.IMqBrokerUrlRefreshService;
 import com.ppdai.infrastructure.mq.client.core.IMqCheckService;
@@ -10,25 +9,27 @@ import com.ppdai.infrastructure.mq.client.core.IMqHeartbeatService;
 import com.ppdai.infrastructure.mq.client.core.IMqMeticReporterService;
 import com.ppdai.infrastructure.mq.client.core.IMqQueueExcutorService;
 import com.ppdai.infrastructure.mq.client.core.IMqTopicQueueRefreshService;
+import com.ppdai.infrastructure.mq.client.core.IMsgNotifyService;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 
 public interface IMqFactory {
-	IMqBrokerUrlRefreshService createMqBrokerUrlRefreshService(IMqClientBase mqClientBase);
+	IMqBrokerUrlRefreshService createMqBrokerUrlRefreshService();
 
-	IMqCheckService createMqCheckService(IMqClientBase mqClientBase);
+	IMqCheckService createMqCheckService();
 
-	IMqGroupExcutorService createMqGroupExcutorService(IMqClientBase mqClientBase);
+	IMqGroupExcutorService createMqGroupExcutorService();
 
-	IMqHeartbeatService createMqHeartbeatService(IMqClientBase mqClientBase);
+	IMqHeartbeatService createMqHeartbeatService();
 
-	IMqMeticReporterService createMqMeticReporterService(IMqClientBase mqClientBase);
+	IMqMeticReporterService createMqMeticReporterService();
 
-	IMqQueueExcutorService createMqQueueExcutorService(IMqClientBase mqClientBase, String consumerGroupName,
+	IMqQueueExcutorService createMqQueueExcutorService(String consumerGroupName,
 			ConsumerQueueDto consumerQueue);
 
-	IMqTopicQueueRefreshService createMqTopicQueueRefreshService(IMqClientBase mqContext);
+	IMqTopicQueueRefreshService createMqTopicQueueRefreshService();
 	
-	IConsumerPollingService createConsumerPollingService(IMqClientBase mqClientBase);
+	IConsumerPollingService createConsumerPollingService();
 	
 	IMqResource createMqResource(String url, long connectionTimeOut, long readTimeOut);
+	IMsgNotifyService createMsgNotifyService();
 }

@@ -148,4 +148,169 @@
 		) b ON a.topic_id = b.topic_id
 	</select>
 
+	<select id="getListBy" parameterType="java.util.Map" resultMap="BaseResultMap">
+		select *
+		from queue
+		<where>
+			1=1
+			<if test="id != null and id !=''" >
+				and `id` = #{id}
+			</if>
+			<if test="topicId != null and topicId !=''" >
+				and `topic_id` = #{topicId}
+			</if>
+			<if test="topicName != null and topicName !=''" >
+				and `topic_name` = #{topicName}
+			</if>
+			<if test="dbNodeId != null and dbNodeId !=''" >
+				and `db_node_id` = #{dbNodeId}
+			</if>
+			<if test="nodeType != null and nodeType !=''" >
+				and `node_type` = #{nodeType}
+			</if>
+			<if test="ip != null and ip !=''" >
+				and `ip` = #{ip}
+			</if>
+			<if test="dbName != null and dbName !=''" >
+				and `db_name` = #{dbName}
+			</if>
+			<if test="tbName != null and tbName !=''" >
+				and `tb_name` = #{tbName}
+			</if>
+			<if test="readOnly != null and readOnly !=''" >
+				and `read_only` = #{readOnly}
+			</if>
+			<if test="minId != null and minId !=''" >
+				and `min_id` = #{minId}
+			</if>
+			<if test="insertBy != null and insertBy !=''" >
+				and `insert_by` = #{insertBy}
+			</if>
+			<if test="insertTime != null and insertTime !=''" >
+				and `insert_time` = #{insertTime}
+			</if>
+			<if test="updateBy != null and updateBy !=''" >
+				and `update_by` = #{updateBy}
+			</if>
+			<if test="updateTime != null and updateTime !=''" >
+				and `update_time` = #{updateTime}
+			</if>
+			<if test="isActive != null and isActive !=''" >
+				and `is_active` = #{isActive}
+			</if>
+			<if test="lockVersion != null and lockVersion !=''" >
+				and `lock_version` = #{lockVersion}
+			</if>
+			<if test="metaUpdateTime != null and metaUpdateTime !=''" >
+				and `meta_update_time` = #{metaUpdateTime}
+			</if>
+
+			<if test="updateTimeStart != null and updateTimeStart !=''" >
+				and update_time >= #{updateTimeStart}
+			</if>
+			<if test="updateTimeEnd != null and updateTimeEnd !=''" >
+				and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+			</if>
+			<if test="insertTimeStart != null and insertTimeStart !=''" >
+				and insert_time >= #{insertTimeStart}
+			</if>
+			<if test="insertTimeEnd != null and insertTimeEnd !=''" >
+				and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+			</if>
+			<if test="distributeType == 1" >
+				and topic_name != ''
+			</if>
+			<if test="distributeType == 2" >
+				and (topic_name = null or topic_name = '')
+			</if>
+			<if test="distributeType == 3" >
+				and topic_name ='MQ_NEED_DELETE_1111111'
+			</if>
+		</where>
+		order by id desc
+		limit #{start1}, #{offset1}
+	</select>
+
+	<select id="countBy" parameterType="java.util.Map" resultType="java.lang.Long">
+		select count(1)
+		from queue
+		<where>
+			1=1
+			<if test="id != null and id !=''" >
+				and `id` = #{id}
+			</if>
+			<if test="topicId != null and topicId !=''" >
+				and `topic_id` = #{topicId}
+			</if>
+			<if test="topicName != null and topicName !=''" >
+				and `topic_name` = #{topicName}
+			</if>
+			<if test="dbNodeId != null and dbNodeId !=''" >
+				and `db_node_id` = #{dbNodeId}
+			</if>
+			<if test="nodeType != null and nodeType !=''" >
+				and `node_type` = #{nodeType}
+			</if>
+			<if test="ip != null and ip !=''" >
+				and `ip` = #{ip}
+			</if>
+			<if test="dbName != null and dbName !=''" >
+				and `db_name` = #{dbName}
+			</if>
+			<if test="tbName != null and tbName !=''" >
+				and `tb_name` = #{tbName}
+			</if>
+			<if test="readOnly != null and readOnly !=''" >
+				and `read_only` = #{readOnly}
+			</if>
+			<if test="minId != null and minId !=''" >
+				and `min_id` = #{minId}
+			</if>
+			<if test="insertBy != null and insertBy !=''" >
+				and `insert_by` = #{insertBy}
+			</if>
+			<if test="insertTime != null and insertTime !=''" >
+				and `insert_time` = #{insertTime}
+			</if>
+			<if test="updateBy != null and updateBy !=''" >
+				and `update_by` = #{updateBy}
+			</if>
+			<if test="updateTime != null and updateTime !=''" >
+				and `update_time` = #{updateTime}
+			</if>
+			<if test="isActive != null and isActive !=''" >
+				and `is_active` = #{isActive}
+			</if>
+			<if test="lockVersion != null and lockVersion !=''" >
+				and `lock_version` = #{lockVersion}
+			</if>
+			<if test="metaUpdateTime != null and metaUpdateTime !=''" >
+				and `meta_update_time` = #{metaUpdateTime}
+			</if>
+
+			<if test="updateTimeStart != null and updateTimeStart !=''" >
+				and update_time >= #{updateTimeStart}
+			</if>
+			<if test="updateTimeEnd != null and updateTimeEnd !=''" >
+				and update_time <![CDATA[ <= ]]> #{updateTimeEnd}
+			</if>
+			<if test="insertTimeStart != null and insertTimeStart !=''" >
+				and insert_time >= #{insertTimeStart}
+			</if>
+			<if test="insertTimeEnd != null and insertTimeEnd !=''" >
+				and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+			</if>
+
+			<if test="distributeType == 1" >
+				and topic_name != ''
+			</if>
+			<if test="distributeType == 2" >
+				and topic_name = null or topic_name = ''
+			</if>
+			<if test="distributeType == 3" >
+				and topic_name ='MQ_NEED_DELETE_1111111'
+			</if>
+		</where>
+	</select>
+
 </mapper>

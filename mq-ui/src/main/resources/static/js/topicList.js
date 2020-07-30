@@ -115,11 +115,11 @@
                 id: topicId,
                 ownerName: ownerName,
                 topicType : topicType
+            },
+            page: {
+                curr: page
             }
         };
-        if (page !== undefined) {
-            option["page"]= page;
-        }
 
         table.reload("topicTable", option);
     }

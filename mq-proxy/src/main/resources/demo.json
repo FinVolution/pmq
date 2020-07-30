@@ -1,0 +1,7 @@
+{
+    "Test1Sub": {
+        "ipLst": "127.0.0.1,127.0.0.2",
+        "exeUrl": "http://localhost:8081/proxy1",
+        "hsUrl": "http://localhost:8081/hs"
+    }
+}

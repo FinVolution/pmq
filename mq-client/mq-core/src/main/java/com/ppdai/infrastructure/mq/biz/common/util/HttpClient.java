@@ -7,12 +7,7 @@ import com.ppdai.infrastructure.mq.biz.common.trace.CatContext;
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
 
-import okhttp3.ConnectionPool;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 
 public class HttpClient implements IHttpClient{
 	//private static final Logger logger = LoggerFactory.getLogger(HttpClient.class);
@@ -120,6 +115,40 @@ public class HttpClient implements IHttpClient{
 			return JsonUtil.parseJson(rs, class1);
 		}
 	}
+
+	public void postAsyn(String url, Object reqObj, Callback callback) {
+		String json = "";
+		if (reqObj != null) {
+			json = JsonUtil.toJsonNull(reqObj);
+		}
+
+		try {
+			RequestBody body = RequestBody.create(JSONTYPE, json);
+			okhttp3.Request.Builder requestbuilder = (new okhttp3.Request.Builder()).url(url).post(body);
+			Request request = requestbuilder.build();
+			if (callback != null) {
+				this.client.newCall(request).enqueue(callback);
+			} else {
+				this.client.newCall(request).enqueue(new Callback() {
+					public void onFailure(Call call, IOException e) {
+					}
+
+					public void onResponse(Call call, Response response) throws IOException {
+						try {
+							response.close();
+						} catch (Exception var4) {
+							;
+						}
+
+					}
+				});
+			}
+		} catch (Exception var8) {
+			;
+		}
+
+	}
+
 	public String get(String url) throws IOException {		
 		Response response = null; 
 		Transaction transaction = null;

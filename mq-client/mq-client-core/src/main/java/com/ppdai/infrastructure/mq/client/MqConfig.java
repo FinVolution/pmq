@@ -23,7 +23,17 @@ public class MqConfig {
 	// 消息发送拉取超时时间
 	private volatile long readTimeOut = 10000;
 	// 数据拉取没有数据时，递增值
-	private int pullDeltaTime = 150;
+	private int pullDeltaTime = 1000;
+	// 异步发送最大等待时间
+	private int publishAsynTimeout=1000;
+
+	public int getPublishAsynTimeout() {
+		return publishAsynTimeout;
+	}
+
+	public void setPublishAsynTimeout(int publishAsynTimeout) {
+		this.publishAsynTimeout = publishAsynTimeout;
+	}
 
 	public int getPullDeltaTime() {
 		return pullDeltaTime;

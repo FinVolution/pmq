@@ -48,7 +48,7 @@ public class AuditLogCleanService extends AbstractTimerService {
 	public void deleteOldDate(){
 		long saveDayNum = soaConfig.getLogSaveDayNum();
 		long minId = auditLogService.getMindId();
-		while (true&&super.isMaster&&soaConfig.isEnbaleAuditLogClean()) {
+		while (true&&isMaster()&&soaConfig.isEnbaleAuditLogClean()) {
 			Transaction transaction = Tracer.newTransaction("mq-msg",
 					"delete-log");
 			transaction.setStatus(Transaction.SUCCESS);

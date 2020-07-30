@@ -24,6 +24,17 @@
     </thead>
 </table>
 
+<br/>
+<br/>
+<table class="layui-table" lay-data="{height:'full', url:'/dbNode/onLineNums', id:'onLineNumsTable'}" lay-filter="onLineNumsTable">
+    <thead>
+    <tr>
+        <th lay-data="{field: 'name', align: 'center', sort: true}">名称</th>
+        <th lay-data="{field: 'number', align: 'center',sort: true}">数量</th>
+    </tr>
+    </thead>
+</table>
+
 <script th:src="@{/layui/layui.js}"></script>
 <script th:inline="javascript">
     layui.use(['element', 'table', 'jquery', 'layer','form'], function () {
@@ -34,6 +45,7 @@
 
         $("body").on("click", "#connections_btn", function () {
             table.reload('connectionsTable');
+            table.reload('onLineNumsTable');
         });
     });
 </script>

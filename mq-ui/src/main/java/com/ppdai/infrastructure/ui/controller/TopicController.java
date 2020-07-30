@@ -2,6 +2,7 @@ package com.ppdai.infrastructure.ui.controller;
 
 import java.util.List;
 
+import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,6 +130,11 @@ public class TopicController {
     @RequestMapping("/report/data")
     public TopicReportResponse getTopicReport(TopicGetListRequest topicGetListRequest){
         return uiTopicService.getTopicReport(topicGetListRequest);
+    }
+
+    @RequestMapping("/msgCount")
+    public BaseUiResponse<String> getTopicMsgCount(@RequestParam("topicName") String topicName, @RequestParam("startTime") String startTime, @RequestParam("endTime") String endTime){
+        return uiTopicService.getTopicMsgCount(topicName,startTime,endTime);
     }
 
 }

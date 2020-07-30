@@ -2,6 +2,7 @@ package com.ppdai.infrastructure.rest.mq.controller.client;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,6 +19,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import com.ppdai.infrastructure.mq.biz.MqEnv;
 import com.ppdai.infrastructure.mq.biz.cache.ConsumerGroupCacheService;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.inf.ConsumerGroupChangedListener;
@@ -34,6 +36,8 @@ import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupOneDto;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupResponse;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerService;
+import com.ppdai.infrastructure.mq.biz.service.IIpSubEnvService;
+import com.ppdai.infrastructure.mq.client.MqClient;
 
 @RestController
 @RequestMapping(MqConstanst.CONSUMERPRE)
@@ -48,6 +52,8 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 	private ConsumerGroupCacheService consumerGroupCacheService;
 	@Autowired
 	private ConsumerService consumerService;
+	@Autowired
+	private IIpSubEnvService iIpSubEnvService;
 	private static AtomicLong longPollingCounter = new AtomicLong(0);
 	@Autowired
 	private SoaConfig soaConfig;
@@ -76,13 +82,13 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 		response.setSuc(true);
 		response.setSleepTime(RandomUtils.nextInt(50, 2000));
 		response.setBrokerMetaMode(soaConfig.getBrokerMetaMode());
+		setSubEnv(request, response);
 		DeferredResult<GetConsumerGroupResponse> deferredResult = new DeferredResult<>(
 				soaConfig.getPollingTimeOut() * 1000L, response);
 		GetConsumerGroupResponse getApplicationResponse = doCheckConsumerGroupPolling(request);
 		if (getApplicationResponse != null) {
 			deferredResult.setResult(getApplicationResponse);
 		} else {
-			mapAppPolling.put(request, deferredResult);
 			long count = longPollingCounter.incrementAndGet();
 			TraceMessageItem traceMessageItem = new TraceMessageItem();
 			traceMessageItem.status = count + "";
@@ -91,6 +97,7 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 				deferredResult.setResult(response);
 				longPollingCounter.decrementAndGet();
 			} else {
+				mapAppPolling.put(request, deferredResult);
 				deferredResult.onTimeout(() -> {
 					getFollowMsg(request, "getConsumerGroupPolling time out notify");
 				});
@@ -112,6 +119,21 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 			}
 		}
 		return deferredResult;
+	}
+
+	private void setSubEnv(GetConsumerGroupRequest request, GetConsumerGroupResponse response) {
+		if (!soaConfig.isPro() && MqClient.getMqEnvironment().getEnv() == MqEnv.FAT
+				&& soaConfig.getMqBrokerSetSubEnvFlag() == 1) {
+			if (request != null) {
+				Map<String, Set<String>> consumerGroupSubEnvMap = new HashMap<>(
+						request.getConsumerGroupVersion().size());
+				request.getConsumerGroupVersion().entrySet().forEach(t1 -> {
+					consumerGroupSubEnvMap.put(t1.getKey(), iIpSubEnvService.getSubEnvs(t1.getKey()));
+				});
+				response.setConsumerGroupSubEnvMap(consumerGroupSubEnvMap);
+			}
+		}
+
 	}
 
 	private void getFollowMsg(GetConsumerGroupRequest request, String action) {
@@ -151,32 +173,38 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 		response.setSuc(true);
 		response.setConsumerDeleted(0);
 		response.setBrokerMetaMode(soaConfig.getBrokerMetaMode());
-		if (consumerService.get(request.getConsumerId()) == null) {
-			response.setConsumerDeleted(1);
-			return response;
-		} else {
-			Map<String, ConsumerGroupOneDto> dataRs = new HashMap<>();
-			//t1,key 为consumergroupname,value为consumergroup对应的版本号
-			for (Map.Entry<String, Long> t1 : request.getConsumerGroupVersion().entrySet()) {
-				if (consumerGroupMap.containsKey(t1.getKey()) && t1.getValue() < consumerGroupMap.get(t1.getKey()).getMeta().getVersion()) {
-					ConsumerGroupOneDto consumerGroupOneDto = new ConsumerGroupOneDto();
-					consumerGroupOneDto.setMeta(consumerGroupMap.get(t1.getKey()).getMeta());					
-					consumerGroupOneDto.setQueues(new HashMap<>());
-					if (consumerGroupMap.get(t1.getKey()).getConsumers() != null
-							&& consumerGroupMap.get(t1.getKey()).getConsumers().containsKey(request.getConsumerId())) {
-						consumerGroupOneDto
-								.setQueues(consumerGroupMap.get(t1.getKey()).getConsumers().get(request.getConsumerId()));
-					}
-					dataRs.put(t1.getKey(), consumerGroupOneDto);
-				}
-			}
-			if (dataRs.size() > 0) {
-				response.setConsumerGroups(dataRs);
+		try {
+			if (consumerService.get(request.getConsumerId()) == null) {
+				response.setConsumerDeleted(1);
 				return response;
-			} else {
-				return null;
+			}
+		} catch (Throwable e) {
+			//防止出现数据库出问题，客户端重新注册
+		    Util.sleep(1000L);
+		}	
+		Map<String, ConsumerGroupOneDto> dataRs = new HashMap<>();
+		// t1,key 为consumergroupname,value为consumergroup对应的版本号
+		for (Map.Entry<String, Long> t1 : request.getConsumerGroupVersion().entrySet()) {
+			if (consumerGroupMap.containsKey(t1.getKey())
+					&& t1.getValue() < consumerGroupMap.get(t1.getKey()).getMeta().getVersion()) {
+				ConsumerGroupOneDto consumerGroupOneDto = new ConsumerGroupOneDto();
+				consumerGroupOneDto.setMeta(consumerGroupMap.get(t1.getKey()).getMeta());
+				consumerGroupOneDto.setQueues(new HashMap<>());
+				if (consumerGroupMap.get(t1.getKey()).getConsumers() != null
+						&& consumerGroupMap.get(t1.getKey()).getConsumers().containsKey(request.getConsumerId())) {
+					consumerGroupOneDto
+							.setQueues(consumerGroupMap.get(t1.getKey()).getConsumers().get(request.getConsumerId()));
+				}
+				dataRs.put(t1.getKey(), consumerGroupOneDto);
 			}
 		}
+		if (dataRs.size() > 0) {
+			response.setConsumerGroups(dataRs);
+			return response;
+		} else {
+			return null;
+		}
+
 	}
 
 	@Override

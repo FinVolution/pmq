@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ppdai.infrastructure.mq.biz.MqEnv;
 import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessage;
@@ -20,7 +21,7 @@ import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupResponse;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 import com.ppdai.infrastructure.mq.client.core.IConsumerPollingService;
 import com.ppdai.infrastructure.mq.client.core.IMqGroupExcutorService;
@@ -35,20 +36,18 @@ public class ConsumerPollingService implements IConsumerPollingService {
 	private Map<String, IMqGroupExcutorService> mqExcutors = new ConcurrentHashMap<>();
 	private MqContext mqContext = null;
 	private IMqResource mqResource;
-	private IMqClientBase mqClientBase;
 	private IMqFactory mqFactory;
 	private volatile boolean isStop = false;
 	private volatile boolean runStatus = false;
 
-	public ConsumerPollingService(IMqClientBase mqClientBase) {
-		this(mqClientBase, mqClientBase.getMqFactory().createMqResource(mqClientBase.getContext().getConfig().getUrl(), 32000, 32000));
+	public ConsumerPollingService() {
+		this(MqClient.getMqFactory().createMqResource(MqClient.getContext().getConfig().getUrl(), 32000, 32000));
 	}
 
-	public ConsumerPollingService(IMqClientBase mqClientBase, IMqResource mqResource) {
-		this.mqContext = mqClientBase.getContext();
+	public ConsumerPollingService(IMqResource mqResource) {
+		this.mqContext = MqClient.getContext();
 		this.mqResource = mqResource;
-		this.mqClientBase = mqClientBase;
-		this.mqFactory = mqClientBase.getMqFactory();
+		this.mqFactory = MqClient.getMqFactory();
 		this.mqContext.setMqPollingResource(mqResource);
 	}
 
@@ -112,13 +111,16 @@ public class ConsumerPollingService implements IConsumerPollingService {
 		}
 		if (response != null) {
 			mqContext.setBrokerMetaMode(response.getBrokerMetaMode());
+			if (MqClient.getMqEnvironment() != null && MqClient.getMqEnvironment().getEnv() == MqEnv.FAT) {
+				MqClient.getContext().setAppSubEnvMap(response.getConsumerGroupSubEnvMap());
+			}
 		}
 		if (response != null && response.getConsumerDeleted() == 1) {
-			mqClientBase.reStart();
+			MqClient.reStart();
 			Util.sleep(5000);
 			return;
-		}
-		else if (response != null && response.getConsumerGroups() != null && response.getConsumerGroups().size() > 0) {
+		} else if (response != null && response.getConsumerGroups() != null
+				&& response.getConsumerGroups().size() > 0) {
 			log.info("get_consumer_group_data,获取到的最新消费者组数据为：" + JsonUtil.toJson(response));
 			TraceMessageItem item = new TraceMessageItem();
 			item.status = "changed";
@@ -126,7 +128,7 @@ public class ConsumerPollingService implements IConsumerPollingService {
 			response.getConsumerGroups().entrySet().forEach(t1 -> {
 				if (!isStop) {
 					if (!mqExcutors.containsKey(t1.getKey())) {
-						mqExcutors.put(t1.getKey(), mqFactory.createMqGroupExcutorService(mqClientBase));
+						mqExcutors.put(t1.getKey(), mqFactory.createMqGroupExcutorService());
 					}
 					log.info("consumer_group_data_change,消费者组" + t1.getKey() + "发生重平衡或者meta更新");
 					// 进行重平衡操作或者更新元数据信息
@@ -168,5 +170,11 @@ public class ConsumerPollingService implements IConsumerPollingService {
 		}
 		startFlag.set(false);
 		isStop = true;
+	}
+
+	@Override
+	public Map<String, IMqGroupExcutorService> getMqExcutors() {
+		// TODO Auto-generated method stub
+		return mqExcutors;
 	}
 }

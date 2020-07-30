@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<messageQueue>
+     <consumer groupName="TestProxy" alarmEmails="*****@****.com">
+        <topics>
+            <topic name="****"  receiverType="com.ppdai.infrastructure.proxy.ProxySub"></topic>
+        </topics>
+    </consumer>
+</messageQueue>

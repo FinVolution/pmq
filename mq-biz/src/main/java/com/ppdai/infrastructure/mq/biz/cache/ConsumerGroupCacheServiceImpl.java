@@ -29,7 +29,6 @@ import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessage;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessageItem;
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
-import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerGroupDto;
 import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerGroupMetaDto;
@@ -45,10 +44,10 @@ import com.ppdai.infrastructure.mq.biz.service.common.DbService;
 @Component
 public class ConsumerGroupCacheServiceImpl implements ConsumerGroupCacheService {
 	private Logger log = LoggerFactory.getLogger(ConsumerGroupCacheServiceImpl.class);
-	//记录上次的最大id
+	// 记录上次的最大id
 	private volatile long lastMaxId = 0;
 	private volatile boolean stop = true;
-	private final Object lockObj = new Object();
+	// private final Object lockObj = new Object();
 	private volatile long currentMaxId = 0;
 
 	@Autowired
@@ -97,20 +96,20 @@ public class ConsumerGroupCacheServiceImpl implements ConsumerGroupCacheService 
 			}
 			lastDate = new Date();
 			executor.execute(() -> {
-				doCheckPollingData();
+				checkPollingData();
 			});
 		}
 	}
 
 	private synchronized void initData() {
-		synchronized (lockObj) {
-			Map<String, ConsumerGroupDto> dataMap = doInitData();
-			String json = JsonUtil.toJson(dataMap);
-			log.info("cache_data_is " + json);
+		Map<String, ConsumerGroupDto> dataMap = doInitData();
+//		String json = JsonUtil.toJson(dataMap);
+//		log.info("cache_data_is " + json);
+		if (dataMap.size() > 0) {
 			consumerGroupRefMap.set(dataMap);
-			log.info("ConsumerGroup_init_suc, 初始化完成！");
-			initConsumerGroupCounter.inc();
 		}
+		log.info("ConsumerGroup_init_suc, 初始化完成！");
+		initConsumerGroupCounter.inc();
 	}
 
 	private Map<String, ConsumerGroupDto> doInitData() {
@@ -153,11 +152,11 @@ public class ConsumerGroupCacheServiceImpl implements ConsumerGroupCacheService 
 			consumerGroupDto.setConsumers(consumers);
 			t1.queueOffsets.forEach(t3 -> {
 				if (!StringUtils.isEmpty(t3.getOriginTopicName())) {
-					if(!consumers.containsKey(t3.getConsumerId())){
-						//consumers.putIfAbsent(t3.getConsumerId(), new HashMap<>());	
+					if (!consumers.containsKey(t3.getConsumerId())) {
+						// consumers.putIfAbsent(t3.getConsumerId(), new HashMap<>());
 						consumers.put(t3.getConsumerId(), new HashMap<>());
 					}
-					
+
 					ConsumerQueueDto consumerQueueDto = getConsumerQueue(t1, t2, t3);
 					consumers.get(t3.getConsumerId()).put(consumerQueueDto.getQueueId(), consumerQueueDto);
 				} else {
@@ -200,7 +199,7 @@ public class ConsumerGroupCacheServiceImpl implements ConsumerGroupCacheService 
 			consumerQueueDto.setMaxPullTime(temp.getMaxPullTime());
 			consumerQueueDto.setTimeout(temp.getTimeOut());
 		} else {
-			//大部分情况不会调用此代码，防止极端情况
+			// 大部分情况不会调用此代码，防止极端情况
 			consumerQueueDto.setDelayProcessTime(0);
 			consumerQueueDto.setThreadSize(10);
 			consumerQueueDto.setConsumerBatchSize(1);
@@ -219,42 +218,41 @@ public class ConsumerGroupCacheServiceImpl implements ConsumerGroupCacheService 
 		}
 	}
 
-	private void doCheckPollingData() {
+	private void checkPollingData() {
 		while (!stop) {
-			synchronized (lockObj) {
-				Transaction catTransaction = Tracer.newTransaction("ConsumerGroupCacheService", "DoCheckPollingData");
-				TraceMessageItem item = new TraceMessageItem();
-				try {
-					catTransaction.setStatus(Transaction.SUCCESS);
-					if (reInit()) {
-						item.status = "reInit";
-						item.msg = "currentMaxId:" + currentMaxId + ",maxId:" + lastMaxId + ",dbtime is "
-								+ Util.formateDate(dbService.getDbTime());
-						continue;
-					}
-					else {
-						currentMaxId = notifyMessageService.getDataMaxId(lastMaxId);
-						if (currentMaxId > 0 && currentMaxId > lastMaxId) {
-							item.status = "maxId-" + lastMaxId;
-							updateCache();
-							lastMaxId = currentMaxId;
-							item.msg = "currentMaxId:" + currentMaxId + ",maxId:" + lastMaxId + ",dbtime is "
-									+ Util.formateDate(dbService.getDbTime());
-						} else {
-							item.status = "maxId-nodata";
-						}
-					}
-					
-					catTransaction.setStatus(Transaction.SUCCESS);
-				} catch (Exception e) {
-					log.error("doCheckPollingData_error,更新异常", e);
-					catTransaction.setStatus(e);
-				} finally {
-					catTransaction.complete();
-					traceMax.add(item);
+			doCheckPollingData();
+			Util.sleep(soaConfig.getCheckPollingDataInterval());
+		}
+	}
+
+	private void doCheckPollingData() {
+		Transaction catTransaction = Tracer.newTransaction("ConsumerGroupCacheService", "DoCheckPollingData");
+		TraceMessageItem item = new TraceMessageItem();
+		try {
+			if (reInit()) {
+				item.status = "reInit";
+				item.msg = "currentMaxId:" + currentMaxId + ",maxId:" + lastMaxId + ",dbtime is "
+						+ Util.formateDate(dbService.getDbTime());
+			} else {
+				currentMaxId = notifyMessageService.getDataMaxId(lastMaxId);
+				if (currentMaxId > 0 && currentMaxId > lastMaxId) {
+					item.status = "maxId-" + lastMaxId;
+					updateCache();
+					lastMaxId = currentMaxId;
+					item.msg = "currentMaxId:" + currentMaxId + ",maxId:" + lastMaxId + ",dbtime is "
+							+ Util.formateDate(dbService.getDbTime());
+				} else {
+					item.status = "maxId-nodata";
 				}
 			}
-			Util.sleep(soaConfig.getCheckPollingDataInterval());
+
+			catTransaction.setStatus(Transaction.SUCCESS);
+		} catch (Exception e) {
+			log.error("doCheckPollingData_error,更新异常", e);
+			catTransaction.setStatus(e);
+		} finally {
+			catTransaction.complete();
+			traceMax.add(item);
 		}
 	}
 

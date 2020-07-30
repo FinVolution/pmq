@@ -1,18 +1,16 @@
 package com.ppdai.infrastructure.rest.mq.controller.client;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ppdai.infrastructure.mq.biz.MqConst;
+import com.ppdai.infrastructure.mq.biz.MqEnv;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
-import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.MqConstanst;
 import com.ppdai.infrastructure.mq.biz.dto.base.ProducerDataDto;
@@ -30,13 +28,8 @@ import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.PullDataRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.PullDataResponse;
-import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerService;
-import com.ppdai.infrastructure.mq.biz.service.QueueService;
 import com.ppdai.infrastructure.mq.client.MqClient;
-import com.ppdai.infrastructure.mq.client.bootstrap.MqClientStartup;
-import com.ppdai.infrastructure.mq.client.exception.ContentExceed65535Exception;
-import com.ppdai.infrastructure.mq.client.exception.MqNotInitException;
 
 @RestController
 @RequestMapping(MqConstanst.CONSUMERPRE)
@@ -44,15 +37,8 @@ public class ConsumerController {
 
 	@Autowired
 	private ConsumerService consumerService;
-
-	@Autowired
-	private QueueService queueService;
-
 	@Autowired
 	private SoaConfig soaConfig;
-
-	@Autowired
-	private Environment env;
 
 	@PostMapping("/register")
 	public ConsumerRegisterResponse register(@RequestBody ConsumerRegisterRequest request) {
@@ -74,80 +60,54 @@ public class ConsumerController {
 
 	@PostMapping("/publish")
 	public PublishMessageResponse publish(@RequestBody PublishMessageRequest request) {
-		try {
-			PublishMessageResponse response = consumerService.publish(request);
-			if (response != null && !response.isSuc() && !Util.isEmpty(request.getTopicName())) {
-				Map<String, List<QueueEntity>> topicQueueMap = queueService.getAllLocatedTopicQueue();
-				if (!Util.isEmpty(soaConfig.getSysPubFailTopic())
-						&& topicQueueMap.containsKey(soaConfig.getSysPubFailTopic())) {
-					ProducerDataDto msg = new ProducerDataDto(request.getTopicName(), JsonUtil.toJsonNull(request));
-					Map<String, String> head = new HashMap<>();
-					head.put("result", response.getMsg());
-					msg.setHead(head);
-					if (!MqClient.hasInit()) {
-						MqClientStartup.init(env);
-						MqClient.start();
+		setSubEnv(request);
+		PublishMessageResponse response = consumerService.publish(request);
+		return response;
+
+	}
+
+	public boolean setSubEnvFlag() {
+		return !soaConfig.isPro() && MqClient.getMqEnvironment() != null
+				&& (MqClient.getMqEnvironment().getEnv() == MqEnv.FAT) && (soaConfig.getMqBrokerSetSubEnvFlag() == 1);
+	}
+
+	private void setSubEnv(PublishMessageRequest request) {
+		if (setSubEnvFlag()) {
+			for (ProducerDataDto t1 : request.getMsgs()) {
+				if (t1.getHead() == null) {
+					t1.setHead(new HashMap<>());
+				}
+				if (!Util.isEmpty(t1.getBizId()) && soaConfig.getMqTopicRouteMap() != null
+						&& soaConfig.getMqTopicRouteMap().containsKey(request.getTopicName())
+						&& soaConfig.getMqTopicRouteMap().get(request.getTopicName()).containsKey(t1.getBizId())) {
+					if (t1.getHead().containsKey(MqConst.MQ_SUB_ENV_KEY)) {
+						t1.getHead().put("mq_sub_env_orgin", t1.getHead().get(MqConst.MQ_SUB_ENV_KEY));
+					} else {
+						t1.getHead().put("mq_sub_env_orgin", MqConst.DEFAULT_SUBENV);
 					}
-					MqClient.publishAsyn(soaConfig.getSysPubFailTopic(), "", msg);
+					t1.getHead().put(MqConst.MQ_SUB_ENV_KEY,
+							soaConfig.getMqTopicRouteMap().get(request.getTopicName()).get(t1.getBizId()));
 				}
 			}
-			return response;
-		} catch (Exception e) {
-			if (!Util.isEmpty(request.getTopicName())) {
-				Map<String, List<QueueEntity>> topicQueueMap = queueService.getAllLocatedTopicQueue();
-				if (topicQueueMap.containsKey(soaConfig.getSysPubFailTopic())) {
-					ProducerDataDto msg = new ProducerDataDto(request.getTopicName(), JsonUtil.toJsonNull(request));
-					Map<String, String> head = new HashMap<>();
-					head.put("result", e.getMessage());
-					msg.setHead(head);
-					if (!MqClient.hasInit()) {
-						MqClientStartup.init(env);
-						MqClient.start();
-					}
-					try {
-						MqClient.publishAsyn(soaConfig.getSysPubFailTopic(), "", msg);
-					} catch (MqNotInitException | ContentExceed65535Exception e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-				}
-			}
-			throw new RuntimeException(e);
 		}
 	}
 
 	@PostMapping("/pullData")
 	public PullDataResponse pullData(@RequestBody PullDataRequest request) {
-		try {
-			PullDataResponse response = consumerService.pullData(request);
-			return response;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-			// TODO: handle exception
-		}
+		PullDataResponse response = consumerService.pullData(request);
+		return response;
 	}
 
 	@PostMapping("/publishAndUpdateResultFailMsg")
 	public FailMsgPublishAndUpdateResultResponse publishAndUpdateResultFailMsg(
 			@RequestBody FailMsgPublishAndUpdateResultRequest request) {
-		try {
-			FailMsgPublishAndUpdateResultResponse response = consumerService.publishAndUpdateResultFailMsg(request);
-			return response;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-			// TODO: handle exception
-		}
+		FailMsgPublishAndUpdateResultResponse response = consumerService.publishAndUpdateResultFailMsg(request);
+		return response;
+
 	}
 
 	@PostMapping("/getMessageCount")
 	public GetMessageCountResponse getMessageCount(@RequestBody GetMessageCountRequest request) {
-		GetMessageCountResponse response = consumerService.getMessageCount(request);
-		return response;
-	}
-
-	@Deprecated
-	@PostMapping("/getConsumerGroupCount")
-	public GetMessageCountResponse getConsumerGroupCount(@RequestBody GetMessageCountRequest request) {
 		GetMessageCountResponse response = consumerService.getMessageCount(request);
 		return response;
 	}

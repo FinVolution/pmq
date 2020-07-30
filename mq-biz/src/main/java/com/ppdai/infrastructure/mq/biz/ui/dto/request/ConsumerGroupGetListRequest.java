@@ -8,7 +8,16 @@ public class ConsumerGroupGetListRequest extends BaseUiRequst {
     private String ownerNames;
     private String id;
     private String mode;
+    private String subEnv;
 
+
+    public String getSubEnv() {
+        return subEnv;
+    }
+
+    public void setSubEnv(String subEnv) {
+        this.subEnv = subEnv;
+    }
 
     public String getMode() {
         return mode;

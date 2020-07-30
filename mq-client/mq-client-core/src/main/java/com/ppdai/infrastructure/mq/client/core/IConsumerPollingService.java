@@ -1,5 +1,7 @@
 package com.ppdai.infrastructure.mq.client.core;
 
-public interface IConsumerPollingService extends IMqClientService{
+import java.util.Map;
 
+public interface IConsumerPollingService extends IMqClientService{
+	Map<String, IMqGroupExcutorService> getMqExcutors();
 }

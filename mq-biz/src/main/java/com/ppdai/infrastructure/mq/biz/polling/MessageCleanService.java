@@ -206,9 +206,10 @@ public class MessageCleanService extends AbstractTimerService {
 		Map<String, ConsumerGroupEntity> groupCache = consumerGroupService.getCache();
 		int cleanSize = soaConfig.getCleanBatchSize();
 		log.info("clean queue {} of {} ,ip is {}", count, tcount, ip);
-		while (true && super.isMaster && soaConfig.isEnbaleMessageClean()) {
-			topicEntity=topicService.getCache().get(topicEntity.getName());
-			if(topicEntity==null) {
+		boolean first = true;
+		while (true && isMaster() && soaConfig.isEnbaleMessageClean()) {
+			topicEntity = topicService.getCache().get(topicEntity.getName());
+			if (topicEntity == null) {
 				break;
 			}
 			QueueEntity temp = queueService.getAllQueueMap().get(queueEntity.getId());
@@ -222,7 +223,7 @@ public class MessageCleanService extends AbstractTimerService {
 				message01Service.setDbId(queueEntity.getDbNodeId());
 				long nextId = minId + cleanSize;
 				Message01Entity message01Entity = message01Service.getMessageById(queueEntity.getTbName(), nextId);
-				if (message01Entity == null) {
+				if (message01Entity == null && first) {
 					// 下面这部分代码是为了防止出现一些异常情况数据清理出现间隔
 					message01Service.setDbId(queueEntity.getDbNodeId());
 					message01Entity = message01Service.getNearByMessageById(queueEntity.getTbName(), minId);
@@ -232,6 +233,12 @@ public class MessageCleanService extends AbstractTimerService {
 								+ message01Entity.getId());
 						minId = message01Entity.getId();
 						nextId = minId;
+						// 修复最小id
+						if (minId - 1 != queueEntity.getMinId()) {
+							queueService.updateMinId(queueEntity.getId(), minId - 1);
+							queueEntity.setMinId(minId - 1);
+						}
+						first = false;
 					}
 				} else {
 					cleanSize = soaConfig.getCleanBatchSize();

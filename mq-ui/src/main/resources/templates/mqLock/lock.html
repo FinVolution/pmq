@@ -10,17 +10,15 @@
         <a class="layui-btn" id="lockSearchList_btn" lay-filter="lockSearchFilter">刷新数据</a>
     </div>
 <table class="layui-table" lay-data="{height:'full', url:'/lock/list/data', page:true,limit: 10, id:'mqLockTableId'}" lay-filter="mqLockTableId">
-    <thead>
-    <tr>
-        <th lay-data="{field: 'id', align: 'center', sort: true,width:80}" rowspan="2">id</th>
-        <th lay-data="{field: 'ip', align: 'center'}" rowspan="2">ip</th>
-        <th lay-data="{field: 'key1', align: 'center'}" rowspan="2">key1</th>
-        <th lay-data="{field: 'heartTime', align: 'center'}" rowspan="2">心跳时间</th>
-        <th lay-data="{field: 'insertTime', align: 'center'}" rowspan="2">插入时间</th>
-        <th lay-data="{field: 'insertBy', align: 'center'}" rowspan="2">操作人</th>
-        <th lay-data="{field: 'updateTime', align: 'center'}" rowspan="2">更新时间</th>
-        <th lay-data="{field: 'updateBy', align: 'center'}" rowspan="2">修改者</th>
+     <thead>  
+    <tr>  
+        <th lay-data="{field: 'id', align: 'center', sort: true,width:80}" >id</th>
+        <th lay-data="{field: 'ip', align: 'center'}" >ip</th>
+        <th lay-data="{field: 'key1', align: 'center'}" >key1</th>
+        <th lay-data="{field: 'heartTime', align: 'center',width:200}" >心跳时间</th>
+        <th lay-data="{field: 'insertTime', align: 'center'}" >插入时间</th>
         <th lay-data="{fixed: 'right', align:'center',toolbar: '#ctrlBar'}">操作区</th>
+    </tr>
     </thead>
 </table>
 
@@ -57,8 +55,10 @@
 
         function getLockList() {
             var option={
+                page: {
+                    curr: 1
+                }
             };
-                option["page"]=1;
 
             table.reload('mqLockTableId',option);
         }

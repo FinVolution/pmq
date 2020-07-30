@@ -23,7 +23,6 @@ import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
 import com.ppdai.infrastructure.mq.biz.common.util.BrokerException;
 import com.ppdai.infrastructure.mq.biz.common.util.HttpClient;
 import com.ppdai.infrastructure.mq.biz.common.util.IHttpClient;
-import com.ppdai.infrastructure.mq.biz.common.util.IPUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.BaseResponse;
@@ -142,7 +141,7 @@ public class MqResource implements IMqResource {
 			}
 			count++;
 		}
-		return urlsOrigin.get().get(counter1 % urlsOrigin.get().size());
+		return urLst.get(0);
 	}
 
 	protected String doGetHost(List<String> urLst, int count, boolean isImportant) {
@@ -284,13 +283,6 @@ public class MqResource implements IMqResource {
 				request2.setJson(json);
 				request2.setMsg(response.getMsg());
 				addCat(request2);
-
-				SendMailRequest mailRequest = new SendMailRequest();
-				mailRequest.setSubject("客户端：" + request.getClientIp() + ",Topic：" + request.getTopicName() + "发送失败！");
-				mailRequest.setContent("消息发送失败，" + response.getMsg() + ",消息体是：" + json);
-				mailRequest.setType(2);
-				mailRequest.setKey("topic:" + request.getTopicName() + "-发送失败！");
-				sendMail(mailRequest);
 			}
 			return response.isSuc();
 		} catch (Exception e) {
@@ -306,9 +298,10 @@ public class MqResource implements IMqResource {
 			addCat(request2);
 
 			SendMailRequest mailRequest = new SendMailRequest();
-			mailRequest.setSubject("客户端：" + request.getClientIp() + ",Topic：" + request.getTopicName() + "发送失败！");
+			mailRequest.setSubject("消息发送失败,客户端：" + request.getClientIp() + ",Topic:" + request.getTopicName());
 			mailRequest.setContent("消息发送异常，" + ",消息体是：" + json + ",异常原因是：" + e.getMessage());
 			mailRequest.setType(2);
+			mailRequest.setTopicName(request.getTopicName());
 			sendMail(mailRequest);
 			return false;
 		} finally {
@@ -489,11 +482,14 @@ public class MqResource implements IMqResource {
 						|| url.indexOf(MqConstanst.CONSUMERPRE + "/getMetaGroup") != -1)) {
 					logger.error("访问" + url + "异常,access_error", e);
 				}
+				addErrorCat(e, request, count, tryCount);
 				last = e;
 			} catch (BrokerException e) {
 				last = e;
+				addErrorCat(e, request, count, tryCount);
 			} catch (Exception e) {
 				last = e;
+				addErrorCat(e, request, count, tryCount);
 			} finally {
 				if (response != null) {
 					if (isImportant) {
@@ -533,23 +529,28 @@ public class MqResource implements IMqResource {
 			}
 			count++;
 		}
-		if (last != null) {
-			if (!url.endsWith("/sendMail") && (path + "").endsWith("/publish")) {
-				SendMailRequest request2 = new SendMailRequest();
-				request2.setSubject("客户端:" + IPUtil.getLocalIP() + "，访问" + url + "报错");
-				request2.setContent(last.getMessage());
-				request2.setType(1);
-				request2.setKey("访问" + url + "报错");
-				sendMail(request2);
-			}
+		if (last != null) {			
 			throw new RuntimeException(last);
 		}
 		return response;
 	}
+	private void addErrorCat(Exception e, Object request, int count, int tryCount) {
+		try {
+			if (request instanceof PublishMessageRequest && count < tryCount) {
+				CatRequest request2 = new CatRequest();
+				request2.setJson(JsonUtil.toJson(request) + ",try count " + count + " of " + tryCount);
+				request2.setMethod("publish_try_" + ((PublishMessageRequest) request).getTopicName());
+				request2.setMsg(e.getMessage());
+				addCat(request2);
+			}
+		} catch (Exception ee) {
+			// TODO: handle exception
+		}
 
+	}
 	@Override
 	public String getBrokerIp() {
-		String url = getHost(false)+"/api/client/tool/getIp";
+		String url = getHost(false)+MqConstanst.TOOLPRE + "/getIp";
 		try {
 			return httpClient.get(url);
 		} catch (IOException e) {
@@ -557,5 +558,4 @@ public class MqResource implements IMqResource {
 			return "";
 		}
 	}
-
 }

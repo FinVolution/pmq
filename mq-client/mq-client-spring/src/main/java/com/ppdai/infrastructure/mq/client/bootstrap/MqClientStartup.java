@@ -1,5 +1,7 @@
 package com.ppdai.infrastructure.mq.client.bootstrap;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -10,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
+import com.ppdai.infrastructure.mq.biz.MqConst;
 import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
 import com.ppdai.infrastructure.mq.biz.common.util.IPUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqConfig;
@@ -41,26 +45,40 @@ public class MqClientStartup {
 
 	private static void initConfig() {
 		MqConfig config = new MqConfig();
-		String netCard = System.getProperty("mq.network.netCard", env.getProperty("mq.network.netCard", ""));
-		String url = System.getProperty("mq.broker.url", env.getProperty("mq.broker.url", ""));
+		String netCard = System.getProperty("mq.network.netCard", env.getProperty("mq.network.netCard", ""));		
+		String url =System.getProperty("mq.broker.url", env.getProperty("mq.broker.url", ""));		
 		String host = System.getProperty("mq.client.host", env.getProperty("mq.client.host", ""));
 		String serverPort = System.getProperty("server.port", env.getProperty("server.port", "8080"));
+		String asynCapacity = System.getProperty("mq.asyn.capacity", env.getProperty("mq.asyn.capacity", "2000"));
+		String rbTimes = System.getProperty("mq.rb.times", env.getProperty("mq.rb.times", "4"));
+		String pbRetryTimes = System.getProperty("mq.pb.retry.times", env.getProperty("mq.pb.retry.times", "10"));
 		String readTimeOut = System.getProperty("mq.http.timeout", env.getProperty("mq.http.timeout", "10000"));
 		String pullDeltaTime = System.getProperty("mq.pull.time.delta", env.getProperty("mq.pull.time.delta", "150"));
+		boolean metaMode = "true"
+				.equals(System.getProperty("mq.broker.metaMode", env.getProperty("mq.broker.metaMode", "true")));
+		if(!Util.isEmpty(netCard)){
+			logger.warn("请注意你指定了网卡名称mq.network.netCard="+netCard);
+		}		
 		if (Util.isEmpty(host)) {
 			host = IPUtil.getLocalIP(netCard);
+			logger.info("自动获取当前的ip地址是"+host);
+		}else{
+			logger.info("当前配置生效的机器ip地址是：mq.client.host="+host);
 		}
+		
 		if (Util.isEmpty(url)) {
 			throw new RuntimeException("没有配置broker地址。");
 		}
 		config.setIp(host);
+		config.setMetaMode(metaMode);
 		config.setServerPort(serverPort);
 		config.setUrl(url);
-		config.setReadTimeOut(Long.parseLong(readTimeOut));
+		config.setAsynCapacity(Integer.parseInt(asynCapacity));
+		config.setRbTimes(getRbTimes(rbTimes));
+		config.setPbRetryTimes(getPbRetryTimes(pbRetryTimes));
 		config.setPullDeltaTime(Integer.parseInt(pullDeltaTime));
-		if (config.getReadTimeOut() < 10000) {
-			config.setReadTimeOut(10000);
-		}
+		config.setReadTimeOut(Long.parseLong(readTimeOut));
+		logger.info("当前生效的配置是："+JsonUtil.toJsonNull(config));
 		MqClient.init(config);
 		updateConfig();
 	}
@@ -101,6 +119,8 @@ public class MqClientStartup {
 	protected static String metaMode = "-2";
 	protected static String asynCapacity = "-2";
 	protected static String pullDeltaTime1 = "150";
+	protected static String subEnvs1 = " ";
+	protected static String publishAsynTimeout1="1000";
 	protected static Map<String, String> properties = null;
 
 	private static void monitorConfig() {
@@ -138,6 +158,37 @@ public class MqClientStartup {
 		setMetaMode();
 
 		setPullDeltaTime();
+		
+		//setAppSubEnvs();
+		
+		setPublishAsynTimeout();
+	}
+
+	private static void setPublishAsynTimeout() {
+		String publishAsynTimeout = System.getProperty("mq.publish.asyn.timeout", env.getProperty("mq.publish.asyn.timeout", "1000"));
+		if (!publishAsynTimeout.equals(publishAsynTimeout1)) {
+			try{
+				publishAsynTimeout1=publishAsynTimeout;
+				int publishAsynTimeout2 = Integer.parseInt(publishAsynTimeout);				
+				MqClient.getContext().getConfig().setPublishAsynTimeout(publishAsynTimeout2);
+			}catch (Exception e) {
+				logger.error("setPublishAsynTimeout_error", e);
+			}
+			
+		}
+
+	}
+
+	private static void setAppSubEnvs() {
+		String subEnvs = System.getProperty("mq.app.subEnvs", env.getProperty("mq.app.subEnvs", ""));
+		if (!subEnvs1.equals(subEnvs)&&MqClient.getMqEnvironment()!=null) {
+			List<String> subEnv2 = Arrays.asList(subEnvs.toLowerCase().split(","));
+			subEnv2.remove(MqConst.DEFAULT_SUBENV);
+			if(MqClient.getMqEnvironment()!=null){
+				MqClient.getMqEnvironment().setAppSubEnvs(subEnv2);
+			}
+			subEnvs1 = subEnvs;
+		}
 	}
 
 	private static void setPullDeltaTime() {

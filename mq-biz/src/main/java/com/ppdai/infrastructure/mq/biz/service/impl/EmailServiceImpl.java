@@ -1,15 +1,13 @@
 package com.ppdai.infrastructure.mq.biz.service.impl;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.util.EmailUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity;
@@ -56,20 +54,22 @@ public class EmailServiceImpl implements EmailService {
 	 * @param request
 	 */
 	private void sendByConsumer(SendMailRequest request) {
-		if (request == null || !StringUtils.isEmpty(request.getConsumerGroupName())
-				|| !StringUtils.isEmpty(request.getTopicName())) {
+		if (request != null && (!StringUtils.isEmpty(request.getConsumerGroupName())
+				|| !StringUtils.isEmpty(request.getTopicName()))) {
 			if (request.getType() > 0 && request.getType() < 3) {
-				Map<String, ConsumerGroupEntity> map = consumerGroupService.getCache();
-				if (map.containsKey(request.getConsumerGroupName())) {
+				ConsumerGroupEntity consumerGroupEntity = consumerGroupService.getCache().get(request.getConsumerGroupName());
+				if (consumerGroupEntity!=null) {
 					ConsumerGroupTopicEntity topicEntity = consumerGroupService.getTopic(request.getConsumerGroupName(),
 							request.getTopicName());
-					String alarms = map.get(request.getConsumerGroupName()).getAlarmEmails();
+					String alarms = consumerGroupEntity.getAlarmEmails();
 					if (topicEntity != null) {
 						alarms += "," + topicEntity.getAlarmEmails() + ",";
 					}
 					alarms = alarms.replaceAll(",,", ",");
 					emailUtil.sendMail(request.getSubject(), request.getContent(), Arrays.asList(alarms.split(",")),
 							request.getType());
+				} else if (!Util.isEmpty(request.getTopicName())) {
+					sendByProducer(request);
 				}
 			}
 		} else if (request != null && request.getType() > 0 && request.getType() < 3) {
@@ -83,16 +83,17 @@ public class EmailServiceImpl implements EmailService {
 	 * @param request
 	 */
 	private void sendByProducer(SendMailRequest request) {
-		if (request == null || !StringUtils.isEmpty(request.getTopicName())) {
+		if (request != null && !StringUtils.isEmpty(request.getTopicName())) {
 			if (request.getType() > 0 && request.getType() < 3) {
-				Map<String, TopicEntity> map = topicService.getCache();
-				if (map.containsKey(request.getTopicName())) {
-					TopicEntity topicEntity = map.get(request.getTopicName());
+				TopicEntity topicEntity = topicService.getCache().get(request.getTopicName());
+				if (topicEntity!=null) {
 					String alarms = topicEntity.getEmails() + "";
 					emailUtil.sendMail(request.getSubject(), request.getContent(), Arrays.asList(alarms.split(",")),
 							request.getType());
 				}
 			}
+		} else if (request != null && request.getType() > 0 && request.getType() < 3) {
+			emailUtil.sendMail(request.getSubject(), request.getContent(), null, request.getType());
 		}
 	}
 }

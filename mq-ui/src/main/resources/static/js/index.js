@@ -157,16 +157,20 @@ layui
 					});
 
 					setInterval(function() {
-						countQueue()
+						var userRole=$('#userRole').val();
+						if(userRole==0){
+							countQueue();
+						}
+
 					}, 15000);
 
 					setTimeout(function() {
-						countQueue()
+						countQueue();
 					}, 500);
 
+
 					function countQueue() {
-						$
-								.get(
+						$.get(
 										"/queue/countByType",
 										"nodeType=1",
 										function(data, xhr) {
@@ -193,8 +197,7 @@ layui
 											xhr = null;
 											data = null;
 										});
-						$
-								.get(
+						$.get(
 										"/queue/countByType",
 										"nodeType=2",
 										function(data, xhr) {
@@ -222,4 +225,31 @@ layui
 											data = null;
 										});
 					}
+
+
+                    //如果是生产环境，并且是管理员，则一分钟检查一次，如果在线实例小于配置数量则提示告警
+                    window.setInterval(onLineServerCheckAlert,1000*60);
+
+                    function onLineServerCheckAlert(){
+                        var userRole=$('#userRole').val();
+
+                        if($("#proEnv").val()==1&&userRole==0){
+                            $.post("/server/onLineServer",onLineRequestCallback);
+                        }
+                    }
+
+
+
+					function onLineRequestCallback(result, xhr){
+						if (xhr === 'success') {
+							if (result.code ==1) {
+								failBox(result.msg)
+							}
+						}
+					}
+
+					function failBox(msg) {
+						layer.alert(msg, {icon: 2})
+					}
+
 				});

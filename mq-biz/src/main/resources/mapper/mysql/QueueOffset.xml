@@ -33,9 +33,9 @@
 		)
 	</select>
 	<select id="getAllBasic" resultMap="BaseResultMap" useCache="false">
-		select id, consumer_group_id, consumer_group_name, consumer_name,
+			select id, consumer_group_id, consumer_group_name, consumer_name,
 		consumer_id, topic_id, topic_name, origin_topic_name, topic_type,
-		queue_id, offset, start_offset, offset_version, stop_flag, db_info
+		queue_id, offset, start_offset, offset_version, stop_flag, db_info,origin_consumer_group_name,sub_env
 		from queue_offset
 	</select>
 
@@ -51,7 +51,7 @@
 		useCache="false">
 		select *
 		from queue_offset where
-		consumer_id =0
+		consumer_id =0 and (consumer_group_mode=1 or consumer_group_mode=3 ) and sub_env='default'
 	</select>
 
 	<select id="countBy" parameterType="java.util.Map" resultType="java.lang.Long">
@@ -140,6 +140,9 @@
 			</if>
 			<if test="consumerGroupMode != null and consumerGroupMode !=''" >
 				and `consumer_group_mode` = #{consumerGroupMode}
+			</if>
+			<if test="subEnv != null and subEnv !=''" >
+				and `sub_env` = #{subEnv}
 			</if>
 		</where>
 	</select>
@@ -231,6 +234,9 @@
 			<if test="consumerGroupMode != null and consumerGroupMode !=''" >
 				and `consumer_group_mode` = #{consumerGroupMode}
 			</if>
+			<if test="subEnv != null and subEnv !=''" >
+				and `sub_env` = #{subEnv}
+			</if>
 		</where>
 		order by id desc
 		limit #{start1}, #{offset1}
@@ -240,7 +246,7 @@
 		parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity">
 		update queue_offset set
 		consumer_name = #{consumerName},
-		consumer_id = #{consumerId}
+		consumer_id = #{consumerId},meta_update_time = current_timestamp
 		where id = #{id}
 	</update>
 
@@ -293,7 +299,7 @@
 		update queue_offset
 		set
 		offset = #{offset},
-		offset_version = #{offsetVersion},
+		offset_version = offset_version+1,
 		update_by =
 		#{updateBy},
 		meta_update_time = current_timestamp

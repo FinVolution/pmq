@@ -16,7 +16,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.ppdai.infrastructure.mq.biz.ui.exceptions.CheckFailException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import com.ppdai.infrastructure.mq.biz.MqConst;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.inf.TimerService;
 import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
@@ -40,6 +40,7 @@ import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dal.meta.ConsumerGroupRepository;
 import com.ppdai.infrastructure.mq.biz.dto.UserRoleEnum;
 import com.ppdai.infrastructure.mq.biz.dto.request.ConsumerGroupCreateRequest;
+import com.ppdai.infrastructure.mq.biz.dto.request.ConsumerGroupTopicCreateRequest;
 import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
 import com.ppdai.infrastructure.mq.biz.dto.response.ConsumerGroupCreateResponse;
 import com.ppdai.infrastructure.mq.biz.dto.response.ConsumerGroupDeleteResponse;
@@ -64,6 +65,7 @@ import com.ppdai.infrastructure.mq.biz.service.common.AuditUtil;
 import com.ppdai.infrastructure.mq.biz.service.common.CacheUpdateHelper;
 import com.ppdai.infrastructure.mq.biz.service.common.MessageType;
 import com.ppdai.infrastructure.mq.biz.service.common.MqReadMap;
+import com.ppdai.infrastructure.mq.biz.ui.exceptions.CheckFailException;
 
 /**
  * @author dal-generator
@@ -88,11 +90,11 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	@Autowired
 	private AuditLogService uiAuditLogService;
 	@Autowired
-	private TopicService topicService;	
+	private TopicService topicService;
 	@Autowired
 	private ConsumerService consumerService;
 	@Autowired
-	private RoleService roleService;	
+	private RoleService roleService;
 	private AtomicBoolean startFlag = new AtomicBoolean(false);
 	private AtomicBoolean updateFlag = new AtomicBoolean(false);
 	protected volatile boolean isRunning = true;
@@ -100,6 +102,9 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			new HashMap<>());
 	protected AtomicReference<Map<Long, ConsumerGroupEntity>> consumerGroupByIdRefMap = new AtomicReference<>(
 			new HashMap<>());
+
+	private AtomicReference<List<String>> subEnvList = new AtomicReference<>(new ArrayList<>());
+
 	protected ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
 			new LinkedBlockingQueue<Runnable>(100), SoaThreadFactory.create("ConsumerGroupService", true),
 			new ThreadPoolExecutor.DiscardOldestPolicy());
@@ -149,16 +154,26 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			List<ConsumerGroupEntity> consumerGroupEntities = getList();
 			MqReadMap<String, ConsumerGroupEntity> dataMap = new MqReadMap<>(consumerGroupEntities.size());
 			MqReadMap<Long, ConsumerGroupEntity> dataIdMap = new MqReadMap<>(consumerGroupEntities.size());
+			List<String> envList = new ArrayList<>();
+			envList.add(MqConst.DEFAULT_SUBENV);
 			consumerGroupEntities.forEach(t1 -> {
 				dataMap.put(t1.getName(), t1);
 				dataIdMap.put(t1.getId(), t1);
+				if (!envList.contains(t1.getSubEnv())) {
+					envList.add(t1.getSubEnv());
+				}
 			});
 			dataMap.setOnlyRead();
 			dataIdMap.setOnlyRead();
-			consumerGroupRefMap.set(dataMap);
-			consumerGroupByIdRefMap.set(dataIdMap);
+			if (dataMap.size() > 0 && dataIdMap.size() > 0) {
+				consumerGroupRefMap.set(dataMap);
+				consumerGroupByIdRefMap.set(dataIdMap);
+				subEnvList.set(envList);
+			}else {
+				lastUpdateEntity = null;
+			}
 			traceMessageItem.status = "count-" + dataMap.size();
-			consumerGroupCacheTrace.add(traceMessageItem);
+			consumerGroupCacheTrace.add(traceMessageItem);			
 			transaction.setStatus(Transaction.SUCCESS);
 		} catch (Exception e) {
 			transaction.setStatus(e);
@@ -223,7 +238,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
+	// @Transactional(rollbackFor = Exception.class)
 	public void rb(List<QueueOffsetEntity> queueOffsetEntities) {
 		Map<Long, String> idsMap = new HashMap<>(30);
 		List<NotifyMessageEntity> notifyMessageEntities = new ArrayList<>(30);
@@ -243,7 +258,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 
 	}
 
-	@Transactional(rollbackFor = Exception.class)
+	// @Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyRb(long id) {
 		updateRbVersion(Arrays.asList(id));
@@ -260,7 +275,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		notifyMessageService.insertBatch(notifyMessageEntities);
 	}
 
-	@Transactional(rollbackFor = Exception.class)
+	// @Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyRb(List<Long> ids) {
 		if (CollectionUtils.isEmpty(ids))
@@ -287,7 +302,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		consumerGroupRepository.updateRbVersion(ids);
 	}
 
-	@Transactional(rollbackFor = Exception.class)
+	// @Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyMeta(long id) {
 		updateMetaVersion(Arrays.asList(id));
@@ -297,7 +312,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		notifyMessageService.insert(notifyMessageEntity);
 	}
 
-	@Transactional(rollbackFor = Exception.class)
+	// @Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyMeta(List<Long> ids) {
 		if (CollectionUtils.isEmpty(ids))
@@ -378,6 +393,26 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
+	public List<String> getSubEnvList() {
+		List<String> rs = subEnvList.get();
+		if (rs.size() == 0) {
+			cacheLock.lock();
+			try {
+				rs = subEnvList.get();
+				if (rs.size() == 0) {
+					if (first.compareAndSet(true, false)) {
+						updateCache();
+					}
+					rs = subEnvList.get();
+				}
+			} finally {
+				cacheLock.unlock();
+			}
+		}
+		return rs;
+	}
+
+	@Override
 	public void notifyOffset(long id) {
 		notifyMeta(id);
 	}
@@ -443,7 +478,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		return JsonUtil.toJsonNull(getCache());
 	}
 
-	@Transactional(rollbackFor = Exception.class)
+	// @Transactional(rollbackFor = Exception.class)
 	@Override
 	public ConsumerGroupCreateResponse createConsumerGroup(ConsumerGroupCreateRequest consumerGroupCreateRequest) {
 		CacheUpdateHelper.updateCache();
@@ -457,15 +492,20 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		consumerGroupEntity.setAlarmEmails(StringUtils.trim(consumerGroupCreateRequest.getAlarmEmails()));
 		consumerGroupEntity.setAppId(consumerGroupCreateRequest.getAppId());
 		consumerGroupEntity.setMode(consumerGroupCreateRequest.getMode());
+		consumerGroupEntity.setPushFlag(consumerGroupCreateRequest.getPushFlag());
 		consumerGroupEntity.setConsumerQuality(consumerGroupCreateRequest.getConsumerQuality());
+		if (Util.isEmpty(consumerGroupCreateRequest.getSubEnv())) {
+			consumerGroupCreateRequest.setSubEnv(MqConst.DEFAULT_SUBENV);
+		}
+		consumerGroupEntity.setSubEnv(consumerGroupCreateRequest.getSubEnv());
 		if (consumerGroupCreateRequest.getMode() == 2) {// 广播模式
 			consumerGroupEntity
 					.setOriginName(ConsumerGroupUtil.getOriginConsumerName(consumerGroupCreateRequest.getName()));
 		} else {
 			consumerGroupEntity.setOriginName(consumerGroupCreateRequest.getName());
 		}
-	
-		consumerGroupEntity.setTels(consumerGroupCreateRequest.getTels());		
+
+		consumerGroupEntity.setTels(consumerGroupCreateRequest.getTels());
 		consumerGroupEntity.setDptName(consumerGroupCreateRequest.getDptName());
 		if (consumerGroupCreateRequest.getIpFlag() != null && consumerGroupCreateRequest.getIpFlag() == 1) {
 			consumerGroupEntity.setIpWhiteList(null);
@@ -474,7 +514,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			consumerGroupEntity.setIpBlackList(null);
 			consumerGroupEntity.setIpWhiteList(StringUtils.trim(consumerGroupCreateRequest.getIpList()));
 		}
-		consumerGroupEntity.setRemark(consumerGroupCreateRequest.getRemark());		
+		consumerGroupEntity.setRemark(consumerGroupCreateRequest.getRemark());
 		String userId = userInfoHolder.getUserId();
 		if (StringUtils.isNotEmpty(consumerGroupCreateRequest.getId())) {
 			consumerGroupEntity.setId(Long.valueOf(consumerGroupCreateRequest.getId()));
@@ -483,16 +523,17 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			notifyMeta(consumerGroupEntity.getId());
 		} else {
 			consumerGroupEntity.setInsertBy(userId);
-			List<String> names=new ArrayList<>();
+			List<String> names = new ArrayList<>();
 			names.add(consumerGroupEntity.getName());
-			Map<String, ConsumerGroupEntity> checkEntityMap=getByNames(names);
-			if(!checkEntityMap.isEmpty()){
-				throw new CheckFailException("consumerGroup:"+consumerGroupEntity.getName()+"重复，检查是否有重名consumerGroup已经存在。");
+			Map<String, ConsumerGroupEntity> checkEntityMap = getByNames(names);
+			if (!checkEntityMap.isEmpty()) {
+				throw new CheckFailException(
+						"consumerGroup:" + consumerGroupEntity.getName() + "重复，检查是否有重名consumerGroup已经存在。");
 			}
 			try {
 				insert(consumerGroupEntity);
 			} catch (DuplicateKeyException e) {
-				return new ConsumerGroupCreateResponse("1","consumerGroup重复，检查是否有重名consumerGroup已经存在。");
+				return new ConsumerGroupCreateResponse("1", "consumerGroup重复，检查是否有重名consumerGroup已经存在。");
 			}
 			// 查出新建consumerGroup的id,用于日志和更新元数据
 			ArrayList<String> consumerGroupEntityNames = new ArrayList<>();
@@ -512,9 +553,9 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	public ConsumerGroupEditResponse editConsumerGroup(ConsumerGroupEntity consumerGroupEntity) {
 		CacheUpdateHelper.updateCache();
 		ConsumerGroupEntity oldConsumerGroupEntity = get(consumerGroupEntity.getId());
-		if (roleService.getRole(userInfoHolder.getUserId(),
-				oldConsumerGroupEntity.getOwnerIds()) >= UserRoleEnum.USER.getRoleCode()) {
-			return new ConsumerGroupEditResponse("1","没有操作权限，请进行权限检查。");
+		if (roleService.getRole(userInfoHolder.getUserId(), oldConsumerGroupEntity.getOwnerIds()) >= UserRoleEnum.USER
+				.getRoleCode()) {
+			return new ConsumerGroupEditResponse("1", "没有操作权限，请进行权限检查。");
 		}
 		consumerGroupEntity.setTopicNames(oldConsumerGroupEntity.getTopicNames());
 		consumerGroupEntity.setRbVersion(oldConsumerGroupEntity.getRbVersion());
@@ -522,6 +563,11 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		consumerGroupEntity.setVersion(oldConsumerGroupEntity.getVersion());
 		consumerGroupEntity.setInsertBy(oldConsumerGroupEntity.getInsertBy());
 		consumerGroupEntity.setIsActive(oldConsumerGroupEntity.getIsActive());
+
+		// 注意处于编辑模式此两项值不变。
+		consumerGroupEntity.setSubEnv(oldConsumerGroupEntity.getSubEnv());
+		consumerGroupEntity.setOriginName(oldConsumerGroupEntity.getOriginName());
+
 		String userId = userInfoHolder.getUserId();
 		consumerGroupEntity.setUpdateBy(userId);
 
@@ -537,6 +583,15 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			topicService.updateFailTopic(consumerGroupEntity);
 		}
 
+		// 如果修改了消费模式，则对应的queueoffset的消费模式也许修改
+		if (consumerGroupEntity.getMode() != oldConsumerGroupEntity.getMode()) {
+			Map<String, List<QueueOffsetEntity>> queueOffsetMap = queueOffsetService.getConsumerGroupQueueOffsetMap();
+			for (QueueOffsetEntity queueOffset : queueOffsetMap.get(consumerGroupEntity.getName())) {
+				queueOffset.setConsumerGroupMode(consumerGroupEntity.getMode());
+				queueOffsetService.update(queueOffset);
+			}
+		}
+
 		consumerGroupTopicService.updateEmailByGroupName(consumerGroupEntity.getName(),
 				consumerGroupEntity.getAlarmEmails());
 		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME, oldConsumerGroupEntity.getId(),
@@ -547,7 +602,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		if (!StringUtils.equals(consumerGroupEntity.getIpBlackList(), oldConsumerGroupEntity.getIpBlackList())
 				|| !StringUtils.equals(consumerGroupEntity.getIpWhiteList(), oldConsumerGroupEntity.getIpWhiteList())) {
 			checkVersionAndRb(oldConsumerGroupEntity.getId());
-		}	
+		}
 		return new ConsumerGroupEditResponse();
 	}
 
@@ -578,7 +633,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 				if (consumerGroupMap.get(key) != null) {
 					if (consumerGroupMap.get(key).getOriginName().equals(consumerGroupEntity.getName())
 							&& consumerGroupMap.get(key).getId() != consumerGroupEntity.getId()) {
-						return new ConsumerGroupDeleteResponse("1","存在镜像组时，不能删除原始组。");
+						return new ConsumerGroupDeleteResponse("1", "存在镜像组时，不能删除原始组。");
 					}
 				}
 
@@ -590,15 +645,15 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 
 	private ConsumerGroupDeleteResponse doDelete(ConsumerGroupEntity consumerGroupEntity, boolean checkOnline) {
 		if (checkOnline) {
-			if (roleService.getRole(userInfoHolder.getUserId(),
-					consumerGroupEntity.getOwnerIds()) >= UserRoleEnum.USER.getRoleCode()) {
+			if (roleService.getRole(userInfoHolder.getUserId(), consumerGroupEntity.getOwnerIds()) >= UserRoleEnum.USER
+					.getRoleCode()) {
 				throw new RuntimeException();
 			}
 		}
 		List<Long> consumerGroupIds = new ArrayList<>();
 		consumerGroupIds.add(consumerGroupEntity.getId());
 		if (checkOnline && consumerService.getConsumerGroupByConsumerGroupIds(consumerGroupIds).size() > 0) {
-			return new ConsumerGroupDeleteResponse("1","有消费者正在消费，不能删除消费者组。");
+			return new ConsumerGroupDeleteResponse("1", "有消费者正在消费，不能删除消费者组。");
 		}
 
 		// 获取该消费者组下所有失败topic对应的originTopicName
@@ -609,7 +664,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		delete(consumerGroupEntity.getId());
 		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME, consumerGroupEntity.getId(),
 				"删除consumerGroup:" + consumerGroupEntity.getName() + "." + JsonUtil.toJson(consumerGroupEntity));
-		notifyMeta(consumerGroupEntity.getId());		
+		notifyMeta(consumerGroupEntity.getId());
 		return new ConsumerGroupDeleteResponse();
 	}
 
@@ -630,7 +685,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		update(consumerGroupEntity);
 		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME, consumerGroupEntity.getId(),
 				"新增订阅，修改consumerGroup的topic字段，从" + oldTopicNames + "变为：" + consumerGroupEntity.getTopicNames());
-	
+
 		return new BaseUiResponse<Void>();
 	}
 
@@ -652,8 +707,45 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		consumerGroupEntity.setTopicNames(finalTopicNames);
 		update(consumerGroupEntity);
 		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME, consumerGroupEntity.getId(),
-				"取消订阅，修改consumerGroup的topic字段，从" + oldTopicNames + "变为：" + finalTopicNames);		
+				"取消订阅，修改consumerGroup的topic字段，从" + oldTopicNames + "变为：" + finalTopicNames);
 		return new BaseUiResponse<Void>();
 	}
 
+	@Override
+	public void copyAndNewConsumerGroup(ConsumerGroupEntity consumerGroupEntityOld,
+			ConsumerGroupEntity consumerGroupEntityNew) {
+		consumerGroupEntityNew.setId(0);
+		insert(consumerGroupEntityNew);
+		updateCache();
+		Map<Long, Map<String, ConsumerGroupTopicEntity>> ctMap = consumerGroupTopicService.getCache();
+		Map<String, ConsumerGroupTopicEntity> consumerTopics = ctMap.get(consumerGroupEntityOld.getId());
+		if (consumerTopics != null) {
+			for (Map.Entry<String, ConsumerGroupTopicEntity> entry : consumerTopics.entrySet()) {
+				if (entry.getValue().getTopicType() == 1) {
+					ConsumerGroupTopicCreateRequest request2 = new ConsumerGroupTopicCreateRequest();
+					request2.setAlarmEmails(entry.getValue().getAlarmEmails());
+					request2.setConsumerBatchSize(entry.getValue().getConsumerBatchSize());
+					request2.setConsumerGroupId(consumerGroupEntityNew.getId());
+					request2.setConsumerGroupName(consumerGroupEntityNew.getName());
+					request2.setDelayProcessTime(entry.getValue().getDelayProcessTime());
+					request2.setDelayPullTime(entry.getValue().getMaxPullTime());
+					request2.setMaxLag(entry.getValue().getMaxLag());
+					request2.setOriginTopicName(entry.getValue().getOriginTopicName());
+					request2.setPullBatchSize(entry.getValue().getPullBatchSize());
+					request2.setRetryCount(entry.getValue().getRetryCount());
+					request2.setTag(entry.getValue().getTag());
+					request2.setThreadSize(entry.getValue().getThreadSize());
+					request2.setTopicId(entry.getValue().getTopicId());
+					request2.setTopicName(entry.getValue().getTopicName());
+					request2.setTopicType(entry.getValue().getTopicType());
+					request2.setTimeOut(entry.getValue().getTimeOut());
+					try {
+						consumerGroupTopicService.subscribe(request2);
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				}
+			}
+		}
+	}
 }

@@ -44,10 +44,10 @@ public class NotifyMessageCleanService extends AbstractTimerService {
 	@Override
 	public void doStart() {
 		long minId = notifyMessageService.getMinId();
-		if (minId > 0 && super.isMaster&&soaConfig.isEnbaleNotifyMessageClean()) {
+		if (minId > 0 && isMaster()&&soaConfig.isEnbaleNotifyMessageClean()) {
 			log.info("clear_old_data_minId_is_{}_and_maxId_is_{}", minId, minId + 500);
 			int count = notifyMessageService.clearOld(soaConfig.getCleanInterval(), minId + 500);
-			while (count > 0 && super.isMaster) {
+			while (count > 0 && isMaster()) {
 				minId = notifyMessageService.getMinId();
 				log.info("clear_old_data_minId_is_{}_and_maxId_is_{}", minId, minId + 500);
 				count = notifyMessageService.clearOld(soaConfig.getCleanInterval(), minId + 500);

@@ -7,7 +7,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.ppdai.infrastructure.mq.biz.dto.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +16,13 @@ import org.springframework.stereotype.Service;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
+import com.ppdai.infrastructure.mq.biz.common.util.ConsumerUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.ConsumerUtil.ConsumerVo;
 import com.ppdai.infrastructure.mq.biz.common.util.EmailUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.HttpClient;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
+import com.ppdai.infrastructure.mq.biz.dto.Constants;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerEntity;
-import com.ppdai.infrastructure.mq.biz.service.AuditLogService;
-import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerService;
 import com.ppdai.infrastructure.mq.biz.service.common.DbService;
 
@@ -45,7 +45,6 @@ public class NoActiveConsumerService extends AbstractTimerService {
 	@Autowired
 	private Environment env;
 
-
 	@PostConstruct
 	private void init() {
 		super.init(Constants.NOACTIVE_CONSUMER, soaConfig.getConsumerCheckInterval(), soaConfig);
@@ -66,7 +65,7 @@ public class NoActiveConsumerService extends AbstractTimerService {
 	@Override
 	public void doStart() {
 		Transaction transaction = Tracer.newTransaction("Polling", "NoActiveConsumerService");
-		try {			
+		try {
 			// 查找过期的consumer，大于心跳间隔时间 还没发送心跳
 			List<ConsumerEntity> consumerList = consumerService
 					.findByHeartTimeInterval(soaConfig.getConsumerInactivityTime());
@@ -78,20 +77,8 @@ public class NoActiveConsumerService extends AbstractTimerService {
 			consumerList = doubleCheck(consumerList, dbTime);
 			List<List<ConsumerEntity>> list = Util.split(consumerList, 10);
 			for (List<ConsumerEntity> consumers : list) {
-				if (super.isMaster()) {
-					if ("1".equals(env.getProperty("mq.noactive.debug", "0"))) {
-						List<ConsumerEntity> consumers1 = new ArrayList<>();
-						consumers.forEach(t1 -> {
-							if (!String.valueOf(t1.getId()).equals(env.getProperty("mq.noactive.consumer.id", "0"))) {
-								consumers1.add(t1);
-							}
-						});
-						if (consumers1.size() > 0) {
-							consumerService.deleteByConsumers(consumers1);
-						}
-					} else {
-						consumerService.deleteByConsumers(consumers);
-					}
+				if (isMaster()) {
+					consumerService.deleteByConsumers(consumers);
 				}
 			}
 			transaction.setStatus(Transaction.SUCCESS);
@@ -106,23 +93,25 @@ public class NoActiveConsumerService extends AbstractTimerService {
 
 	}
 
-
-
 	private List<ConsumerEntity> doubleCheck(List<ConsumerEntity> consumerList, Date dbTime) {
 		List<ConsumerEntity> rs = new ArrayList<>();
 		consumerList.forEach(t1 -> {
-			String[] arr = t1.getName().split("\\|");
-			// consumerid老版本没有端口号或者有的不是web无端口号或者心跳时间超过5分钟没有发送心跳就认为此实例已经down了
-			if (arr.length < 4
-					|| (dbTime.getTime() - t1.getHeartTime().getTime()) > soaConfig.getMaxConsumerNoActiveTime()) {
+			ConsumerVo consumerVo = ConsumerUtil.parseConsumerId(t1.getName());
+			if (!soaConfig.isPro()) {
 				rs.add(t1);
 			} else {
-				String url = String.format("http://%s:%s/mq/client/hs", t1.getIp(), arr[3]);
-				if (!httpClient.check(url)) {
+				// consumerid老版本没有端口号或者有的不是web无端口号或者心跳时间超过5分钟没有发送心跳就认为此实例已经down了
+				if (Util.isEmpty(consumerVo.port)
+						|| (dbTime.getTime() - t1.getHeartTime().getTime()) > soaConfig.getMaxConsumerNoActiveTime()) {
 					rs.add(t1);
-					String message = String.format("Consumer心跳异常，但是健康检查没有问题，请注意。url is %s,最后心跳时间为%s,当前时间为%s", url,
-							Util.formateDate(t1.getHeartTime()), Util.formateDate(dbTime));
-					emailUtil.sendWarnMail("NoActiveConsumerService", message);
+				} else {
+					String url = String.format("http://%s:%s/mq/client/hs", consumerVo.ip, consumerVo.port);
+					if (!httpClient.check(url)) {
+						rs.add(t1);
+						String message = String.format("Consumer心跳异常，但是健康检查没有问题，请注意。url is %s,最后心跳时间为%s,当前时间为%s", url,
+								Util.formateDate(t1.getHeartTime()), Util.formateDate(dbTime));
+						emailUtil.sendWarnMail("NoActiveConsumerService", message);
+					}
 				}
 			}
 		});

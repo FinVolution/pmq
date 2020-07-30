@@ -47,6 +47,7 @@ public class UiConsumerGroupService {
         parameterMap.put("name", consumerGroupGetListRequest.getConsumerGroupName());
         parameterMap.put("appId", consumerGroupGetListRequest.getAppId());
         parameterMap.put("ownerNames", consumerGroupGetListRequest.getOwnerNames());
+        parameterMap.put("subEnv",consumerGroupGetListRequest.getSubEnv());
         if (StringUtils.isNotBlank(consumerGroupGetListRequest.getId())) {
             parameterMap.put("id", Long.valueOf(consumerGroupGetListRequest.getId()));
         }

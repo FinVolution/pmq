@@ -12,4 +12,8 @@ public interface ServerService extends BaseService<ServerEntity> {
 	List<String> getBrokerUrlCache();
 
 	List<String> getPortalCache();
+
+	int getOnlineServerNum();
+
+	void batchUpdate(List<Long> serverIds,int serverStatus);
 }

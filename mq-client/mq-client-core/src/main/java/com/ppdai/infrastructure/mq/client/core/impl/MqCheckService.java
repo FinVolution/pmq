@@ -21,7 +21,7 @@ import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupOneDto;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 import com.ppdai.infrastructure.mq.client.core.IMqCheckService;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
@@ -35,14 +35,14 @@ public class MqCheckService implements IMqCheckService {
 	private AtomicBoolean startFlag = new AtomicBoolean(false);
 	private ThreadPoolExecutor executor = null;
 
-	public MqCheckService(IMqClientBase mqClientBase) {
+	public MqCheckService() {
 //		this.mqContext = mqContext;
 //		this.mqResource = mqContext.getMqResource();
-		this(mqClientBase, mqClientBase.getContext().getMqResource());
+		this( MqClient.getContext().getMqResource());
 	}
 
-	public MqCheckService(IMqClientBase mqClientBase, IMqResource mqResource) {
-		this.mqContext = mqClientBase.getContext();
+	public MqCheckService(IMqResource mqResource) {
+		this.mqContext = MqClient.getContext();
 		this.mqResource = mqResource;
 	}
 

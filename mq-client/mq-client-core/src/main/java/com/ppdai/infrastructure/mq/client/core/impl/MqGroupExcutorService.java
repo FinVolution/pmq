@@ -15,7 +15,7 @@ import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerQueueVersionDto;
 import com.ppdai.infrastructure.mq.biz.dto.client.CommitOffsetRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupOneDto;
 import com.ppdai.infrastructure.mq.biz.dto.client.OpLogRequest;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 import com.ppdai.infrastructure.mq.client.core.IMqGroupExcutorService;
 import com.ppdai.infrastructure.mq.client.core.IMqQueueExcutorService;
@@ -33,17 +33,15 @@ public class MqGroupExcutorService implements IMqGroupExcutorService {
 	private MqContext mqContext;
 	private IMqResource mqResource;
 	private IMqFactory mqFactory = null;
-	private IMqClientBase mqClientBase;
 
-	public MqGroupExcutorService(IMqClientBase mqClientBase) {
-		this(mqClientBase, mqClientBase.getContext().getMqResource());
+	public MqGroupExcutorService() {
+		this(MqClient.getContext().getMqResource());
 	}
 
-	public MqGroupExcutorService(IMqClientBase mqClientBase, IMqResource mqResource) {
-		this.mqContext = mqClientBase.getContext();
+	public MqGroupExcutorService(IMqResource mqResource) {
+		this.mqContext = MqClient.getContext();
 		this.mqResource = mqResource;
-		this.mqFactory = mqClientBase.getMqFactory();
-		this.mqClientBase = mqClientBase;
+		this.mqFactory = MqClient.getMqFactory();
 	}
 
 	// 重平衡或者更新信息
@@ -184,8 +182,8 @@ public class MqGroupExcutorService implements IMqGroupExcutorService {
 					"doStasrtQueue-" + localConsumerGroup.getMeta().getName());
 			try {
 				localConsumerGroup.getQueues().values().forEach(t1 -> {
-					IMqQueueExcutorService mqQueueExcutorService = mqFactory.createMqQueueExcutorService(mqClientBase,
-							localConsumerGroup.getMeta().getName(), t1);
+					IMqQueueExcutorService mqQueueExcutorService = mqFactory
+							.createMqQueueExcutorService(localConsumerGroup.getMeta().getName(), t1);
 					mqEx.put(t1.getQueueId(), mqQueueExcutorService);
 					mqQueueExcutorService.start();
 					log.info("queueid_{}_started.", t1.getQueueId());
@@ -241,5 +239,11 @@ public class MqGroupExcutorService implements IMqGroupExcutorService {
 			closeQueues();
 			isRunning = false;
 		}
+	}
+
+	@Override
+	public Map<Long, IMqQueueExcutorService> getQueueEx() {
+		// TODO Auto-generated method stub
+		return mqEx;
 	}
 }

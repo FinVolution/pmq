@@ -336,11 +336,11 @@ public class UiQueueService implements TimerService {
 		if (!StringUtils.isEmpty(queueGetListRequest.getDistributeType())) {
 			conditionMap.put(QueueEntity.FdDistributeType, Integer.valueOf(queueGetListRequest.getDistributeType()));
 		}
-		long count = queueService.count(conditionMap);
+		long count = queueService.countBy(conditionMap);
 		if (count == 0) {
 			return new QueueGetListResponse(count, null);
 		}
-		List<QueueEntity> queueEntityList = queueService.getList(conditionMap, Long.valueOf(queueGetListRequest.getPage()),
+		List<QueueEntity> queueEntityList = queueService.getListBy(conditionMap, Long.valueOf(queueGetListRequest.getPage()),
 				Long.valueOf(queueGetListRequest.getLimit()));
 		List<QueueVo> queueVos = new ArrayList<>();
 		for (QueueEntity queueEntity : queueEntityList) {

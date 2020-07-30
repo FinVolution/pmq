@@ -89,6 +89,7 @@ public class ToolController {
 	@GetMapping("/mq/getValue")
 	@ResponseBody
 	public Object getValue(@RequestParam("beanName") String beanName, @RequestParam("fieldName") String fieldName) {
+		//bean名称为类名的首字母小写
 		return SpringUtil.getValue(beanName, fieldName);
 	}
 }

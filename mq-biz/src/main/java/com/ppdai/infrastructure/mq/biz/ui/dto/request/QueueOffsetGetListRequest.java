@@ -12,7 +12,16 @@ public class QueueOffsetGetListRequest extends BaseUiRequst {
     private String ownerNames;
     private String onlineType;
     private String mode;
+    private String subEnv;
 
+
+    public String getSubEnv() {
+        return subEnv;
+    }
+
+    public void setSubEnv(String subEnv) {
+        this.subEnv = subEnv;
+    }
 
     public String getMode() {
         return mode;

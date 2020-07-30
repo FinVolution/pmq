@@ -36,6 +36,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form','laydate'], function ()
         var data = {
             "topicName": $("#topics").val(),
             "sendType": $("#sendType").val(),
+            "mqSubEnv": $("#subEnv").val(),
             "message": {
                 "bizId": $("#bizId").val(),
                  "head": $("#head").val()?JSON.parse($("#head").val()):null,

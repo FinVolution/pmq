@@ -407,7 +407,6 @@ public class SoaConfig {
 		return cleanBatchSize;
 	}
 
-
 	private volatile String _authorizedUsers = "";
 	private volatile List<String> authorizedUsers = new ArrayList<>();
 	private String env_getAuthorizedUsers_key = "mq.messageTool.filter.user.name";
@@ -417,7 +416,8 @@ public class SoaConfig {
 	// 生产环境，界面发送工具授权用户列表
 	public List<String> getAuthorizedUsers() {
 		try {
-			if (!_authorizedUsers.equals(env.getProperty(env_getAuthorizedUsers_key, env_getAuthorizedUsers_defaultValue))) {
+			if (!_authorizedUsers
+					.equals(env.getProperty(env_getAuthorizedUsers_key, env_getAuthorizedUsers_defaultValue))) {
 				_authorizedUsers = env.getProperty(env_getAuthorizedUsers_key, env_getAuthorizedUsers_defaultValue);
 				authorizedUsers = JsonUtil.parseJson(
 						env.getProperty(env_getAuthorizedUsers_key, env_getAuthorizedUsers_defaultValue),
@@ -431,7 +431,6 @@ public class SoaConfig {
 		}
 		return authorizedUsers;
 	}
-
 
 	private volatile String _getCleanSleepTime = "";
 	private volatile int getCleanSleepTime = 100;
@@ -966,7 +965,7 @@ public class SoaConfig {
 				_commitSleepTime = env.getProperty(env_getCommitSleepTime_key, env_getCommitSleepTime_defaultValue);
 				commitSleepTime = Integer
 						.parseInt(env.getProperty(env_getCommitSleepTime_key, env_getCommitSleepTime_defaultValue));
-				if (commitSleepTime < 1000 || commitSleepTime > 5000) {
+				if (commitSleepTime < 1000 || commitSleepTime > 10000) {
 					commitSleepTime = 2000;
 				}
 				onChange();
@@ -1013,6 +1012,61 @@ public class SoaConfig {
 
 	public boolean isFullLog() {
 		return "1".equals(env.getProperty(env_isFullLog_key, env_isFullLog_defaultValue));
+	}
+
+	private volatile String _getDefaultMaxActive = "";
+	private volatile int getDefaultMaxActive = 100;
+	private final String env_getDefaultMaxActive_key = "spring.datasource.maxActive";
+	private final String env_getDefaultMaxActive_defaultValue = "80";
+	private final String env_getDefaultMaxActive_des = "mq basic 默认 最大连接数";
+
+	// 数据库初始链接个数
+	public int getDefaultMaxActive() {
+		try {
+			if (!_getDefaultMaxActive
+					.equals(env.getProperty(env_getDefaultMaxActive_key, env_getDefaultMaxActive_defaultValue))) {
+				_getDefaultMaxActive = env.getProperty(env_getDefaultMaxActive_key,
+						env_getDefaultMaxActive_defaultValue);
+				getDefaultMaxActive = Integer
+						.parseInt(env.getProperty(env_getDefaultMaxActive_key, env_getDefaultMaxActive_defaultValue));
+				if (getDefaultMaxActive <= 30) {
+					getDefaultMaxActive = 30;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getDefaultMaxActive = 50;
+			onChange();
+			log.error("getgetDefaultMaxActive_SoaConfig_error", e);
+		}
+		return getDefaultMaxActive;
+	}
+
+	private volatile String _getMinEvictableIdleTimeMillis = "";
+	private volatile int getMinEvictableIdleTimeMillis = 30000;
+	private final String env_getMinEvictableIdleTimeMillis_key = "spring.datasource.minEvictableIdleTimeMillis";
+	private final String env_getMinEvictableIdleTimeMillis_defaultValue = "30000";
+	private final String env_getMinEvictableIdleTimeMillis_des = "mq basic 数据库最小活跃时间";
+
+	public int getMinEvictableIdleTimeMillis() {
+		try {
+			if (!_getMinEvictableIdleTimeMillis.equals(env.getProperty(env_getMinEvictableIdleTimeMillis_key,
+					env_getMinEvictableIdleTimeMillis_defaultValue))) {
+				_getMinEvictableIdleTimeMillis = env.getProperty(env_getMinEvictableIdleTimeMillis_key,
+						env_getMinEvictableIdleTimeMillis_defaultValue);
+				getMinEvictableIdleTimeMillis = Integer.parseInt(env.getProperty(env_getMinEvictableIdleTimeMillis_key,
+						env_getMinEvictableIdleTimeMillis_defaultValue));
+				if (getMinEvictableIdleTimeMillis <= 30000) {
+					getMinEvictableIdleTimeMillis = 30000;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getMinEvictableIdleTimeMillis = 30000;
+			onChange();
+			log.error("getgetMinEvictableIdleTimeMillis_SoaConfig_error", e);
+		}
+		return getMinEvictableIdleTimeMillis;
 	}
 
 	private final String env_enableTimer_key = "mq.enableTimer";
@@ -1070,6 +1124,33 @@ public class SoaConfig {
 			log.error("getgetMaxDbCount_SoaConfig_error", e);
 		}
 		return getMaxDbCount;
+	}
+
+	private volatile String _getDbMinEvictableIdleTimeMillis = "";
+	private volatile int getDbMinEvictableIdleTimeMillis = 600000;
+	private final String env_getDbMinEvictableIdleTimeMillis_key = "mq.db.minEvictableIdleTimeMillis";
+	private final String env_getDbMinEvictableIdleTimeMillis_defaultValue = "600000";
+	private final String env_getDbMinEvictableIdleTimeMillis_des = "mq 消息数据库最小活跃时间";
+
+	public int getDbMinEvictableIdleTimeMillis() {
+		try {
+			if (!_getDbMinEvictableIdleTimeMillis.equals(env.getProperty(env_getDbMinEvictableIdleTimeMillis_key,
+					env_getDbMinEvictableIdleTimeMillis_defaultValue))) {
+				_getDbMinEvictableIdleTimeMillis = env.getProperty(env_getDbMinEvictableIdleTimeMillis_key,
+						env_getDbMinEvictableIdleTimeMillis_defaultValue);
+				getDbMinEvictableIdleTimeMillis = Integer.parseInt(env.getProperty(
+						env_getDbMinEvictableIdleTimeMillis_key, env_getDbMinEvictableIdleTimeMillis_defaultValue));
+				if (getDbMinEvictableIdleTimeMillis <= 300000) {
+					getDbMinEvictableIdleTimeMillis = 300000;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getDbMinEvictableIdleTimeMillis = 300000;
+			onChange();
+			log.error("getgetDbMinEvictableIdleTimeMillis_SoaConfig_error", e);
+		}
+		return getDbMinEvictableIdleTimeMillis;
 	}
 
 	private volatile String getSoaLogLevel = "";
@@ -1365,6 +1446,75 @@ public class SoaConfig {
 			log.error("getgetFailTopicSaveDayNum_SoaConfig_error", e);
 		}
 		return getFailTopicSaveDayNum;
+	}
+
+	// 通过apollo控制是否开启实时消息
+	private final String env_getMqPushFlag_key = "mq.push.flag";
+	private final String env_getMqPushFlag_defaultValue = "1";
+	private final String env_getMqPushFlag_des = "通过apollo控制是否开启实时消息,0表示关闭，1表示开启。";
+
+	public int getMqPushFlag() {
+		try {
+			return Integer.parseInt(env.getProperty(env_getMqPushFlag_key, env_getMqPushFlag_defaultValue));
+		} catch (Exception e) {
+			return 1;
+		}
+	}
+
+	private volatile String _getMqClientNotifyTime = "";
+	private volatile int MqClientNotifyTime = 0;
+	private final String env_getMqClientNotifyTime_key = "mq.notify.time";
+	private final String env_getMqClientNotifyTime_defaultValue = "10";
+	private final String env_getMqClientNotifyTime_des = "给客户端推送拉取通知的时间间隔,单位是毫秒";
+
+	// 客户端推送拉取通知的时间间隔
+	public int getMqClientNotifyTime() {
+		try {
+			if (!_getMqClientNotifyTime
+					.equals(env.getProperty(env_getMqClientNotifyTime_key, env_getMqClientNotifyTime_defaultValue))) {
+				_getDbFailWaitTime = env.getProperty(env_getMqClientNotifyTime_key,
+						env_getMqClientNotifyTime_defaultValue);
+				MqClientNotifyTime = Integer.parseInt(
+						env.getProperty(env_getMqClientNotifyTime_key, env_getMqClientNotifyTime_defaultValue));
+				if (MqClientNotifyTime < 10) {
+					MqClientNotifyTime = 10;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			MqClientNotifyTime = 10;
+			onChange();
+			log.error("getMqClientNotifyTime_SoaConfig_error", e);
+		}
+		return MqClientNotifyTime;
+	}
+
+	private volatile String _getMqNotifyFailTime = "";
+	private volatile int MqNotifyFailTime = 0;
+	private final String env_getMqNotifyFailTime_key = "mq.notify.fail.time";
+	private final String env_getMqNotifyFailTime_defaultValue = "5000";
+	private final String env_getMqNotifyFailTime_des = "给客户端推送失败的重试间隔,单位是毫秒";
+
+	// 客户端推送拉取通知的时间间隔
+	public int getMqNotifyFailTime() {
+		try {
+			if (!_getMqNotifyFailTime
+					.equals(env.getProperty(env_getMqNotifyFailTime_key, env_getMqNotifyFailTime_defaultValue))) {
+				_getMqNotifyFailTime = env.getProperty(env_getMqNotifyFailTime_key,
+						env_getMqNotifyFailTime_defaultValue);
+				MqNotifyFailTime = Integer
+						.parseInt(env.getProperty(env_getMqNotifyFailTime_key, env_getMqNotifyFailTime_defaultValue));
+				if (MqNotifyFailTime < 5000) {
+					MqNotifyFailTime = 5000;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			MqNotifyFailTime = 5000;
+			onChange();
+			log.error("getMqClientNotifyTime_SoaConfig_error", e);
+		}
+		return MqNotifyFailTime;
 	}
 
 	private volatile String _getFailTopicDelayProcessTime = "";
@@ -2275,6 +2425,32 @@ public class SoaConfig {
 		return getServerHeartbeat;
 	}
 
+	private final String env_getServerExpireTime_key = "mq.broker.server.expire.time";
+	private final String env_getServerExpireTime_defaultValue = "120";
+	private final String env_getServerExpireTime_des = "broker server 心跳超时时间";
+
+	private volatile String _getServerExpireTime = "200";
+	private volatile int getServerExpireTime = 200;
+
+	public int getServerExpireTime() {
+		try {
+			if (!_getServerExpireTime
+					.equals(env.getProperty(env_getServerExpireTime_key, env_getServerExpireTime_defaultValue))) {
+				_getServerExpireTime = env.getProperty(env_getServerExpireTime_key,
+						env_getServerExpireTime_defaultValue);
+				getServerExpireTime = Integer.parseInt(_getServerExpireTime);
+				if (getServerExpireTime < 30) {
+					getServerExpireTime = 30;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getServerExpireTime = 30;
+			onChange();
+		}
+		return getServerExpireTime;
+	}
+
 	private final String env_isEnbaleAuditLogClean_key = "mq.audit.log.clean";
 	private final String env_isEnbaleAuditLogClean_defaultValue = "1";
 	private final String env_isEnbaleAuditLogClean_des = "是否开启AuditLogClean,0表示关闭，1表示开启";
@@ -2710,4 +2886,234 @@ public class SoaConfig {
 		}
 		return getTransSkipNameMap;
 	}
+
+	private final String env_getMinServerCount_key = "mq.server.min.count";
+	private final String env_getMinServerCount_defaultValue = "20";
+	private final String env_getMinServerCount_des = "server拉入状态个数限制";
+
+	private volatile String _getMinServerCount = "0";
+	private volatile int getMinServerCount = 0;
+
+	public int getMinServerCount() {
+		try {
+			if (!_getMinServerCount
+					.equals(env.getProperty(env_getMinServerCount_key, env_getMinServerCount_defaultValue))) {
+				_getMinServerCount = env.getProperty(env_getMinServerCount_key, env_getMinServerCount_defaultValue);
+				getMinServerCount = Integer.parseInt(_getMinServerCount);
+				onChange();
+			}
+		} catch (Exception e) {
+			getMinServerCount = 20;
+			onChange();
+		}
+		return getMinServerCount;
+	}
+
+
+	private final String env_getMaxServerCount_key = "mq.server.max.count";
+	private final String env_getMaxServerCount_defaultValue = "30";
+	private final String env_getMaxServerCount_des = "server拉入状态最多个数限制";
+
+	private volatile String _getMaxServerCount = "0";
+	private volatile int getMaxServerCount = 0;
+
+	public int getMaxServerCount() {
+		try {
+			if (!_getMaxServerCount
+					.equals(env.getProperty(env_getMaxServerCount_key, env_getMaxServerCount_defaultValue))) {
+				_getMaxServerCount = env.getProperty(env_getMaxServerCount_key, env_getMaxServerCount_defaultValue);
+				getMaxServerCount = Integer.parseInt(_getMaxServerCount);
+				onChange();
+			}
+		} catch (Exception e) {
+			getMaxServerCount = 30;
+			onChange();
+		}
+		return getMaxServerCount;
+	}
+
+
+
+	private final String env_getBatchNum_key = "mq.server.batch.num";
+	private final String env_getBatchNum_defaultValue = "25";
+	private final String env_getBatchNum_des = "server批量拉取个数限制";
+
+	private volatile String _getBatchNum = "0";
+	private volatile int getBatchNum = 0;
+
+	public int getBatchNum() {
+		try {
+			if (!_getBatchNum
+					.equals(env.getProperty(env_getBatchNum_key, env_getBatchNum_defaultValue))) {
+				_getBatchNum = env.getProperty(env_getBatchNum_key, env_getBatchNum_defaultValue);
+				getBatchNum = Integer.parseInt(_getBatchNum);
+				onChange();
+			}
+		} catch (Exception e) {
+			getBatchNum = 5;
+			onChange();
+		}
+		return getBatchNum;
+	}
+
+	private final String env_getBrokerDomain_key = "mq.broker.domain";
+	private final String env_getBrokerDomain_defaultValue = "";
+	private final String env_getBrokerDomain_des = "broker 域名,用来防止出现拉入数量不够时，用域名代替";
+
+	private volatile String _getBrokerDomain = "";
+
+	public String getBrokerDomain() {
+		try {
+			if (!_getBrokerDomain.equals(env.getProperty(env_getBrokerDomain_key, env_getBrokerDomain_defaultValue))) {
+				_getBrokerDomain = env.getProperty(env_getBrokerDomain_key, env_getBrokerDomain_defaultValue);
+				onChange();
+			}
+		} catch (Exception e) {
+			onChange();
+		}
+		return _getBrokerDomain;
+	}
+
+	private final String env_getLockWhiteIps_key = "mq.lock.whiteips";
+	private final String env_getLockWhiteIps_defaultValue = "";
+	private final String env_getLockWhiteIps_des = "设置lock白名单";
+
+	public String getLockWhiteIps(String key) {
+		if (!Util.isEmpty(key)) {
+			String value = env.getProperty(env_getLockWhiteIps_key + "." + key, env_getLockWhiteIps_defaultValue);
+			if (!Util.isEmpty(value)) {
+				return value;
+			}
+		}
+		return env.getProperty(env_getLockWhiteIps_key, env_getLockWhiteIps_defaultValue);
+	}
+
+	private final String env_getLockBlackIps_key = "mq.lock.blackips";
+	private final String env_getLockBlackIps_defaultValue = "";
+	private final String env_getLockBlackIps_des = "设置lock黑名单";
+
+	public String getLockBlackIps(String key) {
+		if (!Util.isEmpty(key)) {
+			String value = env.getProperty(env_getLockBlackIps_key + "." + key, env_getLockBlackIps_defaultValue);
+			if (!Util.isEmpty(value)) {
+				return value;
+			}
+		}
+		return env.getProperty(env_getLockBlackIps_key, env_getLockBlackIps_defaultValue);
+	}
+	private volatile String _getTruncateMessageInterval = "";
+	private volatile int getTruncateMessageInterval = 0;
+	private final String env_getTruncateMessageInterval_key = "mq.msg.truncate.interval";
+	private final String env_getTruncateMessageInterval_defaultValue = "3600";
+	private final String env_getTruncateMessageInterval_des = "定时truncate queue数据";
+
+	// 定时truncate queue数据
+	public int getTruncateMessageInterval() {
+		try {
+			if (!_getTruncateMessageInterval.equals(
+					env.getProperty(env_getTruncateMessageInterval_key, env_getTruncateMessageInterval_defaultValue))) {
+				_getTruncateMessageInterval = env.getProperty(env_getTruncateMessageInterval_key,
+						env_getTruncateMessageInterval_defaultValue);
+				getTruncateMessageInterval = Integer.parseInt(env.getProperty(env_getTruncateMessageInterval_key,
+						env_getTruncateMessageInterval_defaultValue));
+				if (getTruncateMessageInterval < 3600) {
+					getTruncateMessageInterval = 3600;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getTruncateMessageInterval = 3600;
+			onChange();
+			log.error("getgetTruncateMessageInterval_SoaConfig_error", e);
+		}
+		return getTruncateMessageInterval;
+	}
+
+	private volatile String _getConnectTimeout = "";
+	private volatile int getConnectTimeout = 0;
+	public final String env_getConnectTimeout_key = "mysql.connect.time";
+	private final String env_getConnectTimeout_defaultValue = "30000";
+	private final String env_getConnectTimeout_des = "mysql数据库连接超时时间";
+
+	public int getConnectTimeout() {
+		try {
+			if (!_getConnectTimeout
+					.equals(env.getProperty(env_getConnectTimeout_key, env_getConnectTimeout_defaultValue))) {
+				_getConnectTimeout = env.getProperty(env_getConnectTimeout_key, env_getConnectTimeout_defaultValue);
+				getConnectTimeout = Integer
+						.parseInt(env.getProperty(env_getConnectTimeout_key, env_getConnectTimeout_defaultValue));
+				if (getConnectTimeout < 10000) {
+					getConnectTimeout = 10000;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getConnectTimeout = 30000;
+			onChange();
+			log.error("getHeartBeatTime_SoaConfig_error", e);
+		}
+		return getConnectTimeout;
+	}
+
+	private volatile String _getSocketTimeout = "";
+	private volatile int getSocketTimeout = 0;
+	public final String env_getSocketTimeout_key = "mysql.socket.time";
+	private final String env_getSocketTimeout_defaultValue = "30000";
+	private final String env_getSocketTimeout_des = "mysql数据库连接超时时间";
+
+	public int getSocketTimeout() {
+		try {
+			if (!_getSocketTimeout
+					.equals(env.getProperty(env_getSocketTimeout_key, env_getSocketTimeout_defaultValue))) {
+				_getSocketTimeout = env.getProperty(env_getSocketTimeout_key, env_getSocketTimeout_defaultValue);
+				getSocketTimeout = Integer
+						.parseInt(env.getProperty(env_getSocketTimeout_key, env_getSocketTimeout_defaultValue));
+				if (getSocketTimeout < 10000) {
+					getSocketTimeout = 10000;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getSocketTimeout = 30000;
+			onChange();
+			log.error("getHeartBeatTime_SoaConfig_error", e);
+		}
+		return getSocketTimeout;
+	}
+	
+	// 通过apollo开关，控制broker发消息时，是否给消息头加上子环境信息
+		private final String env_getMqBrokerSetSubEnvFlag_key = "mq.broker.set.sub.env.flag";
+		private final String env_getMqBrokerSetSubEnvFlag_defaultValue = "1";
+		private final String env_getMqBrokerSetSubEnvFlag_des = "通过apollo开关，控制broker发消息时，是否给消息头加上子环境信息,0表示关闭，1表示开启。";
+
+		public int getMqBrokerSetSubEnvFlag() {
+			try {
+				return Integer.parseInt(
+						env.getProperty(env_getMqBrokerSetSubEnvFlag_key, env_getMqBrokerSetSubEnvFlag_defaultValue));
+			} catch (Exception e) {
+				return 1;
+			}
+		}
+		
+		private final String env_getMqTopicRouteMap_key = "mq.topic.route.map";
+		private final String env_getMqTopicRouteMap_defaultValue = "";
+		private final String env_getMqTopicRouteMap_des = "获取测试环境中某个mq的特殊路由";
+		private volatile String _getMqTopicRouteMap = "";
+		private volatile Map<String, Map<String, String>> getMqTopicRouteMap = new HashMap<>();
+
+		public Map<String, Map<String, String>> getMqTopicRouteMap() {
+			try {
+				if (!_getMqTopicRouteMap
+						.equals(env.getProperty(env_getMqTopicRouteMap_key, env_getMqTopicRouteMap_defaultValue))) {
+					_getMqTopicRouteMap = env.getProperty(env_getMqTopicRouteMap_key, env_getMqTopicRouteMap_defaultValue);
+					getMqTopicRouteMap = JsonUtil.parseJson(_getMqTopicRouteMap, new TypeReference<Map<String, Map<String, String>>>() {
+					});
+					onChange();
+				}
+			} catch (Exception e) {
+				onChange();
+			}
+
+			return getMqTopicRouteMap;
+		}
 }

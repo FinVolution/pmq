@@ -16,17 +16,19 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         var consumerGroupNames = $("#consumerGroupNames").val();
         var sdkVersion = $("#sdkVersion").val();
         var compareType=$("#compareType").val();
-        getListData(id, ip, consumerGroupNames, sdkVersion,compareType);
+        var heartBeat=$("#heartBeat").val();
+        getListData(id, ip, consumerGroupNames, sdkVersion,compareType,heartBeat);
     });
 
-    function getListData(id, ip, consumerGroupNames, sdkVersion,compareType) {
+    function getListData(id, ip, consumerGroupNames, sdkVersion,compareType,heartBeat) {
         table.reload("consumerTable", {
             where: {
                 id: id,
                 ip: ip,
                 consumerGroupNames: consumerGroupNames,
                 sdkVersion: sdkVersion,
-                compareType:compareType
+                compareType:compareType,
+                heartBeat:heartBeat
             },page: {
                 curr: 1 //重新从第 1 页开始
             }
@@ -49,7 +51,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         if (xhr === 'success') {
             if (result.code ==yesFlag) {
                 layer.msg(result.msg, {icon: 1})
-                getListData($("#consumerId").val(), $("#ip").val(), $("#consumerGroupNames").val(), $("#sdkVersion").val());
+                getListData($("#consumerId").val(), $("#ip").val(), $("#consumerGroupNames").val(), $("#sdkVersion").val(),$("#heartBeat").val());
             } else {
                 layer.alert(result.msg, {icon: 2})
             }

@@ -4,8 +4,8 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     var element = layui.element;
     var formArray;
 
-    initOwnerIdSelect2();
     initForm();
+    initOwnerIdSelect2();
     initConsumerGroupSelect2();
     initDptNameSelect2();
 
@@ -76,8 +76,8 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                 if (result.code == yesFlag) {
                     var user=result.data;
                     var ownerList = [];
-                    ownerList.push(user.userId+"|"+user.name)
-                    $("#ownerIds").select2({data:ownerList}).val(ownerList).trigger("change");
+                    ownerList.push({id:user.email,text: user.userId+"|"+user.name});
+                    $("#ownerIds").select2({data:ownerList}).val(user.email).trigger("change");
                     $("#emails").val(user.email);
                     initOwnerIdSelect2();
                 }
@@ -197,15 +197,20 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     function initOwners(topic){
         var ownerIds=topic.ownerIds;
         var ownerNames=topic.ownerNames;
+        var emails=topic.emails;
+       // debugger;
         if(ownerIds!=null&&ownerIds!=undefined){
             var ownerIdArr=ownerIds.split(",");
             var ownerNameArr = ownerNames.split(",");
+            var ownerEmailArr= emails.split(",");
             var ownerList = [];
+            var emailList=[];
             $.each(ownerIdArr, function (k, v) {
-                ownerList.push(v +"|"+ ownerNameArr[k]);
+                ownerList.push({id:ownerEmailArr[k],text:v +"|"+ ownerNameArr[k]});
+                emailList.push(ownerEmailArr[k]);
             });
-            $("#ownerIds").select2({data:ownerList}).val(ownerList).trigger("change");
 
+            $("#ownerIds").select2({data:ownerList}).val(emailList).trigger("change");
             $("#emails").val(topic.emails);
             initOwnerIdSelect2();
 
@@ -272,6 +277,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                     var users = [];
                     if (data.count > 0) {
                         $.each(data.data, function (k, v) {
+                        	//debugger;
                             users.push({
                                 id: v.email,
                                 text: v.userId + "|" + v.name
@@ -279,6 +285,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                         });
                     }
 
+                    //debugger;
                     return {
                         results: users
                     }
@@ -292,18 +299,24 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
 
 
     function initConsumerGroupSelect2(){
-        parent.window.initSelect2($("#consumerGroupList"),'/consumerGroup/consumerGroupSelect');
+        try{
+             parent.window.initSelect2($("#consumerGroupList"),'/consumerGroup/consumerGroupSelect');
+        }catch(e){}
     }
 
     function initDptNameSelect2(){
-        parent.window.initSelect2($("#dptName"),'/user/getDepartmentsBySearch');
+        try{
+            parent.window.initSelect2($("#dptName"),'/user/getDepartmentsBySearch');
+        }catch(e){}
     }
 
 
     function getOwnerEmails (ownerList){
         var itemIds = [];
         $.each(ownerList, function (k, v) {
-            itemIds.push( v.id);
+        	//debugger;
+           // itemIds.push( v.text.split('|')[0]+"@ppdai.com");
+        	 itemIds.push(v.id);
         });
         return itemIds.join(",");
     }
@@ -311,7 +324,8 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     function getItemIds (ownerList){
         var itemIds = [];
         $.each(ownerList, function (k, v) {
-            itemIds.push( v.text.split('|')[0]);
+           // itemIds.push( v.text.split('|')[0]);
+           itemIds.push( v.id);
         });
         return itemIds.join(",");
     }

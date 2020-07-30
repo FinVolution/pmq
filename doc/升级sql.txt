@@ -1,0 +1,15 @@
+ALTER TABLE `consumer_group` 
+ADD COLUMN `sub_env` VARCHAR(45) NULL DEFAULT 'default' AFTER `origin_name`;
+
+
+ALTER TABLE `queue_offset` 
+ADD COLUMN `sub_env` VARCHAR(45) NULL DEFAULT 'default' AFTER `consumer_group_mode`;
+
+
+ALTER TABLE `server` 
+ADD UNIQUE INDEX `ip_port_uq` (`ip` ASC, `port` ASC);
+
+
+ALTER TABLE `server` 
+ADD COLUMN `server_version` VARCHAR(100) NULL COMMENT 'broker 版本号' AFTER `status_flag`;
+

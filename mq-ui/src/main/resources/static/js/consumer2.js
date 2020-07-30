@@ -19,8 +19,9 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
             where: {
                 ip: ip,
                 consumerGroupNames: consumerGroupNames
-            },
-            page : 1
+            },page: {
+                curr: 1
+            }
         });
     }
 

@@ -14,7 +14,7 @@ public class MqBootstrapScanConfigTest {
 	@Test
 	public void test() {
 		MqBootstrapScanConfig mqBootstrapScanConfig=new MqBootstrapScanConfig();
-		FilterRegistrationBean filterRegistrationBean=mqBootstrapScanConfig.ppdfilter(new MqFilter());
+		FilterRegistrationBean filterRegistrationBean=mqBootstrapScanConfig.clientMqFilter(new MqFilter());
 		assertEquals(1, filterRegistrationBean.getUrlPatterns().size());
 	}
 }

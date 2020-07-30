@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.codahale.metrics.MetricFilter;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.core.IMqMeticReporterService;
 import com.ppdai.infrastructure.mq.client.metric.MetricSingleton;
 
@@ -16,20 +16,20 @@ public class MqMeticReporterService implements IMqMeticReporterService {
 	/**
 	 * 获取单例
 	 */
-	public static MqMeticReporterService getInstance(IMqClientBase mqClientBase) {
+	public static MqMeticReporterService getInstance() {
 		if (instance == null) {
 			synchronized (MqTopicQueueRefreshService.class) {
 				if (instance == null) {
-					instance = new MqMeticReporterService(mqClientBase);
+					instance = new MqMeticReporterService();
 				}
 			}
 		}
 		return instance;
 	}
 
-	private MqMeticReporterService(IMqClientBase mqClientBase) {
+	private MqMeticReporterService() {
 		reporter = new MqMetricReporter(MetricSingleton.getMetricRegistry(), "mq-client", MetricFilter.ALL,
-				TimeUnit.MILLISECONDS, TimeUnit.MILLISECONDS, null, mqClientBase.getContext());
+				TimeUnit.MILLISECONDS, TimeUnit.MILLISECONDS, null, MqClient.getContext());
 	}
 
 	@Override

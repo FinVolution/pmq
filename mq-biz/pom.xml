@@ -21,7 +21,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.ppdai.infrastructure</groupId>
-			<artifactId>mq-client-spring</artifactId>
+			<artifactId>mq-client-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

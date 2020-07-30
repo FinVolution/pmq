@@ -13,7 +13,7 @@ import com.ppdai.infrastructure.mq.biz.common.trace.TraceFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessage;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessageItem;
 import com.ppdai.infrastructure.mq.biz.dto.client.HeartbeatRequest;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 import com.ppdai.infrastructure.mq.client.core.IMqHeartbeatService;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
@@ -28,12 +28,12 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 	private IMqResource mqResource;
 	private volatile boolean isStop = false;
 
-	public MqHeartbeatService(IMqClientBase mqClientBase) {	
-		this(mqClientBase,mqClientBase.getMqFactory().createMqResource(mqClientBase.getContext().getConfig().getUrl(), 3500, 3500));
+	public MqHeartbeatService() {	
+		this(MqClient.getMqFactory().createMqResource(MqClient.getContext().getConfig().getUrl(), 3500, 3500));
 	}
 
-	public MqHeartbeatService(IMqClientBase mqClientBase, IMqResource mqResource) {
-		this.mqContext = mqClientBase.getContext();
+	public MqHeartbeatService(IMqResource mqResource) {
+		this.mqContext = MqClient.getContext();
 		this.mqResource = mqResource;
 		mqContext.setMqHtResource(this.mqResource);
 	}

@@ -27,11 +27,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                 name: topicName,
                 topicExceptionType:topicExceptionType,
                 queueManagementType:queueManagementType
+            },page: {
+                curr: page
             }
         };
-        if (page !== undefined) {
-            option["page"]= page;
-        }
 
         table.reload("topicReportTable", option);
     }

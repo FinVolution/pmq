@@ -1,9 +1,11 @@
 package com.ppdai.infrastructure.ui.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ppdai.infrastructure.mq.biz.MqConst;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.service.RoleService;
 import org.slf4j.Logger;
@@ -98,7 +100,10 @@ public class MessageController {
         PublishMessageResponse publishMessageResponse = new PublishMessageResponse();
         Map<String,TopicEntity> topicMap=topicService.getCache();
         TopicEntity topicEntity=topicMap.get(messageToolRequest.getTopicName());
-        int userRole=roleService.getRole(userInfoHolder.getUserId(),topicEntity.getOwnerIds());
+        int userRole=2;
+        if(topicEntity!=null){
+            userRole=roleService.getRole(userInfoHolder.getUserId(),topicEntity.getOwnerIds());
+        }
         boolean isPro = soaConfig.isPro();
         if(isPro){
             //生产环境中，如果用户不是系统管理员，也不是topic负责人，则不能往该topic发送消息
@@ -108,14 +113,28 @@ public class MessageController {
                 return publishMessageResponse;
             }
         }
+
         boolean result = false;
         if (messageToolRequest != null) {
+            if (messageToolRequest.getMqSubEnv()!=null&&!MqConst.DEFAULT_SUBENV.equalsIgnoreCase(messageToolRequest.getMqSubEnv())) {
+
+                if(messageToolRequest.getMessage().getHead()==null){
+                    Map<String, String> headMap=new HashMap<>();
+                    headMap.put(MqConst.MQ_SUB_ENV_KEY, messageToolRequest.getMqSubEnv());
+                    messageToolRequest.getMessage().setHead(headMap);
+                }else{
+                    messageToolRequest.getMessage().getHead().put(MqConst.MQ_SUB_ENV_KEY, messageToolRequest.getMqSubEnv());
+                }
+
+            }
+
             if (!StringUtils.isEmpty(messageToolRequest.getTopicName())
                     && !StringUtils.isEmpty(messageToolRequest.getMessage().getBody())) {
                     result = MqClient.publish(messageToolRequest.getTopicName(), env.getProperty("test-token", ""),
                             messageToolRequest.getMessage());
                 }
        }
+
 
         //发送成功，添加审计日志
         if (result) {

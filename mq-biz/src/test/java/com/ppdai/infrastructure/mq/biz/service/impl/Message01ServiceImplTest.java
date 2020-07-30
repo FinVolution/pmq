@@ -197,8 +197,15 @@ public class Message01ServiceImplTest extends AbstractTest {
 		message01ServiceImpl.getDataSource();
 		message01ServiceImpl.setDbId(1L);
 		message01ServiceImpl.clearDbId();
-		message01ServiceImpl.getMaxConnectionsCount();
+		message01ServiceImpl.getMaxConnectionsCount();		
+		Map<String,String> conMap=new HashMap<String, String>();
+		conMap.put("Value", "1");
+		when(message01Repository.getMaxConnectionsCount()).thenReturn(conMap);
+		assertEquals("1", message01ServiceImpl.getMaxConnectionsCount());
 		message01ServiceImpl.getConnectionsCount();
+		when(message01Repository.getConnectionsCount()).thenReturn(1);
+		assertEquals(1, message01ServiceImpl.getConnectionsCount().intValue());
+		
 		message01ServiceImpl.setDbId(1L);
 		message01ServiceImpl.updateFailMsgResult("test",Arrays.asList(1L),1);
 		message01ServiceImpl.setDbId(1L);
@@ -262,6 +269,20 @@ public class Message01ServiceImplTest extends AbstractTest {
 	public void getTableQuantityByDbNameTest() {
 		assertEquals(0, message01ServiceImpl.getTableQuantityByDbName("test"));
 		assertEquals(0, message01ServiceImpl.getTableNamesByDbName("test").size());
+		
+		List<TableInfoEntity> dataLst =new ArrayList<TableInfoEntity>();
+		TableInfoEntity tableInfoEntity=new TableInfoEntity();
+		tableInfoEntity.setAutoIncrement(1L);
+		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setTbName("test");
+		dataLst.add(tableInfoEntity);
+		message01ServiceImpl.setDbId(1);		
+		when(dbNodeService.getDataSource(anyLong(), anyBoolean())).thenReturn(new DruidDataSource());
+		when(message01Repository.getMaxIdByDb()).thenReturn(dataLst);
+		assertEquals(1, message01ServiceImpl.getTableNamesByDbName("test").size());
+		message01ServiceImpl.setDbId(1);		
+		assertEquals(1, message01ServiceImpl.getTableQuantityByDbName("test"));
+		
 	}
 
 	@Test

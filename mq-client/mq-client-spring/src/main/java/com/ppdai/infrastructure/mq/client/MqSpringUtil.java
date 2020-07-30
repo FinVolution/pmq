@@ -1,17 +1,20 @@
 package com.ppdai.infrastructure.mq.client;
 
-
 import java.util.Map;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.Ordered;
+import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 
 @Component
 @Qualifier("MqClientSpringUtil")
-public class MqSpringUtil implements ApplicationContextAware {
+public class MqSpringUtil implements BeanFactoryPostProcessor, PriorityOrdered, ApplicationContextAware {
 
 	private static ApplicationContext applicationContext;
 
@@ -51,19 +54,19 @@ public class MqSpringUtil implements ApplicationContextAware {
 		return null;
 
 	}
-	
-	// 通过class获取Bean.
-		public static <T> Map<String,T> getBeans(Class<T> clazz) {
-			try {
-				if (applicationContext != null) {
-					return getApplicationContext().getBeansOfType(clazz);
-				}
-			} catch (Exception e) {
 
+	// 通过class获取Bean.
+	public static <T> Map<String, T> getBeans(Class<T> clazz) {
+		try {
+			if (applicationContext != null) {
+				return getApplicationContext().getBeansOfType(clazz);
 			}
-			return null;
+		} catch (Exception e) {
 
 		}
+		return null;
+
+	}
 
 	// 通过name,以及Clazz返回指定的Bean
 	public static <T> T getBean(String name, Class<T> clazz) {
@@ -75,6 +78,18 @@ public class MqSpringUtil implements ApplicationContextAware {
 
 		}
 		return null;
+
+	}
+
+	@Override
+	public int getOrder() {
+		// TODO Auto-generated method stub
+		return Ordered.HIGHEST_PRECEDENCE;
+	}
+
+	@Override
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		// TODO Auto-generated method stub
 
 	}
 

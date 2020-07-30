@@ -24,13 +24,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.alibaba.druid.filter.Filter;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.inf.PortalTimerService;
 import com.ppdai.infrastructure.mq.biz.common.inf.TimerService;
+import com.ppdai.infrastructure.mq.biz.common.plugin.DruidConnectionFilter;
 import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
+import com.ppdai.infrastructure.mq.biz.common.util.DbUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dal.meta.DbNodeRepository;
@@ -62,6 +65,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 	protected Map<String, Boolean> dbCreated = new ConcurrentHashMap<>();
 	private volatile int minIdle = 0;
 	private volatile int maxActive = 0;
+	private volatile int minEvictableIdleTimeMillis = 0;
 	private AtomicLong lastVersion = new AtomicLong(0);
 	protected volatile boolean isPortal = false;
 	private DataSourceFactory dataSourceFactory;
@@ -84,11 +88,11 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 				return new DruidDataSource();
 			}
 		};
-		start();
 		minIdle = soaConfig.getInitDbCount();
 		maxActive = soaConfig.getMaxDbCount();
+		minEvictableIdleTimeMillis = soaConfig.getDbMinEvictableIdleTimeMillis();
+		start();		
 		registerDbConfigChanged();
-		
 
 	}
 
@@ -102,6 +106,19 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 	}
 
 	protected void updateDbProperties() {
+		if (minEvictableIdleTimeMillis != soaConfig.getDbMinEvictableIdleTimeMillis()) {
+			minEvictableIdleTimeMillis = soaConfig.getDbMinEvictableIdleTimeMillis();
+			cacheDataMap.get().values().forEach(dataSource -> {
+				try {
+					if (dataSource instanceof DruidDataSource) {
+						((DruidDataSource) dataSource)
+								.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);
+					}
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			});
+		}
 		if (minIdle != soaConfig.getInitDbCount() && maxActive != soaConfig.getMaxDbCount()) {
 			log.warn("dataSource_MinIdle_changed,from {} to {}", minIdle, soaConfig.getInitDbCount());
 			log.warn("dataSource_MaxActive_changed,from {} to {}", maxActive, soaConfig.getMaxDbCount());
@@ -109,8 +126,8 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 			minIdle = soaConfig.getInitDbCount();
 			cacheDataMap.get().values().forEach(dataSource -> {
 				if (dataSource instanceof DruidDataSource) {
-					((DruidDataSource) dataSource).setMinIdle(soaConfig.getInitDbCount());
-					((DruidDataSource) dataSource).setMaxActive(soaConfig.getMaxDbCount());
+					((DruidDataSource) dataSource).setMinIdle(minIdle);
+					((DruidDataSource) dataSource).setMaxActive(maxActive);
 				}
 			});
 		} else if (minIdle != soaConfig.getInitDbCount()) {
@@ -118,7 +135,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 			minIdle = soaConfig.getInitDbCount();
 			cacheDataMap.get().values().forEach(dataSource -> {
 				if (dataSource instanceof DruidDataSource) {
-					((DruidDataSource) dataSource).setMinIdle(soaConfig.getInitDbCount());
+					((DruidDataSource) dataSource).setMinIdle(minIdle);
 				}
 			});
 		} else if (maxActive != soaConfig.getMaxDbCount()) {
@@ -126,7 +143,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 			maxActive = soaConfig.getMaxDbCount();
 			cacheDataMap.get().values().forEach(dataSource -> {
 				if (dataSource instanceof DruidDataSource) {
-					((DruidDataSource) dataSource).setMaxActive(soaConfig.getMaxDbCount());
+					((DruidDataSource) dataSource).setMaxActive(maxActive);
 				}
 			});
 		}
@@ -180,7 +197,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 	protected void checkSlave(DbNodeEntity dbNodeEntity) throws SQLException {
 		// 检查slave
 		if (hasSlave(dbNodeEntity)) {
-			DruidDataSource dataSource = dataSourceFactory.createDataSource();
+			DruidDataSource dataSource = dataSourceFactory.createDataSource();			
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 			dataSource.setUsername(dbNodeEntity.getDbUserNameBak());
 			dataSource.setPassword(dbNodeEntity.getDbPassBak());
@@ -188,6 +205,9 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 			dataSource.setInitialSize(1);
 			dataSource.setMinIdle(0);
 			dataSource.setMaxActive(1);
+			List<Filter> filters = new ArrayList<Filter>();
+			filters.add(new DruidConnectionFilter(DbUtil.getDbIp(dataSource.getUrl())));
+			dataSource.setProxyFilters(filters);
 			dataSource.init();
 			dataSource = null;
 		}
@@ -195,6 +215,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 
 	private void checkMaster(DbNodeEntity dbNodeEntity) throws SQLException {
 		DruidDataSource dataSource = dataSourceFactory.createDataSource();
+		
 		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 		dataSource.setUsername(dbNodeEntity.getDbUserName());
 		dataSource.setPassword(dbNodeEntity.getDbPass());
@@ -202,6 +223,10 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 		dataSource.setInitialSize(1);
 		dataSource.setMinIdle(0);
 		dataSource.setMaxActive(1);
+		
+		List<Filter> filters = new ArrayList<Filter>();
+		filters.add(new DruidConnectionFilter(DbUtil.getDbIp(dataSource.getUrl())));
+		dataSource.setProxyFilters(filters);
 		dataSource.init();
 		dataSource = null;
 	}
@@ -256,7 +281,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 		try {
 			// if (soaConfig.isUseDruid())
 			{
-				DruidDataSource dataSource = dataSourceFactory.createDataSource();
+				DruidDataSource dataSource = dataSourceFactory.createDataSource();			
 				dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 				if (isMaster) {
 					dataSource.setUsername(t1.getDbUserName());
@@ -267,10 +292,14 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 				}
 				// dataSource.setUrl(t1.getConStr());
 				dataSource.setUrl(getCon(t1, isMaster));
-				dataSource.setInitialSize(soaConfig.getInitDbCount());
-				dataSource.setMinIdle(soaConfig.getInitDbCount());
-				dataSource.setMaxActive(soaConfig.getMaxDbCount());
+				dataSource.setInitialSize(minIdle);
+				dataSource.setMinIdle(minIdle);
+				dataSource.setMaxActive(maxActive);
+				dataSource.setMinEvictableIdleTimeMillis(minEvictableIdleTimeMillis);
 				dataSource.setConnectionInitSqls(Arrays.asList("set names utf8mb4;"));
+				List<Filter> filters = new ArrayList<Filter>();
+				filters.add(new DruidConnectionFilter(DbUtil.getDbIp(dataSource.getUrl())));
+				dataSource.setProxyFilters(filters);
 				dataSource.init();
 				dbCreated.put(key, true);
 				log.info(dataSource.getUrl() + "数据源创建成功！dataSource_created");
@@ -283,14 +312,22 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 		}
 	}
 
+	String timeOutF = "&connectTimeout=%s&socketTimeout=%s";
+
 	private String getCon(DbNodeEntity t1, boolean isMaster) {
+
+		return doGetCon(t1, isMaster)
+				+ String.format(timeOutF, soaConfig.getConnectTimeout(), soaConfig.getSocketTimeout());
+
+	}
+
+	private String doGetCon(DbNodeEntity t1, boolean isMaster) {
 		if (isMaster) {
 			return String.format(conF, t1.getIp(), t1.getPort());
 		} else {
 			return String.format(conF, t1.getIpBak(), t1.getPortBak());
 		}
 	}
-
 //	public String getConKey(long dbNodeId, boolean isMaster) {
 //		if (cacheNodeMap.get().containsKey(dbNodeId)) {
 //			return getConKey(cacheNodeMap.get().get(dbNodeId), isMaster);
@@ -448,7 +485,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 	@Override
 	public DataSource getDataSource(long id, boolean isMaster) {
 		Map<String, DataSource> cache = cacheDataMap.get();
-		Map<Long, DbNodeEntity> data = cacheNodeMap.get(); 
+		Map<Long, DbNodeEntity> data = cacheNodeMap.get();
 		// 如果是broker，默认是禁止读写分离
 		// 注意不是所示的portal 操作都是读取从库
 		if (!isPortal) {
@@ -473,7 +510,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 				// log.info("dbUrl is "+cache.get(key).getUrl());
 				return cache.get(key);
 			} else {
-				key = getConKey(data.get(id), true); 
+				key = getConKey(data.get(id), true);
 				if (cache.containsKey(key)) {
 					// log.info("dbUrl is "+cache.get(key).getUrl());
 					return cache.get(key);

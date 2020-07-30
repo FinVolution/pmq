@@ -10,8 +10,8 @@ import com.ppdai.infrastructure.mq.client.stat.MqFilter;
 @Configuration
 @ComponentScan(basePackageClasses = { MqBootstrapScanConfig.class })
 public class MqBootstrapScanConfig {
-	@Bean
-	public FilterRegistrationBean ppdfilter(MqFilter mqFilter) {
+	@Bean("clientMqFilter")
+	public FilterRegistrationBean clientMqFilter(MqFilter mqFilter) {
 		FilterRegistrationBean openApiFilter = new FilterRegistrationBean();
 		openApiFilter.setFilter(mqFilter);
 		openApiFilter.addUrlPatterns("/mq/client/*");

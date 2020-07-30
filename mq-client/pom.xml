@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ppdai.infrastructure</groupId>
 	<artifactId>mq-client</artifactId>
-	<version>5.0.0</version>
+	<version>5.1.0</version>
 	<packaging>pom</packaging>	
     <modules>
 	    <!--module>mq-common</module>
@@ -13,6 +13,7 @@
 		<module>mq-client-core</module>
 		<module>mq-client-spring</module>
 		<module>mq-client-springboot</module>
+		<module>mq-client-spring-subEnv-apollo</module>
     </modules>
 	<properties>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -22,6 +23,18 @@
 		<slf4j.version>1.7.24</slf4j.version>		
 	</properties>
 
+    <distributionManagement>
+        <repository>
+            <id>ppdai-Releases</id>
+            <name>Internal Releases</name>
+            <url>http://maven.repo.ppdai.com/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>ppdai-Snapshots</id>
+            <name>Internal Snapshots</name>
+            <url>http://maven.repo.ppdai.com/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 	<dependencyManagement>
 		<dependencies>  
 		    <!--dependency>
@@ -43,7 +56,12 @@
                 <groupId>com.ppdai.infrastructure</groupId>
                 <artifactId>mq-client-core</artifactId>
                 <version>${project.version}</version>
-            </dependency>		
+            </dependency>	
+			<dependency>
+                <groupId>com.ppdai.infrastructure</groupId>
+                <artifactId>mq-client-spring-subEnv-apollo</artifactId>
+                <version>${project.version}</version>
+            </dependency>				
 			<dependency>
                 <groupId>com.ppdai.infrastructure</groupId>
                 <artifactId>mq-client-spring</artifactId>

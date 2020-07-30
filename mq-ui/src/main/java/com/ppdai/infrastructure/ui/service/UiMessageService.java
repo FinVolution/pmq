@@ -115,6 +115,8 @@ public class UiMessageService {
 			parameterMap.put("body", messageGetListRequest.getBody());
 			parameterMap.put("start1",start);
 			parameterMap.put("offset1",pageSize);
+			parameterMap.put("startTime",messageGetListRequest.getStartTime());
+			parameterMap.put("endTime",messageGetListRequest.getEndTime());
 			if(!StringUtils.isEmpty(messageGetListRequest.getRetryStatus())){
 				parameterMap.put("retryStatus",Integer.parseInt(messageGetListRequest.getRetryStatus()));
 				parameterMap.put("failMsgRetryCountSuc",Message01Service.failMsgRetryCountSuc);

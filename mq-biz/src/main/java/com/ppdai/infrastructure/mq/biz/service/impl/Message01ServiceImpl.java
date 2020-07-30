@@ -49,7 +49,7 @@ public class Message01ServiceImpl implements Message01Service {
 
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public void insertBatchDy(String topic, String tbName, List<Message01Entity> entities) {
 		Timer.Context context = publishTimer.time();
 		// Transaction transaction=Tracer.newTransaction("Msg", getDbName() +
@@ -81,7 +81,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public void deleteDy(String tbName, long start, long end) {
 		try {
 			setMaster(true); 
@@ -95,7 +95,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public List<Message01Entity> getListDy(String topic, String tbName, long start, long end) {
 		List<Message01Entity> rs = new ArrayList<>();
 		setMaster(false);
@@ -121,7 +121,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public List<Message01Entity> getListByPage(Map<String, Object> parameterMap) {
 		List<Message01Entity> rs = new ArrayList<>();
 		setMaster(false);
@@ -139,7 +139,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public long countByPage(Map<String, Object> parameterMap) {
 		try {
 			setMaster(false);
@@ -150,7 +150,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public Message01Entity getMessageById(String tbName, long id) {
 		setMaster(false);
 		Message01Entity message01Entity = null;
@@ -166,7 +166,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public List<Message01Entity> getMessageByIds(String tbName, List<Long> ids) {
 		setMaster(false);
 		List<Message01Entity> message01Entitys = null;
@@ -182,7 +182,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public Long getTableMinId(String tbName){
 		return message01Repository.getTableMinId(getDbName() + "." + tbName);
 	}
@@ -190,7 +190,7 @@ public class Message01ServiceImpl implements Message01Service {
 
 	// 最大值为系统当前最大值的下一个值
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public Long getMaxId(String tbName) {
 		setMaster(true);
 		Long maxId = 0L;
@@ -260,7 +260,7 @@ public class Message01ServiceImpl implements Message01Service {
 	 * 注意是某个数据库实例下面的数据库名和表名对应的 最大id
 	 */
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public Map<String, Map<String, Long>> getMaxId() {
 		setMaster(true); 
 		Map<String, Map<String, Long>> map = new HashMap<>();
@@ -294,7 +294,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public void truncate(String tbName) {
 		try {
 			setMaster(true);
@@ -318,7 +318,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public List<String> getTableNamesByDbName(String dbName) {
 		Map<String, Map<String, Long>> data = getMaxId();
 		List<String> tableNames = new ArrayList<>();
@@ -335,7 +335,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public List<Message01Entity> getListByTime(String tbName, String insertTime) {
 		List<Message01Entity> rs = new ArrayList<>();
 		try {
@@ -351,7 +351,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public Message01Entity getNearByMessageById(String tbName, long id) {
 		Message01Entity message01Entity = null;
 		setMaster(false);
@@ -367,7 +367,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public String getMaxConnectionsCount() {
 		try {
 			setMaster(true);
@@ -383,7 +383,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public Integer getConnectionsCount() {
 		try {
 			setMaster(true);
@@ -398,7 +398,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public void updateFailMsgResult(String tbName, List<Long> ids, int retryCount) {
 		try {
 			setMaster(true);
@@ -409,7 +409,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public int deleteOldFailMsg(String tbName, long id, int retryCount) {
 		try {
 			setMaster(true);
@@ -420,7 +420,7 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public void deleteByIds(String tbName, List<Long> ids) {
 		try {
 			setMaster(true);

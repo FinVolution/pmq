@@ -3,23 +3,40 @@ package com.ppdai.infrastructure.mq.client.event;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ppdai.infrastructure.mq.biz.event.IAsynSubscriberSelector;
+import com.ppdai.infrastructure.mq.biz.event.IMsgFilter;
 import com.ppdai.infrastructure.mq.biz.event.ISubscriberSelector;
 import com.ppdai.infrastructure.mq.biz.event.PostHandleListener;
 import com.ppdai.infrastructure.mq.biz.event.PreHandleListener;
+import com.ppdai.infrastructure.mq.biz.event.PreSendListener;
 
 public class MqEvent {
-	//初始化完成事件
 	private List<Runnable> initCompleted = new ArrayList<>();
-	//消息消费前事件
 	private PreHandleListener preHandleListener = null;
-	//消息消费后事件
 	private PostHandleListener postHandleListener = null;
-	//topic订阅类处理接口
 	private ISubscriberSelector iSubscriberSelector = null;
-	//客户度注册完成事件
+	private IAsynSubscriberSelector iAsynSubscriberSelector = null;
 	private List<Runnable> registerCompleted = new ArrayList<>();
-	//消费者组注册完成事件,在广播消息中使用
 	private List<RegisterConsumerGroupListener> registerConsumerGroupListeners = new ArrayList<>();
+	private List<IMsgFilter> msgFilters = new ArrayList<>();
+
+	public List<IMsgFilter> getMsgFilters() {
+		return msgFilters;
+	}
+
+	public void setMsgFilters(List<IMsgFilter> msgFilters) {
+		this.msgFilters = msgFilters;
+	}
+
+	public List<PreSendListener> getPreSendListeners() {
+		return preSendListeners;
+	}
+
+	public void setPreSendListeners(List<PreSendListener> preSendListeners) {
+		this.preSendListeners = preSendListeners;
+	}
+
+	private List<PreSendListener> preSendListeners = new ArrayList<>();
 
 	public List<Runnable> getInitCompleted() {
 		return initCompleted;
@@ -60,5 +77,11 @@ public class MqEvent {
 	public List<RegisterConsumerGroupListener> getRegisterConsumerGroupListeners() {
 		return registerConsumerGroupListeners;
 	}
-	
+	public IAsynSubscriberSelector getiAsynSubscriberSelector() {
+		return iAsynSubscriberSelector;
+	}
+
+	public void setiAsynSubscriberSelector(IAsynSubscriberSelector iAsynSubscriberSelector) {
+		this.iAsynSubscriberSelector = iAsynSubscriberSelector;
+	}
 }

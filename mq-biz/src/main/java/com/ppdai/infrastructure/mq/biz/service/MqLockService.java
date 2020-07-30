@@ -10,4 +10,5 @@ import com.ppdai.infrastructure.mq.biz.service.common.BaseService;
 public interface MqLockService extends BaseService<MqLockEntity> {
 	boolean isMaster();
 	boolean updateHeatTime();
+	boolean isInLock();
 }

@@ -76,6 +76,15 @@ public class QueueOffsetCheckServiceImpl implements RedundanceCheckService {
                 resultBuilder.append("queue_offset表中Id为：" + queueOffsetEntity.getId() + "的行，对应的topic_name:" + queueOffsetEntity.getTopicName()
                         + "在topic表中不存在,建议删除该条记录"+"<br/>");
             }
+            
+            if (!queueMap.containsKey(queueOffsetEntity.getQueueId())) {
+                resultBuilder.append("queue_offset表中Id为：" + queueOffsetEntity.getId() + "的行，对应的queue_id:" + queueOffsetEntity.getQueueId() +
+                        "在queue表中不存在,请注意,建议删除该条记录!" +"<br/>");
+            }
+            else if (!StringUtils.isEmpty(queueOffsetEntity.getTopicName())&&!queueOffsetEntity.getTopicName().equalsIgnoreCase(queueMap.get(queueOffsetEntity.getQueueId()).getTopicName())) {
+                resultBuilder.append("queue_offset表中Id为：" + queueOffsetEntity.getId() + "的行，对应的queue_id:" + queueOffsetEntity.getQueueId() +
+                        "在queue表中对应的topic_name不存在或者queue表中的topicName("+queueMap.get(queueOffsetEntity.getQueueId()).getTopicName()+")与queueoffset表中的topicName("+queueOffsetEntity.getTopicName()+")不相等,请注意!" +"<br/>");
+            }
 
             if (!StringUtils.isEmpty(queueOffsetEntity.getConsumerGroupName()) && !consumerGroupMap.containsKey(queueOffsetEntity.getConsumerGroupName())) {
                 resultBuilder.append("queue_offset表中Id为：" + queueOffsetEntity.getId() + "的行，对应的consumer_group_name:" + queueOffsetEntity.getConsumerGroupName()

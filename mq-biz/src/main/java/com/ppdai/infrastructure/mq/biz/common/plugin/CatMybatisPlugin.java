@@ -22,37 +22,39 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
-import com.ppdai.infrastructure.mq.biz.service.AuditLogService;
 
 @Intercepts({ @Signature(args = { MappedStatement.class, Object.class }, method = "update", type = Executor.class),
 		@Signature(args = { MappedStatement.class, Object.class, RowBounds.class,
 				ResultHandler.class }, method = "query", type = Executor.class) })
 public class CatMybatisPlugin implements Interceptor {
 	private static final Logger log = LoggerFactory.getLogger(CatMybatisPlugin.class);
-	@Autowired
-	AuditLogService auditLogService;
+//	@Autowired
+//	AuditLogService auditLogService;
 
 	// private Logger log = LoggerFactory.getLogger(CatMybatisPlugin.class);
 	// private String dbUrl;
-	private SoaConfig soaConfig;
+	private SoaConfig soaConfig1;
 
 	public CatMybatisPlugin(SoaConfig soaConfig) {
-		this.soaConfig = soaConfig;
+		soaConfig1 = soaConfig;
+	}
+
+	private boolean isCatSql() {
+		return soaConfig1.getCatSql() == 1;
 	}
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		String sql = "";
 		String classMethod = "Notsupported Class Method";
-		if (soaConfig.getCatSql() == 1) {
+		if (isCatSql()) {
 			try {
-				//String jdbcUrl = "Notsupported Url";
-				//String method = "Notsupported Method";
+				String jdbcUrl = "Notsupported Url";
+				String method = "Notsupported Method";
 
 				// DataSource ds = null;
 				MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
@@ -98,17 +100,13 @@ public class CatMybatisPlugin implements Interceptor {
 				BoundSql boundSql = mappedStatement.getBoundSql(parameter);
 				Configuration configuration = mappedStatement.getConfiguration();
 				sql = showSql(configuration, boundSql);
-				if(classMethod.equals(soaConfig.getCatSqlKey())){
-					log.info("the sql is:"+sql);
-				}
-				
 
 			} catch (Exception ex) {
 
 			}
 		}
 		Transaction t = null;
-		if (soaConfig.getCatSql() == 1) {
+		if (isCatSql()) {
 			t = Tracer.newTransaction("SQL", classMethod);
 		}
 		// method = sql.substring(0, sql.indexOf(" "));
@@ -205,7 +203,7 @@ public class CatMybatisPlugin implements Interceptor {
 
 	@Override
 	public void setProperties(Properties properties) {
-		//System.out.println(1);
+		// System.out.println(1);
 		// dbUrl = properties.getProperty("DBUrl");
 	}
 }

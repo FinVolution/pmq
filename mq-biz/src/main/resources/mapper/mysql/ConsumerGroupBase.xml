@@ -25,11 +25,14 @@
         <result column="update_by" property="updateBy"/>
         <result column="update_time" property="updateTime"/>
         <result column="is_active" property="isActive"/>
+        <result column="consumer_count" property="consumerCount"/>
         <result column="app_id" property="appId"/>
         <result column="consumer_quality" property="consumerQuality"/>
         <result column="meta_update_time" property="metaUpdateTime"/>
         <result column="mode" property="mode"/>
         <result column="origin_name" property="originName"/>
+        <result column="sub_env" property="subEnv"/>
+        <result column="push_flag" property="pushFlag"/>
         
     </resultMap>	
 
@@ -55,11 +58,14 @@
             `version`,
             `insert_by`,
             `update_by`,
+            `consumer_count`,
             `app_id`,
             `consumer_quality`,
             `meta_update_time`,
             `mode`,
-            `origin_name`
+            `origin_name`,
+            `sub_env`,
+            `push_flag`
         )values(
             #{name},
             #{dptName},
@@ -78,11 +84,14 @@
             #{version},
             #{insertBy},
             #{updateBy},
+            #{consumerCount},
             #{appId},
             #{consumerQuality},
             current_timestamp,
             #{mode},
-            #{originName}
+            #{originName},
+            #{subEnv},
+            #{pushFlag}
         )
     </insert>
 
@@ -106,11 +115,14 @@
             `version`,
             `insert_by`,
             `update_by`,
+            `consumer_count`,
             `app_id`,
             `consumer_quality`,
             `meta_update_time`,
             `mode`,
-            `origin_name`
+            `origin_name`,
+            `sub_env`,
+            `push_flag`
         )
         values
         <foreach collection="entityList" item="item" index="index"
@@ -133,11 +145,14 @@
             #{item.version},
             #{item.insertBy},
             #{item.updateBy},
+            #{item.consumerCount},
             #{item.appId},
             #{item.consumerQuality},
             current_timestamp,
             #{item.mode},
-            #{item.originName}
+            #{item.originName},
+            #{item.subEnv},
+            #{item.pushFlag}
         )
         </foreach>
     </insert>
@@ -220,6 +235,9 @@
             <if test="isActive != null and isActive !=''" >
                 and `is_active` = #{isActive}
             </if>
+            <if test="consumerCount != null and consumerCount !=''" >
+                and `consumer_count` = #{consumerCount}
+            </if>
             <if test="appId != null and appId !=''" >
                 and `app_id` = #{appId}
             </if>
@@ -234,6 +252,12 @@
             </if>
             <if test="originName != null and originName !=''" >
                 and `origin_name` = #{originName}
+            </if>
+            <if test="subEnv != null and subEnv !=''" >
+                and `sub_env` = #{subEnv}
+            </if>
+            <if test="pushFlag != null and pushFlag !=''" >
+                and `push_flag` = #{pushFlag}
             </if>
             
             <if test="updateTimeStart != null and updateTimeStart !=''" >
@@ -284,11 +308,14 @@
         `version` = #{version},
         `update_by` = #{updateBy},
         `is_active` = #{isActive},
+        `consumer_count` = #{consumerCount},
         `app_id` = #{appId},
         `consumer_quality` = #{consumerQuality},
         `meta_update_time` = current_timestamp,
         `mode` = #{mode},
-        `origin_name` = #{originName}
+        `origin_name` = #{originName},
+        `sub_env` = #{subEnv},
+        `push_flag` = #{pushFlag}
         where id = #{id}
     </update>
 
@@ -361,6 +388,9 @@
             <if test="isActive != null and isActive !=''" >
                 and `is_active` = #{isActive}
             </if>
+            <if test="consumerCount != null and consumerCount !=''" >
+                and `consumer_count` = #{consumerCount}
+            </if>
             <if test="appId != null and appId !=''" >
                 and `app_id` = #{appId}
             </if>
@@ -375,6 +405,12 @@
             </if>
             <if test="originName != null and originName !=''" >
                 and `origin_name` = #{originName}
+            </if>
+            <if test="subEnv != null and subEnv !=''" >
+                and `sub_env` = #{subEnv}
+            </if>
+            <if test="pushFlag != null and pushFlag !=''" >
+                and `push_flag` = #{pushFlag}
             </if>
             
             <if test="updateTimeStart != null and updateTimeStart !=''" >
@@ -461,6 +497,9 @@
             <if test="isActive != null and isActive !=''" >
                 and `is_active` = #{isActive}
             </if>
+            <if test="consumerCount != null and consumerCount !=''" >
+                and `consumer_count` = #{consumerCount}
+            </if>
             <if test="appId != null and appId !=''" >
                 and `app_id` = #{appId}
             </if>
@@ -475,6 +514,12 @@
             </if>
             <if test="originName != null and originName !=''" >
                 and `origin_name` = #{originName}
+            </if>
+            <if test="subEnv != null and subEnv !=''" >
+                and `sub_env` = #{subEnv}
+            </if>
+            <if test="pushFlag != null and pushFlag !=''" >
+                and `push_flag` = #{pushFlag}
             </if>
             
             <if test="updateTimeStart != null and updateTimeStart !=''" >
@@ -567,6 +612,9 @@
             <if test="isActive != null and isActive !=''" >
                 and `is_active` = #{isActive}
             </if>
+            <if test="consumerCount != null and consumerCount !=''" >
+                and `consumer_count` = #{consumerCount}
+            </if>
             <if test="appId != null and appId !=''" >
                 and `app_id` = #{appId}
             </if>
@@ -581,6 +629,12 @@
             </if>
             <if test="originName != null and originName !=''" >
                 and `origin_name` = #{originName}
+            </if>
+            <if test="subEnv != null and subEnv !=''" >
+                and `sub_env` = #{subEnv}
+            </if>
+            <if test="pushFlag != null and pushFlag !=''" >
+                and `push_flag` = #{pushFlag}
             </if>
             
             <if test="updateTimeStart != null and updateTimeStart !=''" >

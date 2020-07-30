@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.ServerRepository">
-    
-        <resultMap id="BaseResultMap"
+<mapper namespace="com.ppdai.infrastructure.mq.biz.dal.meta.ServerRepository">    
+    <resultMap id="BaseResultMap"
         type="com.ppdai.infrastructure.mq.biz.entity.ServerEntity">
         <result column="id" property="id"/>
         <result column="ip" property="ip"/>
         <result column="port" property="port"/>
         <result column="heart_time" property="heartTime"/>
-        <result column="status_flag" property="statusFlag"/>
         <result column="server_type" property="serverType"/>
+        <result column="status_flag" property="statusFlag"/>
+        <result column="server_version" property="serverVersion"/>
         <result column="insert_by" property="insertBy"/>
         <result column="insert_time" property="insertTime"/>
         <result column="update_by" property="updateBy"/>
@@ -26,16 +26,18 @@
             `ip`,
             `port`,
             `heart_time`,
-            `status_flag`,
             `server_type`,
+            `status_flag`,
+            `server_version`,
             `insert_by`,
             `update_by`
         )values(
             #{ip},
             #{port},
             #{heartTime},
-            #{statusFlag},
             #{serverType},
+            #{statusFlag},
+            #{serverVersion},
             #{insertBy},
             #{updateBy}
         )
@@ -47,8 +49,9 @@
             `ip`,
             `port`,
             `heart_time`,
-            `status_flag`,
             `server_type`,
+            `status_flag`,
+            `server_version`,
             `insert_by`,
             `update_by`
         )
@@ -59,8 +62,9 @@
             #{item.ip},
             #{item.port},
             #{item.heartTime},
-            #{item.statusFlag},
             #{item.serverType},
+            #{item.statusFlag},
+            #{item.serverVersion},
             #{item.insertBy},
             #{item.updateBy}
         )
@@ -94,11 +98,14 @@
             <if test="heartTime != null and heartTime !=''" >
                 and `heart_time` = #{heartTime}
             </if>
+            <if test="serverType != null and serverType !=''" >
+                and `server_type` = #{serverType}
+            </if>
             <if test="statusFlag != null and statusFlag !=''" >
                 and `status_flag` = #{statusFlag}
             </if>
-            <if test="serverType != null and serverType !=''" >
-                and `server_type` = #{serverType}
+            <if test="serverVersion != null and serverVersion !=''" >
+                and `server_version` = #{serverVersion}
             </if>
             <if test="insertBy != null and insertBy !=''" >
                 and `insert_by` = #{insertBy}
@@ -150,8 +157,9 @@
             `ip` = #{ip},
         `port` = #{port},
         `heart_time` = #{heartTime},
-        `status_flag` = #{statusFlag},
         `server_type` = #{serverType},
+        `status_flag` = #{statusFlag},
+        `server_version` = #{serverVersion},
         `update_by` = #{updateBy},
         `is_active` = #{isActive}
         where id = #{id}
@@ -175,11 +183,14 @@
             <if test="heartTime != null and heartTime !=''" >
                 and `heart_time` = #{heartTime}
             </if>
+            <if test="serverType != null and serverType !=''" >
+                and `server_type` = #{serverType}
+            </if>
             <if test="statusFlag != null and statusFlag !=''" >
                 and `status_flag` = #{statusFlag}
             </if>
-            <if test="serverType != null and serverType !=''" >
-                and `server_type` = #{serverType}
+            <if test="serverVersion != null and serverVersion !=''" >
+                and `server_version` = #{serverVersion}
             </if>
             <if test="insertBy != null and insertBy !=''" >
                 and `insert_by` = #{insertBy}
@@ -230,11 +241,14 @@
             <if test="heartTime != null and heartTime !=''" >
                 and `heart_time` = #{heartTime}
             </if>
+            <if test="serverType != null and serverType !=''" >
+                and `server_type` = #{serverType}
+            </if>
             <if test="statusFlag != null and statusFlag !=''" >
                 and `status_flag` = #{statusFlag}
             </if>
-            <if test="serverType != null and serverType !=''" >
-                and `server_type` = #{serverType}
+            <if test="serverVersion != null and serverVersion !=''" >
+                and `server_version` = #{serverVersion}
             </if>
             <if test="insertBy != null and insertBy !=''" >
                 and `insert_by` = #{insertBy}
@@ -291,11 +305,14 @@
             <if test="heartTime != null and heartTime !=''" >
                 and `heart_time` = #{heartTime}
             </if>
+            <if test="serverType != null and serverType !=''" >
+                and `server_type` = #{serverType}
+            </if>
             <if test="statusFlag != null and statusFlag !=''" >
                 and `status_flag` = #{statusFlag}
             </if>
-            <if test="serverType != null and serverType !=''" >
-                and `server_type` = #{serverType}
+            <if test="serverVersion != null and serverVersion !=''" >
+                and `server_version` = #{serverVersion}
             </if>
             <if test="insertBy != null and insertBy !=''" >
                 and `insert_by` = #{insertBy}

@@ -54,7 +54,7 @@ public class LogServiceImpl implements LogService {
 			if (!StringUtils.isEmpty(request.getConsumerGroupName())
 					&& cache.containsKey(request.getConsumerGroupName())) {
 				if (cache.get(request.getConsumerGroupName()).getTraceFlag() == 1) {
-					log.info(getLog(request));
+					log.info(logContent);
 					// return;
 				}
 			}

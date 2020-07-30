@@ -69,7 +69,6 @@ public interface QueueService extends BaseService<QueueEntity> {
 	void updateCache();
 
 	void forceUpdateCache();
-	
 
 	List<QueueEntity> getQueuesByTopicId(long topicId);
 
@@ -79,4 +78,9 @@ public interface QueueService extends BaseService<QueueEntity> {
 
 	List<QueueEntity> getTopUndistributed(int topNum, int nodeType, Long topicId);
 
+	void truncate(QueueEntity queueEntity);
+
+	List<QueueEntity> getListBy(Map<String, Object> conditionMap, long page, long pageSize);
+
+	long countBy(Map<String, Object> conditionMap);
 }

@@ -186,6 +186,8 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                 ip : ip,
                 name : dbName,
                 readOnly : isReadOnly
+            },page: {
+                curr: 1
             }
         });
     }

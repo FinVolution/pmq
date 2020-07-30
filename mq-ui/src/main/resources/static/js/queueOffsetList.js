@@ -19,7 +19,7 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 				getQueueOffsetList($("#consumerGroupName").val(), $(
 						"#topicName").val(), $("#consumerName").val(), 1, $(
 						"#isReadOnly").val(), $("#topicType").val(), $(
-						"#queueOffsetId").val(), $("#mode").val())
+						"#queueOffsetId").val(), $("#mode").val(),$("#subEnv").val())
 			});
 
 	$('body').on(
@@ -36,7 +36,7 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 		getQueueOffsetList($("#consumerGroupName").val(),
 				$("#topicName").val(), $("#consumerName").val(), 1, $(
 						"#isReadOnly").val(), $("#topicType").val(), $(
-						"#queueOffsetId").val(), $("#mode").val())
+						"#queueOffsetId").val(), $("#mode").val(),$("#subEnv").val())
 	}
 
 	table.on('tool(queueOffsetTable)', function(obj) {
@@ -55,6 +55,8 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 		}
         if(layEvent === 'intelligentDetection'){
             doIntelligentDetection(data)
+        }if(layEvent==="searchMessage"){
+            searchMessage(data)
         }
 		if (layEvent === 'clearConsumerId') {
 			var consumerId = data.consumerName.substring(4,
@@ -80,7 +82,7 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 				getQueueOffsetList($("#consumerGroupName").val(), $(
 						"#topicName").val(), $("#consumerName").val(), 1, $(
 						"#isReadOnly").val(), $("#topicType").val(), $(
-						"#queueOffsetId").val(),$("#mode").val())
+						"#queueOffsetId").val(),$("#mode").val(),$("#subEnv").val())
 			} else {
 				layer.alert(result.msg, {
 					icon : 2
@@ -98,6 +100,12 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 				'/queue/list?queueId=' + queueOffset.queueId,
 				queueOffset.queueId + "队列管理");
 	}
+
+    function searchMessage(queueOffset) {
+        parent.window.addTab(queueOffset.queueId + "searchMessage",
+            '/message/list?queueOffsetQueueId=' + queueOffset.queueId+"&queueOffsetTopicName="+queueOffset.topicName,
+            queueOffset.queueId + "消息查询");
+    }
 
 	function updateQueueOffset(queueOffset) {
 		if (queueOffset.consumerName.indexOf("mq2") != -1) {
@@ -159,7 +167,7 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 	}
 
 	function getQueueOffsetList(consumerGroupName, topicName, consumerName,
-			page, isReadOnly, topicType, queueOffsetId,mode) {
+			page, isReadOnly, topicType, queueOffsetId,mode,subEnv) {
 		table.reload("queueOffsetTable", {
 			where : {
 				consumerGroupName : consumerGroupName,
@@ -168,9 +176,11 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form' ], function() {
 				readOnly : isReadOnly,
 				topicType : topicType,
 				id : queueOffsetId,
-				mode : mode
-			},
-			page : page
+				mode : mode,
+                subEnv:subEnv
+			},page: {
+                curr: page //重新从第 1 页开始
+            }
 		});
 	}
 

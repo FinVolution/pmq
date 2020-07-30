@@ -34,10 +34,13 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void updateCache();
 	Map<String,ConsumerGroupEntity> getCache();
 	Map<Long,ConsumerGroupEntity> getIdCache();
+	List<String> getSubEnvList();
 	ConsumerGroupTopicEntity getTopic(String consumerGroupName,String topicName);
 	ConsumerGroupCreateResponse createConsumerGroup(ConsumerGroupCreateRequest consumerGroupCreateRequest);
 	ConsumerGroupEditResponse editConsumerGroup(ConsumerGroupEntity consumerGroupEntity);
 	ConsumerGroupDeleteResponse deleteConsumerGroup(long consumerGroupId, boolean checkOnline);
+	//按照新的名称重新生成一个新的组
+	void copyAndNewConsumerGroup(ConsumerGroupEntity consumerGroupEntityOld,ConsumerGroupEntity consumerGroupEntityNew);
 	BaseUiResponse deleteTopicNameFromConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity);
 	BaseUiResponse addTopicNameToConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity);
 }

@@ -13,6 +13,16 @@ public class ConsumerGetListRequest extends BaseUiRequst {
 
     private String compareType;
 
+    private String heartBeat;
+
+    public String getHeartBeat() {
+        return heartBeat;
+    }
+
+    public void setHeartBeat(String heartBeat) {
+        this.heartBeat = heartBeat;
+    }
+
     public String getCompareType() {
         return compareType;
     }

@@ -125,8 +125,9 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                 id:queueOffsetId,
                 ownerNames:ownerNames,
                 onlineType:onlineType
-            },
-            page:page
+            },page: {
+                curr: page
+            }
         });
     }
 

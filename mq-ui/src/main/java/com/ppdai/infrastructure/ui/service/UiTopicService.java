@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PreDestroy;
 
+import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -685,13 +686,50 @@ public class UiTopicService implements TimerService {
 		return new TopicManualExpandResponse();
 	}
 
+
 	public TopicGetTopicNamesResponse getTopicNames(String keyword, int offset, int limit) {
 		Map<String, TopicEntity> topicMap = topicService.getCache();
+		Map<String,ConsumerGroupEntity> consumerGroupMap=consumerGroupService.getCache();
+		Map<String, List<ConsumerGroupTopicEntity>> consumerGroupTopicMap=consumerGroupTopicService.getTopicSubscribeMap();
 		List<String> topicList = new LinkedList<>();
+		boolean isPro = soaConfig.isPro();
 		for (String topicName : topicMap.keySet()) {
-			if (topicName.toLowerCase().startsWith(keyword.toLowerCase())) {
-				topicList.add(topicName);
+
+			if(isPro){
+				//生产环境中，只有系统管理员和topic负责人和订阅组的负责人可以查看消息
+				if(topicName.toLowerCase().startsWith(keyword.toLowerCase())){
+					TopicEntity topicEntity=topicMap.get(topicName);
+					int topicRole=roleService.getRole(userInfoHolder.getUserId(),topicEntity.getOwnerIds());
+					boolean consumerGroupRole=false;
+					List<ConsumerGroupTopicEntity> consumerGroupTopicList=new ArrayList<>();
+					if(consumerGroupTopicMap.containsKey(topicName)){
+						consumerGroupTopicList=consumerGroupTopicMap.get(topicName);
+					}
+
+					if(!consumerGroupTopicList.isEmpty()){
+						for (ConsumerGroupTopicEntity consumerGroupTopic:consumerGroupTopicList) {
+							ConsumerGroupEntity consumerGroup=consumerGroupMap.get(consumerGroupTopic.getConsumerGroupName());
+							if(consumerGroup!=null&&consumerGroup.getOwnerIds().contains(userInfoHolder.getUserId())){
+								//如果是消费者组的负责人
+								consumerGroupRole=true;
+								break;
+							}
+						}
+
+					}
+
+					if(topicRole==0||topicRole==1||consumerGroupRole){
+						//如果是系统管理员或者topic负责人或者订阅组的负责人
+						topicList.add(topicName);
+					}
+				}
+			}else{
+				if (topicName.toLowerCase().startsWith(keyword.toLowerCase())) {
+					topicList.add(topicName);
+				}
 			}
+
+
 		}
 
 		if (offset + limit > topicList.size()) {
@@ -805,6 +843,15 @@ public class UiTopicService implements TimerService {
 		return new TopicReportResponse(new Long(t), topicVoList);
 
 	}
+
+	public BaseUiResponse getTopicMsgCount(String topicName, String startTime, String endTime){
+		long msgCount=topicService.getMsgCount(topicName,startTime,endTime);
+		BaseUiResponse baseUiResponse=new BaseUiResponse();
+		baseUiResponse.setCode("0");
+		baseUiResponse.setMsg("消息总量为："+msgCount);
+		return baseUiResponse;
+	}
+
 
 	public List<TopicVo> getTopicVos(){
 		return topicVoListRf.get();

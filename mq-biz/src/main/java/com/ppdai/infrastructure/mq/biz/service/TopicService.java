@@ -12,6 +12,7 @@ import com.ppdai.infrastructure.mq.biz.service.common.BaseService;
  * @author dal-generator
  */
 public interface TopicService extends BaseService<TopicEntity> {
+	public static String NEED_DELETED_TOPIC_NANE="MQ_NEED_DELETE_1111111";
 	Map<String, TopicEntity> getCache();
 
 	public void distributeQueue(TopicEntity normalTopicEntity, QueueEntity queueEntity);
@@ -33,5 +34,7 @@ public interface TopicService extends BaseService<TopicEntity> {
 	TopicEntity createFailTopic(TopicEntity topicEntity, ConsumerGroupEntity consumerGroup);
 
 	void distributeQueueWithLock(TopicEntity topicEntity, int queueNum, int nodeType);
+
+	long getMsgCount(String topicName, String start, String end);
 
 }

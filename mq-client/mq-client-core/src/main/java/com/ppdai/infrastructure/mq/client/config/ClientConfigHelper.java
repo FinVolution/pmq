@@ -17,7 +17,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
+import com.ppdai.infrastructure.mq.biz.event.IAsynSubscriber;
 import com.ppdai.infrastructure.mq.biz.event.ISubscriber;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 
 public class ClientConfigHelper {
@@ -105,11 +107,13 @@ public class ClientConfigHelper {
 	private void setTopic(ConsumerGroupVo consumerGroupConfig, Element consumerItem) {
 		Map<String, ConsumerGroupTopicVo> groupConfigMap = new ConcurrentHashMap<>();
 		if (consumerItem == null || !consumerItem.hasChildNodes()) {
-			throw new IllegalArgumentException(consumerGroupConfig.getMeta().getName() + "下无topic节点");
+			log.warn(consumerGroupConfig.getMeta().getName() + "下无topic节点");
+			return;
 		}
 		NodeList nodeList = consumerItem.getElementsByTagName("topic");
 		if (nodeList == null || nodeList.getLength() < 1) {
-			throw new IllegalArgumentException(consumerGroupConfig.getMeta().getName() + "下无topic节点");
+			log.warn(consumerGroupConfig.getMeta().getName() + "下无topic节点");
+			return;
 		}
 		int count = nodeList.getLength();
 		for (int i = 0; i < count; i++) {
@@ -120,21 +124,58 @@ public class ClientConfigHelper {
 			if (!item.hasAttribute("name")) {
 				throw new IllegalArgumentException("topic节点没有设置name参数");
 			}
-			ConsumerGroupTopicVo groupConfig = new ConsumerGroupTopicVo();
-			groupConfig.setName(item.getAttribute("name"));
+			ConsumerGroupTopicVo groupTopicConfig = new ConsumerGroupTopicVo();
+			groupTopicConfig.setName(item.getAttribute("name"));
 			if (item.hasAttribute("receiverType")) {
-				groupConfig.setSubscriber(getSubscriber(item.getAttribute("receiverType")));
-
+				try {
+					groupTopicConfig.setSubscriber(getSubscriber(item.getAttribute("receiverType")));
+					if (groupTopicConfig.getSubscriber() == null) {
+						throw new RuntimeException();
+					}
+				} catch (Exception e) {
+					try {
+						groupTopicConfig.setAsynSubscriber(getAsySubscriber(item.getAttribute("receiverType")));
+					} catch (Exception e2) {
+						// TODO: handle exception
+					}
+				}
 			} else {
-				throw new IllegalArgumentException("topic:" + groupConfig.getName() + "节点没有设置receiverType参数");
+				log.warn("topic:" + groupTopicConfig.getName() + "节点没有设置receiverType参数");
 			}
-			groupConfigMap.put(groupConfig.getName(), groupConfig);
+			groupConfigMap.put(groupTopicConfig.getName(), groupTopicConfig);
 		}
 		consumerGroupConfig.setTopics(groupConfigMap);
 
 	}
 
+	private IAsynSubscriber getAsySubscriber(String receiverType) {
+		if (MqClient.getSubscriberResolver() != null) {
+			try {
+				return MqClient.getSubscriberResolver().getAsynSubscriber(receiverType);
+			} catch (Exception e) {
+				throw new RuntimeException(receiverType + "不存在!", e);
+			}
+		}
+		IAsynSubscriber subscriber = null;
+		try {
+			Class<?> onwClass = Class.forName(receiverType);
+			if (IAsynSubscriber.class.isAssignableFrom(onwClass)) {
+				subscriber = (IAsynSubscriber) onwClass.newInstance();
+			}
+		} catch (Exception ex) {
+			throw new RuntimeException(receiverType + "不存在!", ex);
+		}
+		return subscriber;
+	}
+
 	private ISubscriber getSubscriber(String receiverType) {
+		if (MqClient.getSubscriberResolver() != null) {
+			try {
+				return MqClient.getSubscriberResolver().getSubscriber(receiverType);
+			} catch (Exception e) {
+				throw new RuntimeException(receiverType + "不存在!", e);
+			}
+		}
 		ISubscriber subscriber = null;
 		try {
 			Class<?> onwClass = Class.forName(receiverType);
@@ -149,7 +190,7 @@ public class ClientConfigHelper {
 		}
 		return subscriber;
 	}
-	
+
 	private InputStream getConfigFileStream() {
 		InputStream inputStream = ClientConfigHelper.class.getClassLoader().getResourceAsStream("messageQueue/mq.xml");
 		if (inputStream != null) {

@@ -42,5 +42,9 @@ public interface QueueRepository extends BaseRepository<QueueEntity> {
     List<QueueEntity> getAllBasic();
     
     LastUpdateEntity getLastUpdate();
+
+    List<QueueEntity> getListBy(Map<String, Object> conditionMap);
+
+    long countBy(Map<String, Object> conditionMap);
 }
     

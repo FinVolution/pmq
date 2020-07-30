@@ -28,14 +28,19 @@ public class ServerEntity {
      private Date heartTime;
     
     /**
+     * 1 表示broker，0 表示portal。当值为0时，这个是用在做批量清理时使用。
+     */
+     private int serverType;
+    
+    /**
      * 1 表示状态为up,0 表示状态为down，此状态在系统灰度平滑发布时使用。默认是1 表示up
      */
      private int statusFlag;
     
     /**
-     * 1 表示broker，0 表示portal。当值为0时，这个是用在做批量清理时使用。
+     * broker 版本号
      */
-     private int serverType;
+     private String serverVersion;
     
     /**
      * 操作人
@@ -79,12 +84,16 @@ public class ServerEntity {
         return heartTime;
     }
     
+    public int getServerType() {
+        return serverType;
+    }
+    
     public int getStatusFlag() {
         return statusFlag;
     }
     
-    public int getServerType() {
-        return serverType;
+    public String getServerVersion() {
+        return serverVersion;
     }
     
     public String getInsertBy() {
@@ -124,12 +133,16 @@ public class ServerEntity {
         this.heartTime = heartTime;
     }
     
+    public void setServerType(int serverType) {
+        this.serverType = serverType;
+    }
+    
     public void setStatusFlag(int statusFlag) {
         this.statusFlag = statusFlag;
     }
     
-    public void setServerType(int serverType) {
-        this.serverType = serverType;
+    public void setServerVersion(String serverVersion) {
+        this.serverVersion = serverVersion;
     }
     
     public void setInsertBy(String insertBy) {
@@ -167,9 +180,11 @@ public class ServerEntity {
     
     public static String FdHeartTime = "heartTime";    
     
+    public static String FdServerType = "serverType";    
+    
     public static String FdStatusFlag = "statusFlag";    
     
-    public static String FdServerType = "serverType";    
+    public static String FdServerVersion = "serverVersion";    
     
     public static String FdInsertBy = "insertBy";    
     

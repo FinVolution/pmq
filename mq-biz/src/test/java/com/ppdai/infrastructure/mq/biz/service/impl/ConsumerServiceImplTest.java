@@ -307,15 +307,15 @@ public class ConsumerServiceImplTest extends AbstractTest {
 	public void checkBroadcastTest() {
 		ConsumerGroupRegisterRequest request = null;
 		ConsumerGroupRegisterResponse response = new ConsumerGroupRegisterResponse();
-		consumerServiceImpl.checkBroadcast(request, response);
+		consumerServiceImpl.checkBroadcastAndSubEnv(request, response);
 		assertEquals(false, response.isSuc());
 		request = new ConsumerGroupRegisterRequest();
-		consumerServiceImpl.checkBroadcast(request, response);
+		consumerServiceImpl.checkBroadcastAndSubEnv(request, response);
 		assertEquals(false, response.isSuc());
 		Map<String, List<String>> map = new HashMap<String, List<String>>();
 		map.put("test", new ArrayList<String>());
 		request.setConsumerGroupNames(map);
-		consumerServiceImpl.checkBroadcast(request, response);
+		consumerServiceImpl.checkBroadcastAndSubEnv(request, response);
 		assertEquals(false, response.isSuc());
 	}
 
@@ -775,33 +775,15 @@ public class ConsumerServiceImplTest extends AbstractTest {
 		request.setSdkVersion("");
 		consumerServiceImpl.checkVaild(request, response);
 		assertEquals(false, response.isSuc());
-	}
+	}	
 
-	@Test
-	public void checkInBlackIpTest() {
-		ConsumerGroupEntity consumerGroupEntity = new ConsumerGroupEntity();
-		consumerGroupEntity.setName("test");
-		consumerGroupEntity.setIpBlackList("127.0.0.1");
-
-		Map<String, ConsumerGroupEntity> conMap = new HashMap<String, ConsumerGroupEntity>();
-		conMap.put(consumerGroupEntity.getName(), consumerGroupEntity);
-
-		when(consumerGroupService.getCache()).thenReturn(conMap);
-
-		ConsumerEntity consumerEntity = new ConsumerEntity();
-		consumerEntity.setIp("fa");
-		assertEquals(false, consumerServiceImpl.checkInBlackIp(consumerEntity, "test"));
-		consumerEntity.setIp(consumerGroupEntity.getIpBlackList());
-		assertEquals(true, consumerServiceImpl.checkInBlackIp(consumerEntity, "test"));
-	}
-
-	@Test
-	public void setDoDeleteConsumerLogTest() {
-		ConsumerGroupConsumerEntity consumerGroupConsumer = new ConsumerGroupConsumerEntity();
-		AuditLogEntity auditLog = new AuditLogEntity();
-		consumerServiceImpl.setDoDeleteConsumerLog(0, consumerGroupConsumer, auditLog);
-		consumerServiceImpl.setDoDeleteConsumerLog(1, consumerGroupConsumer, auditLog);
-	}
+//	@Test
+//	public void setDoDeleteConsumerLogTest() {
+//		ConsumerGroupConsumerEntity consumerGroupConsumer = new ConsumerGroupConsumerEntity();
+//		AuditLogEntity auditLog = new AuditLogEntity();
+//		consumerServiceImpl.setDoDeleteConsumerLog(0, consumerGroupConsumer, auditLog);
+//		consumerServiceImpl.setDoDeleteConsumerLog(1, consumerGroupConsumer, auditLog);
+//	}
 	
 	@Test
 	public void doSaveMsgTest() {
@@ -836,7 +818,7 @@ public class ConsumerServiceImplTest extends AbstractTest {
 		producerDataDto.setBody("faf");		
 		msgs.add(producerDataDto);		
 		request.setMsgs(msgs);		 
-		consumerServiceImpl.saveAsynMsg(request,response,queueEntities);
+		consumerServiceImpl.saveSynMsg1(request,response,queueEntities);
 		verify(message01Service).insertBatchDy(anyString(), anyString(), anyListOf(Message01Entity.class));
 	}
 
@@ -876,7 +858,7 @@ public class ConsumerServiceImplTest extends AbstractTest {
 		producerDataDto.setPartitionInfo(partitionInfo);
 		msgs.add(producerDataDto);		
 		request.setMsgs(msgs);		
-		consumerServiceImpl.saveAsynMsg(request,response,queueEntities);
+		consumerServiceImpl.saveSynMsg1(request,response,queueEntities);
 		verify(message01Service).insertBatchDy(anyString(), anyString(), anyListOf(Message01Entity.class));
 	}
 	
@@ -900,7 +882,7 @@ public class ConsumerServiceImplTest extends AbstractTest {
 		producerDataDto.setTraceId("111111111111111");
 		msgs.add(producerDataDto);		
 		request.setMsgs(msgs);		
-		consumerServiceImpl.saveAsynMsg(request,response,queueEntities);
+		consumerServiceImpl.saveSynMsg1(request,response,queueEntities);
 		verify(message01Service).insertBatchDy(anyString(), anyString(), anyListOf(Message01Entity.class));
 	}
 	
@@ -924,7 +906,7 @@ public class ConsumerServiceImplTest extends AbstractTest {
 		producerDataDto.setTraceId("111111111111111");
 		msgs.add(producerDataDto);		
 		request.setMsgs(msgs);		
-		consumerServiceImpl.saveAsynMsg(request,response,queueEntities);
+		consumerServiceImpl.saveSynMsg1(request,response,queueEntities);
 		verify(message01Service,times(0)).insertBatchDy(anyString(), anyString(), anyListOf(Message01Entity.class));
 	}
 	

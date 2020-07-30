@@ -10,6 +10,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.ppdai.infrastructure.mq.biz.service.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
@@ -29,15 +30,7 @@ import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
 import com.ppdai.infrastructure.mq.biz.entity.DbNodeEntity;
 import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
 import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
-import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
-import com.ppdai.infrastructure.mq.biz.service.DbNodeService;
-import com.ppdai.infrastructure.mq.biz.service.QueueService;
-import com.ppdai.infrastructure.mq.biz.service.RoleService;
-import com.ppdai.infrastructure.mq.biz.service.TopicService;
-import com.ppdai.infrastructure.mq.biz.service.UserInfoHolder;
 import com.ppdai.infrastructure.mq.biz.ui.vo.MonitorUrlVo;
-import com.ppdai.infrastructure.ui.service.CatDataService;
-import com.ppdai.infrastructure.ui.service.UiConsumerGroupService;
 import com.ppdai.infrastructure.ui.service.UiQueueOffsetService;
 import com.ppdai.infrastructure.ui.service.UiQueueService;
 import com.ppdai.infrastructure.ui.util.CookieUtil;
@@ -64,6 +57,8 @@ public class ViewController {
     private UserInfoHolder userInfoHolder;
     @Autowired
     private UiQueueOffsetService uiQueueOffsetService;
+    @Autowired
+    private ServerService serverService;
 
     Map<String, String> keysMap = new HashMap<>();
 
@@ -83,6 +78,15 @@ public class ViewController {
             model.addAttribute("userName", CookieUtil.getUserName(request));
             model.addAttribute("roleName", roleService.getRoleName(userInfoHolder.getUserId()));
             model.addAttribute("sdkVersion", soaConfig.getSdkVersion());
+            int onLineServerNum=serverService.getOnlineServerNum();
+            int userRole=roleService.getRole(userInfoHolder.getUserId());
+            model.addAttribute("userRole",userRole);
+            if(soaConfig.isPro()){
+                model.addAttribute("proEnv",1);
+            }else{
+                model.addAttribute("proEnv",0);
+            }
+            model.addAttribute("onLineServerNum","在线server数量："+onLineServerNum);
         }catch(Exception e){
 
         }
@@ -161,6 +165,8 @@ public class ViewController {
         String userName = userInfo.getName();
         model.addAttribute("userName", userName);
         model.addAttribute("userId", userInfo.getUserId());
+        List<String> subEnvList=consumerGroupService.getSubEnvList();
+        model.addAttribute("subEnvList",subEnvList);
         return "consumerGroup/consumerGroupList";
     }
 
@@ -301,6 +307,8 @@ public class ViewController {
     @RequestMapping("/queueOffset/list")
     public String queueOffsetList(HttpServletRequest request, Model model) {
         model.addAttribute("timeStamp", System.currentTimeMillis());
+        List<String> subEnvList=consumerGroupService.getSubEnvList();
+        model.addAttribute("subEnvList",subEnvList);
         return "queueOffset/queueOffsetList";
     }
 
@@ -339,11 +347,22 @@ public class ViewController {
     }
 
     @RequestMapping("/message/list")
-    public String messageList(HttpServletRequest request, Model model) {
+    public String messageList(HttpServletRequest request,@RequestParam(name = "queueOffsetQueueId", required = false) String queueOffsetQueueId,
+                              @RequestParam(name = "queueOffsetTopicName", required = false) String queueOffsetTopicName, Model model) {
+
         // 模糊查询时，可以查询的最大消息量
         String maxNumber = env.getProperty("mq.message.max.number", "300000");
         model.addAttribute("timeStamp", System.currentTimeMillis());
         model.addAttribute("maxNumber", maxNumber);
+        UserInfo userInfo = userInfoHolder.getUser();
+        int userRole=roleService.getRole(userInfo.getUserId());
+        model.addAttribute("userRole",userRole);
+        if (StringUtils.isNotEmpty(queueOffsetQueueId)) {
+            model.addAttribute("queueOffsetQueueId", queueOffsetQueueId);
+        }
+        if(StringUtils.isNotEmpty(queueOffsetTopicName)){
+            model.addAttribute("queueOffsetTopicName", queueOffsetTopicName);
+        }
         return "message/messageList";
     }
 
@@ -365,6 +384,8 @@ public class ViewController {
                 }
             });
         }
+        List<String> subEnvList=consumerGroupService.getSubEnvList();
+        model.addAttribute("subEnvList",subEnvList);
         model.addAttribute("topicList", myTopicList);
         return "message/messageTool";
     }
@@ -425,6 +446,7 @@ public class ViewController {
         model.addAttribute("timeStamp", System.currentTimeMillis());
         model.addAttribute("topicList", newCacheData);
         model.addAttribute("queueId", queueId);
+        model.addAttribute("loginUserRole",roleService.getRole(userInfoHolder.getUserId(), null));
         return "queue/queueEdit";
     }
 

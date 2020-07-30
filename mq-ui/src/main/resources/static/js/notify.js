@@ -39,8 +39,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
 
     function getNotifyList() {
         var option={
+            page: {
+                curr: 1
+            }
         };
-        option["page"]=1;
         table.reload('notifyKeyTableId',option);
         table.reload('notifyTableId',option);
     }

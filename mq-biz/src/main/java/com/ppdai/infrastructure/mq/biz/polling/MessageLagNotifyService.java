@@ -127,9 +127,10 @@ public class MessageLagNotifyService extends AbstractTimerService {
 							|| (consumerGroupTopicEntity.getMaxLag() <= 0
 									&& massageLagCount >= topicEntity.getMaxLag())) {
 						String body = String.format(
-								"ConsumerGroup:%s下的Consumer:%s订阅的Topic:%s下的队列:%s待处理的消息已经达到:%s条,请尽快处理!",
+								"ConsumerGroup:%s下的Consumer:%s订阅的Topic:%s下的队列:%s待处理的消息已经达到:%s条,超过了阈值%s,请尽快处理!",
 								queueOffset.getConsumerGroupName(), queueOffset.getConsumerId(),
-								queueOffset.getTopicName(), queueOffset.getQueueId(), massageLagCount);
+								queueOffset.getTopicName(), queueOffset.getQueueId(), massageLagCount,consumerGroupTopicEntity.getMaxLag() > 0?consumerGroupTopicEntity.getMaxLag():topicEntity.getMaxLag());
+
 
 						logger.info("message_lag_check_alarm," + qlog + "," + body);
 						SendMailRequest sendMailRequest=new SendMailRequest();

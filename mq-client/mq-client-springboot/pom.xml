@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>mq-client</artifactId>
 		<groupId>com.ppdai.infrastructure</groupId>
-		<version>5.0.0</version>
+		<version>5.1.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>mq-client-springboot</artifactId>
@@ -18,12 +18,8 @@
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
-			<version>9.4.17.v20190418</version>
+			<version>9.4.4.v20170414</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>com.squareup.okhttp3</groupId> -->
-		<!-- <artifactId>okhttp</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
@@ -84,28 +80,21 @@
 		</dependency>
 	</dependencies>
 	<build>
+	    <resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+					<include>**/META-INF/*</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-			</plugin>
-			<!-- <plugin> -->
-			<!-- <artifactId>maven-assembly-plugin</artifactId> -->
-			<!-- <configuration> -->
-			<!-- <descriptorRefs> -->
-			<!-- <descriptorRef>jar-with-dependencies</descriptorRef> -->
-			<!-- </descriptorRefs> -->
-			<!-- </configuration> -->
-			<!-- <executions> -->
-			<!-- <execution> -->
-			<!-- <id>make-assembly</id> -->
-			<!-- <phase>package</phase> -->
-			<!-- <goals> -->
-			<!-- <goal>single</goal> -->
-			<!-- </goals> -->
-			<!-- </execution> -->
-			<!-- </executions> -->
-			<!-- </plugin> -->
+			</plugin>			
 		</plugins>
 	</build>
 </project>

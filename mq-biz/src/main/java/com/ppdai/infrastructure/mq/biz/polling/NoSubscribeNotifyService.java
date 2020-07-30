@@ -53,7 +53,7 @@ public class NoSubscribeNotifyService extends AbstractTimerService {
 	private void sendWarnEmail(QueueOffsetEntity t1) {
 		SendMailRequest sendMailRequest=new SendMailRequest();
 		sendMailRequest.setConsumerGroupName(t1.getConsumerGroupName());
-		sendMailRequest.setSubject(t1.getConsumerGroupName() + "存在队列未订阅");
+		sendMailRequest.setSubject("存在队列未订阅的消费者组"+t1.getConsumerGroupName()+",请在队列队列消费管理中确认！");
 		sendMailRequest.setContent("Consumer组:" + t1.getConsumerGroupName() + "下的Topic:"
 				+ t1.getTopicName() + "中的队列:" + t1.getQueueId() + "没有被订阅!");		
 		sendMailRequest.setType(1);

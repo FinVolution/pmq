@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
+import com.ppdai.infrastructure.mq.biz.common.util.HttpClient;
+import com.ppdai.infrastructure.mq.biz.common.util.IHttpClient;
+import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.MqConstanst;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetGroupTopicRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetGroupTopicResponse;
@@ -44,6 +47,7 @@ public class MetaServerController {
 	private ConsumerGroupService consumerGroupService;
 	@Autowired
 	private QueueService queueService;
+	IHttpClient httpClient=new HttpClient(3000, 3000);
 	
 	@PostMapping("/getMeta")
 	public GetMetaResponse getMeta(@RequestBody GetMetaRequest request) {
@@ -66,11 +70,21 @@ public class MetaServerController {
 		if(response.getGroupFlag()==0){
 			response.setBrokerIpG1(lstData);
 		}else{
-			response.setBrokerIpG1(lstData.subList(groupCount, lstData.size()));			
+			response.setBrokerIpG1(lstData.subList(groupCount, lstData.size()));
+			if(soaConfig.isPro()&&response.getBrokerIpG1().size()<soaConfig.getMinServerCount()){
+				if(!Util.isEmpty(soaConfig.getBrokerDomain())){
+					if(httpClient.check("http://"+soaConfig.getBrokerDomain()+"/hs")){
+						for(int i=response.getBrokerIpG1().size();i<soaConfig.getMinServerCount();i++){
+							response.getBrokerIpG1().add(soaConfig.getBrokerDomain());
+						}
+					}
+				}
+			}
 			response.setBrokerIpG2(lstData.subList(0, groupCount));
 		}
 		return response;
 	}
+	
 	@PostMapping("/getTopic")
 	public GetTopicResponse getTopic(@RequestBody GetTopicRequest request) {
 		GetTopicResponse response = new GetTopicResponse();

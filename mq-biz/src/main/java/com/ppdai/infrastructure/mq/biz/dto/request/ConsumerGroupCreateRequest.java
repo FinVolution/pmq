@@ -1,5 +1,7 @@
 package com.ppdai.infrastructure.mq.biz.dto.request;
 
+import com.ppdai.infrastructure.mq.biz.MqConst;
+
 public class ConsumerGroupCreateRequest {
     private String id;
     private String name;
@@ -16,6 +18,18 @@ public class ConsumerGroupCreateRequest {
     private String appId;
     private Integer mode;//消费者组的消费模式
     private int consumerQuality;
+    private String subEnv=MqConst.DEFAULT_SUBENV;
+    //实时消息
+    private int pushFlag;
+
+
+    public String getSubEnv() {
+		return subEnv;
+	}
+
+	public void setSubEnv(String subEnv) {
+		this.subEnv = subEnv;
+	}
 
 
     public int getConsumerQuality() {
@@ -144,5 +158,13 @@ public class ConsumerGroupCreateRequest {
 
     public void setAppId(String appId) {
         this.appId = appId;
+    }
+
+    public int getPushFlag() {
+        return pushFlag;
+    }
+
+    public void setPushFlag(int pushFlag) {
+        this.pushFlag = pushFlag;
     }
 }

@@ -122,6 +122,11 @@ public class QueueOffsetEntity {
      */
      private int consumerGroupMode;
     
+    /**
+     * 
+     */
+     private String subEnv;
+    
     
     public long getId() {
         return id;
@@ -213,6 +218,10 @@ public class QueueOffsetEntity {
     
     public int getConsumerGroupMode() {
         return consumerGroupMode;
+    }
+    
+    public String getSubEnv() {
+        return subEnv;
     }
     
     
@@ -308,6 +317,10 @@ public class QueueOffsetEntity {
         this.consumerGroupMode = consumerGroupMode;
     }
     
+    public void setSubEnv(String subEnv) {
+        this.subEnv = subEnv;
+    }
+    
     /**
      * 字段名常量值，在构造查询map时，key值就不需要hard code了。
      * 如构造查询ID为121的查询map时，map.put(QueueOffsetEntity.FdId， "121");
@@ -361,6 +374,6 @@ public class QueueOffsetEntity {
     
     public static String FdConsumerGroupMode = "consumerGroupMode";    
     
-    
+    public static String FdSubEnv = "subEnv";
 }
     

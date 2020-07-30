@@ -167,11 +167,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form','searchSelect'], functi
                 ownerNames:ownerNames,
                 id:consumerGroupId,
                 mode:mode
+            },page: {
+                curr: page
             }
         };
-        if(page!==undefined){
-            option["page"]=page;
-        }
 
         table.reload('consumerGroupTable',option);
     }

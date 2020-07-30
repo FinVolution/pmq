@@ -1,3 +1,7 @@
+String.prototype.endWith = function(endStr) {
+	var d = this.length - endStr.length;
+	return (d >= 0 && this.lastIndexOf(endStr) == d);
+}
 layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
 		function() {
 			var table = layui.table;
@@ -6,7 +10,7 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
 			var $ = layui.$;
 			var laydate = layui.laydate;
 			var element = layui.element;
-			var lastSearchTime = new Date().getTime();
+            var lastSearchTime = new Date().getTime() - 3000;
 			var maxId = "";
 			var minId = "";
 			// 标记当前queue是否有slave
@@ -16,15 +20,33 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
 
             initMessageTable();
 
-			function initTopicSelect2() {
-                parent.window.initSelect2($('#topicName'),'/topic/getTopicNames');
+			isAdmin();
+
+			function isAdmin(){
+				if($('#userRole').val()!=0){
+					$("#msgCount_btn").hide();
+					$("#topicMsgCount").hide();
+				}
 			}
 
-			function showSendAllFailMessageButton(){
-                String.prototype.endWith=function(endStr){
-                    var d=this.length-endStr.length;
-                    return (d>=0&&this.lastIndexOf(endStr)==d);
+
+            function initTopicSelect2() {
+                var queueOffsetQueueId = $("#queueOffsetQueueId").val();
+                var queueOffsetTopicName = $("#queueOffsetTopicName").val();
+                if (queueOffsetTopicName) {
+                    $('#topicName').append(
+                        "<option value='" + queueOffsetTopicName
+                        + "' selected='selected'>"
+                        + queueOffsetTopicName
+                        + "</option>");
                 }
+                parent.window.initSelect2($('#topicName'),
+                    '/topic/getTopicNames');
+                if (queueOffsetQueueId) {
+                    topicChanged(queueOffsetQueueId);
+                }
+            }			
+			function showSendAllFailMessageButton(){
                 //只有失败topic时才展示批量发送按钮
 				var topicName=$("#topicName").val();
 				if(topicName){
@@ -39,7 +61,7 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
 
 			}
 
-			function getMessageList(id,queueId,bizId,traceId,maxId,minId,header,body,retryStatus,curPage){
+			function getMessageList(id,queueId,bizId,traceId,maxId,minId,header,body,retryStatus,curPage, startTime, endTime){
                 table.reload("messageTable", {
                     where : {
                         id : id,
@@ -50,9 +72,13 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
                         minId : minId,
                         header : header,
                         body : body,
-                        retryStatus:retryStatus
+                        retryStatus:retryStatus,
+                        startTime:startTime,
+                        endTime:endTime
                     },
-                    page : curPage
+                    page: {
+                        curr: curPage
+                    }
                 });
 
                 showSendAllFailMessageButton();
@@ -190,6 +216,43 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
                         showSendAllFailMessageButton();
 					});
 
+			$("body").on("click", "#msgCount_btn",
+				function() {
+					var topicName = $("#topicName").val();
+					var startTime = $("#startTime").val();
+					var endTime = $("#endTime").val();
+
+					if ("" == topicName
+						|| topicName == null) {
+						layer.confirm("请选择Topic", {
+							icon : 3,
+							title : '提示'
+						}, function(index) {
+							layer.close(index);
+						});
+					}else{
+						if (startTime == ""
+							|| endTime == "") {
+							failBox("请选择【起始时间】和【截止时间】。");
+						}else {
+							var data = {'topicName':topicName,'startTime':startTime,'endTime':endTime};
+							$.post("/topic/msgCount",data,requestCallback);
+						}
+					}
+				});
+
+			function requestCallback(result, xhr) {
+				if (xhr === 'success') {
+					if (result.code ==yesFlag) {
+						$("#topicMsgCount").text(result.msg);
+					}
+				} else {
+					failBox("网络异常！"+xhr);
+				}
+			}
+
+
+
 			function refreshMessageTable(){
                 table.reload('messageTable');
 
@@ -216,40 +279,61 @@ layui.use([ 'element', 'table', 'jquery', 'layer', 'form', 'laydate' ],
 					$.post(url, 'queueId=' + queueId + '&startTime='
 							+ startTime + '&endTime=' + endTime,
 							function(data) {
-                                getMessageList(id,queueId,bizId,traceId,data.data.maxId,data.data.minId,header,body,retryStatus,curPage);
+                                getMessageList(id,queueId,bizId,traceId,data.data.maxId,data.data.minId,header,body,retryStatus,curPage, startTime, endTime);
 							});
 				} else {
-                    getMessageList(id,queueId,bizId,traceId,maxId,minId,header,body,retryStatus,curPage)
+                    getMessageList(id,queueId,bizId,traceId,maxId,minId,header,body,retryStatus,curPage, startTime, endTime)
 				}
 			}
 
+            function topicChanged(id) {
+                var url = '/message/list/topicQueueIds';
+                showSendAllFailMessageButton();
+                $("#topicMsgCount").text('');
+                $.post(
+                    url,
+                    'topicName=' + $("#topicName").val(),
+                    function(data) {
+                        $("#queueId").html("");
+                        if (data.length > 0) {
+                            $.each(
+                                data,
+                                function(k, v) {
+                                    var option1 = "<option value='"
+                                        + v.id
+                                        + "' "
+                                        + (v.id == id ? "selected='selected'"
+                                            : "")
+                                        + ">"
+                                        + v.id
+                                        + "|"
+                                        + v.dbName
+                                        + "|"
+                                        + v.tbName
+                                        + "|"
+                                        + v.ip
+                                        + "</option>";
+                                    $('#queueId')
+                                        .append(option1);
+                                    form.render('select');
+                                    setMaxMin();
+                                });
+                        } else {
+                            form.render('select');
+                        }
+                        checkSalve($("#queueId").val());
 
-			$("#topicName").on(
-					"select2:select",
-					function(e) {
-						var url = '/message/list/topicQueueIds';
-                        showSendAllFailMessageButton();
-						$.post(url, 'topicName=' + $("#topicName").val(),
-								function(data) {
-									$("#queueId").html("");
-									if (data.length > 0) {
-										$.each(data, function(k, v) {
-											var option1 = $("<option>").val(
-													v.id).text(
-													v.id + "|" + v.dbName + "|"
-															+ v.tbName + "|"
-															+ v.ip);
-											$('#queueId').append(option1);
-											form.render('select');
-											setMaxMin();
-										});
-									} else {
-										form.render('select');
-									}
-									checkSalve($("#queueId").val());
-								});
+                        if (id) {
+                            $("#messageSearchList_btn")
+                                .click();
+                        }
+                    });
+            }
 
-					});
+
+            $("#topicName").on("select2:select", function(e) {
+                topicChanged();
+            });
 
 			form.on('select(queueId)', function(data) {
 				checkSalve(data.value);	

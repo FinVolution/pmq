@@ -22,11 +22,10 @@ import com.ppdai.infrastructure.mq.biz.service.impl.MqLockServiceImpl;
 public abstract class AbstractTimerService implements PortalTimerService {
 	private Logger log = LoggerFactory.getLogger(AbstractTimerService.class);
 	private MqLockService mqLockService = null;
-	private volatile boolean isRunning = false;
-	public volatile boolean isMaster = false;
-	public volatile boolean lastMaster = false;
-	private volatile int interval = 0;
-	private static Object lockObj = new Object();
+	private boolean isRunning = false;
+	private boolean isMaster = false;	
+	private int interval = 0;
+	private Object lockObj = new Object();
 	private ThreadPoolExecutor executor = null;
 	private SoaConfig soaConfig;
 	private String key = "";

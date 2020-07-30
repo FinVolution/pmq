@@ -282,6 +282,7 @@ public class UiQueueOffsetService implements TimerService {
 			queueOffsetEntity.setOriginTopicName(consumerGroupTopicEntity.getOriginTopicName());
 			queueOffsetEntity.setTopicType(consumerGroupTopicEntity.getTopicType());
 			queueOffsetEntity.setQueueId(queueEntity.getId());
+			queueOffsetEntity.setSubEnv(consumerGroupMap.get(consumerGroupTopicEntity.getConsumerGroupName()).getSubEnv());
 			queueOffsetEntity
 					.setDbInfo(queueEntity.getIp() + " | " + queueEntity.getDbName() + " | " + queueEntity.getTbName());
 			String userId = userInfoHolder.getUserId();
@@ -304,6 +305,7 @@ public class UiQueueOffsetService implements TimerService {
 		parameterMap.put("topicName", queueOffsetGetListRequest.getTopicName());
 		parameterMap.put("consumerName", queueOffsetGetListRequest.getConsumerName());
 		parameterMap.put("topicType", queueOffsetGetListRequest.getTopicType());
+		parameterMap.put("subEnv",queueOffsetGetListRequest.getSubEnv());
 		if(StringUtils.isNotEmpty(queueOffsetGetListRequest.getMode())){
 			parameterMap.put("consumerGroupMode",Integer.parseInt(queueOffsetGetListRequest.getMode()));
 		}
@@ -571,11 +573,10 @@ public class UiQueueOffsetService implements TimerService {
 			return new QueueOffsetUpdateResponse("1", "偏移值不能小于当前的最小Id");
 		}
 		String updateBy = userInfoHolder.getUserId();
-		long offsetVersion = originQueueOffsetEntity.getOffsetVersion() + 1;
+		
 		Map<String, Object> parameterMap = new LinkedHashMap<String, Object>();
 		parameterMap.put(QueueOffsetEntity.FdId, id);
 		parameterMap.put(QueueOffsetEntity.FdUpdateBy, updateBy);
-		parameterMap.put(QueueOffsetEntity.FdOffsetVersion, offsetVersion);
 		parameterMap.put(QueueOffsetEntity.FdOffset, offset);
 		queueOffsetService.updateQueueOffset(parameterMap);
 		//queueOffset23Service.updateMq2Offset(id, offset);

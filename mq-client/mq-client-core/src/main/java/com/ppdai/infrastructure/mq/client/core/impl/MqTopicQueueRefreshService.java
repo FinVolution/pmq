@@ -18,7 +18,7 @@ import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetTopicQueueIdsRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetTopicQueueIdsResponse;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 import com.ppdai.infrastructure.mq.client.core.IMqTopicQueueRefreshService;
 
@@ -38,19 +38,19 @@ public class MqTopicQueueRefreshService implements IMqTopicQueueRefreshService {
 	/**
 	 * 获取单例
 	 */
-	public static MqTopicQueueRefreshService getInstance(IMqClientBase mqClientBase) {
+	public static MqTopicQueueRefreshService getInstance() {
 		if (instance == null) {
 			synchronized (MqTopicQueueRefreshService.class) {
 				if (instance == null) {
-					instance = new MqTopicQueueRefreshService(mqClientBase);
+					instance = new MqTopicQueueRefreshService();
 				}
 			}
 		}
 		return instance;
 	}
 
-	protected MqTopicQueueRefreshService(IMqClientBase mqClientBase) {
-		this.mqContext = mqClientBase.getContext();
+	protected MqTopicQueueRefreshService() {
+		this.mqContext = MqClient.getContext();
 	}
 
 	public void start() {

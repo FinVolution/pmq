@@ -8,6 +8,9 @@ import com.ppdai.infrastructure.mq.biz.dto.BaseRequest;
 public class ConsumerGroupRegisterRequest extends BaseRequest {
 	private long consumerId;
 	private String consumerName;
+	//子环境，默认是default
+	private String subEnv = "default";
+
 	// key为consumerGroupName,value为topic列表
 	private Map<String, List<String>> consumerGroupNames;
 
@@ -25,6 +28,14 @@ public class ConsumerGroupRegisterRequest extends BaseRequest {
 
 	public void setConsumerName(String consumerName) {
 		this.consumerName = consumerName;
+	}
+
+	public String getSubEnv() {
+		return subEnv;
+	}
+
+	public void setSubEnv(String subEnv) {
+		this.subEnv = subEnv;
 	}
 
 	public Map<String, List<String>> getConsumerGroupNames() {

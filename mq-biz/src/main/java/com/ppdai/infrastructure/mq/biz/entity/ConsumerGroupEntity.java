@@ -113,6 +113,11 @@ public class ConsumerGroupEntity {
      private int isActive;
     
     /**
+     * 消费者机器数量此字段是为了兼容消息2，在mq3中不用此字段。
+     */
+     private int consumerCount;
+    
+    /**
      * 应用id 一个消费者组只能属于一个appid，但是一个appid 可以有多个消费者组
      */
      private String appId;
@@ -136,6 +141,16 @@ public class ConsumerGroupEntity {
      * 原始的消费者组名
      */
      private String originName;
+    
+    /**
+     * 子环境名称
+     */
+     private String subEnv;
+    
+    /**
+     * 1，表示实时推送，0，表示非实时推送
+     */
+     private int pushFlag;
     
     
     public long getId() {
@@ -221,7 +236,11 @@ public class ConsumerGroupEntity {
     public int getIsActive() {
         return isActive;
     }
-
+    
+    public int getConsumerCount() {
+        return consumerCount;
+    }
+    
     public String getAppId() {
         return appId;
     }
@@ -240,6 +259,14 @@ public class ConsumerGroupEntity {
     
     public String getOriginName() {
         return originName;
+    }
+    
+    public String getSubEnv() {
+        return subEnv;
+    }
+    
+    public int getPushFlag() {
+        return pushFlag;
     }
     
     
@@ -327,6 +354,10 @@ public class ConsumerGroupEntity {
         this.isActive = isActive;
     }
     
+    public void setConsumerCount(int consumerCount) {
+        this.consumerCount = consumerCount;
+    }
+    
     public void setAppId(String appId) {
         this.appId = appId;
     }
@@ -345,6 +376,14 @@ public class ConsumerGroupEntity {
     
     public void setOriginName(String originName) {
         this.originName = originName;
+    }
+    
+    public void setSubEnv(String subEnv) {
+        this.subEnv = subEnv;
+    }
+    
+    public void setPushFlag(int pushFlag) {
+        this.pushFlag = pushFlag;
     }
     
     /**
@@ -394,7 +433,9 @@ public class ConsumerGroupEntity {
     
     public static String FdUpdateTime = "updateTime";    
     
-    public static String FdIsActive = "isActive";
+    public static String FdIsActive = "isActive";    
+    
+    public static String FdConsumerCount = "consumerCount";    
     
     public static String FdAppId = "appId";    
     
@@ -405,6 +446,10 @@ public class ConsumerGroupEntity {
     public static String FdMode = "mode";    
     
     public static String FdOriginName = "originName";    
+    
+    public static String FdSubEnv = "subEnv";    
+    
+    public static String FdPushFlag = "pushFlag";    
     
     
 }

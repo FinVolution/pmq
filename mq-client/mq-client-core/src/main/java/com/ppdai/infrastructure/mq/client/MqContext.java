@@ -1,11 +1,15 @@
 package com.ppdai.infrastructure.mq.client;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ppdai.infrastructure.mq.biz.common.util.PropUtil;
 import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupOneDto;
+import com.ppdai.infrastructure.mq.biz.event.IAsynSubscriber;
 import com.ppdai.infrastructure.mq.biz.event.ISubscriber;
 import com.ppdai.infrastructure.mq.client.config.ConsumerGroupVo;
 import com.ppdai.infrastructure.mq.client.event.MqEvent;
@@ -13,10 +17,9 @@ import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 
 public class MqContext {
 	private volatile long consumerId;
-	//获取记录broker的随机ip，防止出现通过域名访问时，host和dns访问错误
+	// 获取记录broker的随机ip，防止出现通过域名访问时，host和dns访问错误
 	private String brokerIp;
 	private String consumerName;
-	private String lan;
 	private String sdkVersion;
 	// 此参数表示broker端模式
 	private volatile int brokerMetaMode = 0;
@@ -27,7 +30,8 @@ public class MqContext {
 	private Map<String, ConsumerGroupOneDto> consumerGroupMap = new ConcurrentHashMap<>();
 
 	private String configPath;
-
+	// 子环境列表
+	private volatile Set<String> appSubEnv = new HashSet<>();
 	private transient IMqResource mqResource = null;
 
 	private transient IMqResource mqHtResource = null;
@@ -45,9 +49,18 @@ public class MqContext {
 	private MqConfig config = new MqConfig();
 
 	private MqEvent mqEvent = new MqEvent();
+	private MqEnvironment mqEnvironment = null;
 
 	public MqContext() {
 		this.sdkVersion = PropUtil.getSdkVersion();
+	}
+
+	public MqEnvironment getMqEnvironment() {
+		return mqEnvironment;
+	}
+
+	public void setMqEnvironment(MqEnvironment mqEnvironment) {
+		this.mqEnvironment = mqEnvironment;
 	}
 
 	public String getBrokerIp() {
@@ -90,13 +103,13 @@ public class MqContext {
 		this.metricUrl = metricUrl;
 	}
 
-//	public int getLogOrigData() {
-//		return logOrigData;
-//	}
-//
-//	public void setLogOrigData(int logOrigData) {
-//		this.logOrigData = logOrigData;
-//	}
+	// public int getLogOrigData() {
+	// return logOrigData;
+	// }
+	//
+	// public void setLogOrigData(int logOrigData) {
+	// this.logOrigData = logOrigData;
+	// }
 
 	public long getConsumerId() {
 		return consumerId;
@@ -114,12 +127,18 @@ public class MqContext {
 		this.consumerName = consumerName;
 	}
 
-	public String getLan() {
-		return lan;
+	public Set<String> getAppSubEnv() {
+		return appSubEnv;
 	}
 
-	public void setLan(String lan) {
-		this.lan = lan;
+	public void setAppSubEnvMap(Map<String, Set<String>> consumerGroupSubEnvMap) {
+		Set<String> rs = new java.util.HashSet<>(5);
+		if (consumerGroupSubEnvMap != null && consumerGroupSubEnvMap.size() > 0) {
+			consumerGroupSubEnvMap.entrySet().forEach(t1 -> {
+				rs.addAll(t1.getValue());
+			});
+		}
+		this.appSubEnv = rs;
 	}
 
 	public String getSdkVersion() {
@@ -225,6 +244,23 @@ public class MqContext {
 			if (configConsumerGroup.get(consumerGroupName).getTopics() != null
 					&& configConsumerGroup.get(consumerGroupName).getTopics().containsKey(topic)) {
 				return configConsumerGroup.get(consumerGroupName).getTopics().get(topic).getSubscriber();
+			}
+		}
+		return null;
+	}
+
+	public IAsynSubscriber getAsynSubscriber(String consumerGroupName, String topic) {
+		IAsynSubscriber rs = null;
+		if (mqEvent != null && mqEvent.getiAsynSubscriberSelector() != null) {
+			rs = mqEvent.getiAsynSubscriberSelector().getSubscriber(consumerGroupName, topic);
+			if (rs != null) {
+				return rs;
+			}
+		}
+		if (rs == null && configConsumerGroup != null && configConsumerGroup.containsKey(consumerGroupName)) {
+			if (configConsumerGroup.get(consumerGroupName).getTopics() != null
+					&& configConsumerGroup.get(consumerGroupName).getTopics().containsKey(topic)) {
+				return configConsumerGroup.get(consumerGroupName).getTopics().get(topic).getAsynSubscriber();
 			}
 		}
 		return null;

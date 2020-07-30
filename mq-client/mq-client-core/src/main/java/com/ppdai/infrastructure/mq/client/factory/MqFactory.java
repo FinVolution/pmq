@@ -1,7 +1,7 @@
 package com.ppdai.infrastructure.mq.client.factory;
 
 import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerQueueDto;
-import com.ppdai.infrastructure.mq.client.MqClient.IMqClientBase;
+import com.ppdai.infrastructure.mq.client.core.IMsgNotifyService;
 import com.ppdai.infrastructure.mq.client.core.impl.ConsumerPollingService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqBrokerUrlRefreshService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqCheckService;
@@ -10,50 +10,88 @@ import com.ppdai.infrastructure.mq.client.core.impl.MqHeartbeatService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqMeticReporterService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqQueueExcutorService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqTopicQueueRefreshService;
+import com.ppdai.infrastructure.mq.client.core.impl.MsgNotifyService;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 import com.ppdai.infrastructure.mq.client.resource.MqResource;
 
 public class MqFactory implements IMqFactory {
 
+	private static final Object lockObj = new Object();
+
+	private MqBrokerUrlRefreshService mqBrokerUrlRefreshService;
+
 	@Override
-	public MqBrokerUrlRefreshService createMqBrokerUrlRefreshService(IMqClientBase mqClientBase) {
-		return new MqBrokerUrlRefreshService(mqClientBase); 
+	public MqBrokerUrlRefreshService createMqBrokerUrlRefreshService() {
+		if (mqBrokerUrlRefreshService == null) {
+			synchronized (lockObj) {
+				if (mqBrokerUrlRefreshService == null) {
+					mqBrokerUrlRefreshService = new MqBrokerUrlRefreshService();
+				}
+			}
+		}
+		return mqBrokerUrlRefreshService;
+	}
+
+	private MqCheckService mqCheckService;
+
+	@Override
+	public MqCheckService createMqCheckService() {
+		if (mqCheckService == null) {
+			synchronized (lockObj) {
+				if (mqCheckService == null) {
+					mqCheckService = new MqCheckService();
+				}
+			}
+		}
+		return mqCheckService;
 	}
 
 	@Override
-	public MqCheckService createMqCheckService(IMqClientBase mqClientBase) {
-		return new MqCheckService(mqClientBase);
+	public MqGroupExcutorService createMqGroupExcutorService() {
+		return new MqGroupExcutorService();
+	}
+
+	private MqHeartbeatService mqHeartbeatService;
+
+	@Override
+	public MqHeartbeatService createMqHeartbeatService() {
+		if (mqHeartbeatService == null) {
+			synchronized (lockObj) {
+				if (mqHeartbeatService == null) {
+					mqHeartbeatService = new MqHeartbeatService();
+				}
+			}
+		}
+		return mqHeartbeatService;
 	}
 
 	@Override
-	public MqGroupExcutorService createMqGroupExcutorService(IMqClientBase mqClientBase) {
-		return new MqGroupExcutorService(mqClientBase);
+	public MqMeticReporterService createMqMeticReporterService() {
+		return MqMeticReporterService.getInstance();
 	}
 
 	@Override
-	public MqHeartbeatService createMqHeartbeatService(IMqClientBase mqClientBase) {
-		return new MqHeartbeatService(mqClientBase);
+	public MqQueueExcutorService createMqQueueExcutorService(String consumerGroupName, ConsumerQueueDto consumerQueue) {
+		return new MqQueueExcutorService(consumerGroupName, consumerQueue);
 	}
 
 	@Override
-	public MqMeticReporterService createMqMeticReporterService(IMqClientBase mqClientBase) {
-		return MqMeticReporterService.getInstance(mqClientBase);
+	public MqTopicQueueRefreshService createMqTopicQueueRefreshService() {
+		return MqTopicQueueRefreshService.getInstance();
 	}
 
-	@Override
-	public MqQueueExcutorService createMqQueueExcutorService(IMqClientBase mqClientBase, String consumerGroupName,
-			ConsumerQueueDto consumerQueue) {
-		return new MqQueueExcutorService(mqClientBase, consumerGroupName, consumerQueue);
-	}
+	private ConsumerPollingService consumerPollingService;
 
 	@Override
-	public MqTopicQueueRefreshService createMqTopicQueueRefreshService(IMqClientBase mqClientBase) {
-		return MqTopicQueueRefreshService.getInstance(mqClientBase);
-	}
-
-	@Override
-	public ConsumerPollingService createConsumerPollingService(IMqClientBase mqClientBase) {
-		return new ConsumerPollingService(mqClientBase);
+	public ConsumerPollingService createConsumerPollingService() {
+		if (consumerPollingService == null) {
+			synchronized (lockObj) {
+				if (consumerPollingService == null) {
+					consumerPollingService = new ConsumerPollingService();
+				}
+			}
+		}
+		return consumerPollingService;
 	}
 
 	@Override
@@ -62,4 +100,17 @@ public class MqFactory implements IMqFactory {
 		return new MqResource(url, connectionTimeOut, readTimeOut);
 	}
 
+	private IMsgNotifyService msgNotifyService;
+
+	@Override
+	public IMsgNotifyService createMsgNotifyService() {
+		if (msgNotifyService == null) {
+			synchronized (lockObj) {
+				if (msgNotifyService == null) {
+					msgNotifyService = new MsgNotifyService();
+				}
+			}
+		}
+		return msgNotifyService;
+	}
 }

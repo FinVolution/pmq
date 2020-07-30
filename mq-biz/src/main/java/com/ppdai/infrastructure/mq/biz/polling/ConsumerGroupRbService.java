@@ -80,15 +80,16 @@ public class ConsumerGroupRbService extends AbstractTimerService {
 			}
 		});
 	}
-
+	private boolean lastMaster = false;
 	public void doStart() {
 		if (!soaConfig.isEnableRb()) {
 			return;
 		}
-		if (lastMaster != isMaster) {
+		if (lastMaster != isMaster()) {
 			if (!checkNotifyMessageStatId()) {
 				initNotifyMessageStatId();
 			}
+			lastMaster=isMaster();
 		}
 		long currentMaxId = getNotifyMessageId();
 		if (currentMaxId == 0) {
@@ -105,7 +106,7 @@ public class ConsumerGroupRbService extends AbstractTimerService {
 			rb(t1);
 			for (int i = 0; i < 3; i++) {
 				try {
-					if (super.isMaster) {
+					if (isMaster()) {
 						consumerGroupService.rb(t1.queueOffsets);
 					}
 					break;

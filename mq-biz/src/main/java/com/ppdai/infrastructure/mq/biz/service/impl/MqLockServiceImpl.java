@@ -1,9 +1,15 @@
 package com.ppdai.infrastructure.mq.biz.service.impl;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.codahale.metrics.Gauge;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.metric.MetricSingleton;
-import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessage;
 import com.ppdai.infrastructure.mq.biz.common.trace.TraceMessageItem;
@@ -16,15 +22,6 @@ import com.ppdai.infrastructure.mq.biz.entity.MqLockEntity;
 import com.ppdai.infrastructure.mq.biz.service.MqLockService;
 import com.ppdai.infrastructure.mq.biz.service.common.AbstractBaseService;
 import com.ppdai.infrastructure.mq.biz.service.common.DbService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author dal-generator
@@ -44,12 +41,13 @@ public class MqLockServiceImpl extends AbstractBaseService<MqLockEntity> impleme
     private SoaConfig soaConfig;
     private MqLockRepository mqLockRepository;
     private DbService dbService;
-    private HeartbeatProperty heartbeatProperty;
-    private ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<Runnable>(200), SoaThreadFactory.create("MqLockService", true),
-            new ThreadPoolExecutor.DiscardOldestPolicy());
-    private TraceMessage traceMessage = null;
     private EmailUtil emailUtil;
+    private HeartbeatProperty heartbeatProperty;
+//    private ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+//            new LinkedBlockingQueue<Runnable>(200), SoaThreadFactory.create("MqLockService", true),
+//            new ThreadPoolExecutor.DiscardOldestPolicy());
+    private TraceMessage traceMessage = null;
+    
 
     public MqLockServiceImpl(MqLockRepository repository) {
         this.mqLockRepository = repository;
@@ -126,7 +124,7 @@ public class MqLockServiceImpl extends AbstractBaseService<MqLockEntity> impleme
                         Util.sleep(getExpired() * 1000);
                     }
                     clearAndInit();
-                    initHeartBeat();
+                    //initHeartBeat();
                     initMetric();
                 }
             }
@@ -142,23 +140,23 @@ public class MqLockServiceImpl extends AbstractBaseService<MqLockEntity> impleme
         });
     }
 
-    private void initHeartBeat() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        if (isMaster) {
-                            updateHeatTime();
-                        }
-                    } catch (Exception e) {
-                        log.error("doHearBeatError", e);
-                    }
-                    Util.sleep(getHeartBeatTime() * 1000);
-                }
-            }
-        });
-    }
+//    private void initHeartBeat() {
+//        executor.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        if (isMaster) {
+//                            updateHeatTime();
+//                        }
+//                    } catch (Exception e) {
+//                        log.error("doHearBeatError", e);
+//                    }
+//                    Util.sleep(getHeartBeatTime() * 1000);
+//                }
+//            }
+//        });
+//    }
 
     private void clearAndInit() {
         try {
@@ -220,7 +218,26 @@ public class MqLockServiceImpl extends AbstractBaseService<MqLockEntity> impleme
         }
     }
 
-    private boolean checkMaster() {
+    public boolean isInLock() {
+		boolean flag=true;
+		if(!Util.isEmpty(soaConfig.getLockWhiteIps(key))){
+			flag=soaConfig.getLockWhiteIps(key).indexOf(IPUtil.getLocalIP()) != -1;
+		}
+		else if(!Util.isEmpty(soaConfig.getLockBlackIps(key))) {
+			flag=soaConfig.getLockBlackIps(key).indexOf(IPUtil.getLocalIP()) == -1;
+		}		
+		return flag;
+	}
+
+	private boolean checkMaster() {
+		if (isInLock()) {
+			return doCheckMaster();
+		} else {
+			return false;
+		}
+	}
+
+	private boolean doCheckMaster() {
         Map<String, Object> mapCond = new HashMap<>();
         mapCond.put(MqLockEntity.FdKey1, key);
         MqLockEntity entity = mqLockRepository.get(mapCond);

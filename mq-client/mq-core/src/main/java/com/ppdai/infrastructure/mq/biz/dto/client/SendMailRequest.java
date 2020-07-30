@@ -13,7 +13,14 @@ public class SendMailRequest extends BaseRequest {
 	private String content;
 	//用来alter聚合
 	private String key;
-
+	//表示是否是服务端错误,服务端错误只有管理员才会收到
+	private boolean server=false;
+	public boolean isServer() {
+		return server;
+	}
+	public void setServer(boolean server) {
+		this.server = server;
+	}
 	public String getTopicName() {
 		return topicName;
 	}

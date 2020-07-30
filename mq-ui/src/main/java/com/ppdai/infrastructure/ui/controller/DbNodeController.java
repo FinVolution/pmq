@@ -1,5 +1,6 @@
 package com.ppdai.infrastructure.ui.controller;
 
+import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,5 +102,10 @@ public class DbNodeController {
     @RequestMapping("/physicalMachineReport/data")
     public PhysicalMachineReportResponse getPhysicalMachineReportData(String ip) {
         return uiDbNodeService.getPhysicalMachineReportData(ip);
+    }
+
+    @GetMapping("/onLineNums")
+    public BaseUiResponse getOnLineNums() {
+        return uiDbConnectionsService.getOnLineNums();
     }
 }

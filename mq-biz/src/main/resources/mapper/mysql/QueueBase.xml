@@ -444,7 +444,7 @@
                 and topic_name != ''
             </if>
             <if test="distributeType == 2" >
-                and topic_name = null or topic_name = ''
+                and (topic_name = null or topic_name = '')
             </if>
         </where>
         order by id desc

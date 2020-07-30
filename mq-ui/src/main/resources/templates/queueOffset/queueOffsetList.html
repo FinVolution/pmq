@@ -30,9 +30,9 @@
             </div>
 
             <div class="layui-inline">
-                <div class="layui-input-inline" style="width: 150px">
+                <div class="layui-input-inline" style="width: 100px">
                     <select id="isReadOnly" class="search-select">
-                        <option value="">请选择读写状态</option>
+                        <option value="">读写状态</option>
                         <option value ="1">读写</option>
                         <option value ="2">只读</option>
                         <option value ="3">不可读写</option>
@@ -41,9 +41,9 @@
             </div>
 
             <div class="layui-inline">
-                <div class="layui-input-inline" style="width: 150px">
+                <div class="layui-input-inline" style="width: 100px">
                     <select id="topicType" class="search-select">
-                        <option value="">请选择topic类型</option>
+                        <option value="">topic类型</option>
                         <option value ="1">正常topic</option>
                         <option value ="2">失败topic</option>
                     </select>
@@ -51,14 +51,21 @@
             </div>
 
             <div class="layui-inline">
-                <div class="layui-input-inline" style="width: 150px">
+                <div class="layui-input-inline" style="width: 100px">
                     <select name="mode" id="mode" class="search-select">
-                        <option value="">请选择消费模式</option>
+                        <option value="">消费模式</option>
                         <option value="1">集群模式</option>
                         <option value ="2">广播模式</option>
                         <option value ="3">代理模式</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="layui-inline" style="width: 100px">
+                <select id="subEnv" name="subEnv" lay-filter="dbNodeSelect" lay-search>
+                    <option value="">子环境</option>
+                    <option th:each="subEnv:${subEnvList}" th:value="${subEnv}" th:text="${subEnv}"></option>
+                </select>
             </div>
 
             <div class="layui-inline">
@@ -84,12 +91,13 @@
             <th lay-data="{field: 'messageNum', align: 'center',width:'6%',sort: true}">消息总数</th>
             <th lay-data="{field: 'startOffset', align: 'center',width:'6%',sort: true}">起始偏移</th>
             <th lay-data="{field: 'minId', align: 'center',width:'6%',sort: true}">最小Id</th>
+            <th lay-data="{field: 'subEnv', align: 'center',width:'6%',sort: true}">子环境</th>
             <th lay-data="{field: 'topicType', align: 'center',templet:'#topicTypeTpl',width:'6%'}">topic类型</th>
             <th lay-data="{field: 'queueId', sort: true,align: 'center',width:'6%'}">分区Id</th>
             <th lay-data="{field: 'nodeType', align: 'center',templet:'#nodeTypeTpl',width:'6%'}">存储类型</th>
             <th lay-data="{field: 'dbInfo',align: 'center',width:'10%'}">db节点</th>
             <th lay-data="{field: 'insertTime',align: 'center',width:'10%'}">创建时间</th>
-            <th lay-data="{fixed: 'right', align:'center', width:150, toolbar: '#ctrlBar'}">编辑</th>
+            <th lay-data="{fixed: 'right', align:'center', width:200, toolbar: '#ctrlBar'}">编辑</th>
         </tr>
         </thead>
     </table>
@@ -153,6 +161,9 @@
             {{#  } }}
 
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="intelligentDetection">智能检测</a>
+
+        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="searchMessage">消息查询</a>
+
 
         {{#  } else { }}
 

@@ -4,9 +4,15 @@
     <!-- 业务逻辑sql请写在这个文件内 -->
     <delete id="deleteOld">
 	<![CDATA[
-		delete from server where heart_time<TIMESTAMPADD(SECOND,  -#{lockInterval}, CURRENT_TIMESTAMP)
+		delete from server where heart_time<TIMESTAMPADD(SECOND,  -#{heartTime}, CURRENT_TIMESTAMP)
 	]]>
 	</delete>
+	
+	<select id="getNoramlServer" resultMap="BaseResultMap">
+		<![CDATA[
+			select * from server where heart_time > TIMESTAMPADD(second, -#{heartTime}, current_timestamp )
+		  ]]>
+	</select>
 	<update id="updateHeartTimeById">
 		update server set heart_time=CURRENT_TIMESTAMP where id=#{id} 
 	</update>
@@ -19,13 +25,24 @@
             `port`,
             `heart_time`,
             `status_flag`,
-            `server_type`
+            `server_type`,
+             `server_version`
         )values(
             #{ip},
             #{port},
             CURRENT_TIMESTAMP,
             #{statusFlag},
-            #{serverType}
+            #{serverType},
+            #{serverVersion}
         )
-    </insert>	
+    </insert>
+
+    <update id="batchUpdate">
+        update server  set status_flag=#{statusFlag} where id in
+        (
+        <foreach collection="ids" item="item" index="index"
+                 separator=",">#{item}</foreach>
+        )
+    </update>
+
 </mapper>

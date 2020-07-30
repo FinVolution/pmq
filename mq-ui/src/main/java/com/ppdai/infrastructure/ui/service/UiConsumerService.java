@@ -63,6 +63,11 @@ public class UiConsumerService {
             conditionMap.put(ConsumerEntity.FdSdkVersion,compareType.get(consumerGetListRequest.getCompareType())+"'"+ consumerGetListRequest.getSdkVersion()+"'");
         }
 
+        if(!StringUtils.isEmpty(consumerGetListRequest.getHeartBeat())){
+            conditionMap.put("heartBeat",Long.parseLong(consumerGetListRequest.getHeartBeat()));
+            conditionMap.put("consumerCheckInterval",soaConfig.getConsumerCheckInterval());
+        }
+
         Long count=consumerService.countBy(conditionMap);
         long page=Long.valueOf(consumerGetListRequest.getPage());
         long pageSize=Long.valueOf(consumerGetListRequest.getLimit());

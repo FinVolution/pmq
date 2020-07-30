@@ -180,7 +180,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 	@Override
 	public void forceUpdateCache() {
 		Transaction transaction = Tracer.newTransaction("Timer", "Queue-updateCache");
-
+		transaction.setStatus(Transaction.SUCCESS);
 		try {
 			List<QueueEntity> data = queueRepository.getAll();
 			Map<String, TopicEntity> topicCache = topicService.getCache();
@@ -229,11 +229,14 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 			topicWriteQueueMap1.setOnlyRead();
 			topicQueueMap1.setOnlyRead();
 			queueIdMap.setOnlyRead();
-			topicWriteQueueMap.set(topicWriteQueueMap1);
-			topicQueueMap.set(topicQueueMap1);
-			queueIdMapRef.set(queueIdMap);
-			// log.info(queueIdMap.size()+"");
-			queueList.set(data);
+			if (queueIdMap.size() > 0 && data.size() > 0) {
+				topicWriteQueueMap.set(topicWriteQueueMap1);
+				topicQueueMap.set(topicQueueMap1);
+				queueIdMapRef.set(queueIdMap);
+				queueList.set(data);
+			} else {
+				lastUpdateEntity = null;
+			}
 			lastVersion.incrementAndGet();
 			transaction.setStatus(Transaction.SUCCESS);
 		} catch (Exception e) {
@@ -252,11 +255,13 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 				emailUtil.sendErrorMail(t1.getKey() + ",没有可以写入的队列", "topic:" + t1.getKey() + "没有可以写入的队列，请注意！");
 			}
 		});
-		if (topicCount != topicQueueMap1.size()) {
+		if (topicQueueMap1.size() - topicCount > 1) {
 			StringBuilder rs = new StringBuilder();
 			for (String topic : topicQueueMap1.keySet()) {
-				if (!topicCache.containsKey(topic)) {
-					rs.append("topic:" + topic + "在queue中，不在topic表中，请注意！\n");
+				if (!topicService.NEED_DELETED_TOPIC_NANE.equals(topic)) {
+					if (!topicCache.containsKey(topic)) {
+						rs.append("topic:" + topic + "在queue中，不在topic表中，请注意！\n");
+					}
 				}
 			}
 			for (String topic : topicCache.keySet()) {
@@ -666,23 +671,46 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 	@Override
 	public void deleteMessage(List<QueueEntity> queueEntities, long consumerGroupId) {
 		for (QueueEntity queueEntity : queueEntities) {
-			doDeleteMessage(queueEntity);
 			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME, consumerGroupId,
 					"清空consumerGroup下的失败topic对应的Queue，" + JsonUtil.toJson(queueEntity));
+			doDeleteMessage(queueEntity);
 		}
 	}
 
+	// 此处表示真正的清空消息
 	@Override
-	public void doDeleteMessage(QueueEntity queueEntity) {
-		uiAuditLogService.recordAudit(TopicEntity.TABLE_NAME, queueEntity.getTopicId(),
-				"truncate之前：" + JsonUtil.toJson(queueEntity));
+	public void truncate(QueueEntity queueEntity) {
+		uiAuditLogService.recordAudit(QueueEntity.TABLE_NAME, queueEntity.getId(),
+				"待truncate 的queue为：" + JsonUtil.toJson(queueEntity));
 		// 动态切换数据源
 		message01Service.setDbId(queueEntity.getDbNodeId());
+		// 此处需要将truncate操作变成异步操作
 		message01Service.truncate(queueEntity.getTbName());
-		// message01Service.setDbId(queueEntity.getDbNodeId());
+		uiAuditLogService.recordAudit(QueueEntity.TABLE_NAME, queueEntity.getId(), "truncate完成");
+		truncateQueueProperty(queueEntity);
+	}
+
+	private void truncateQueueProperty(QueueEntity queueEntity) {
+		queueEntity.setTopicId(0);
+		queueEntity.setTopicName("");
+		queueEntity.setReadOnly(ReadWriteEnum.READ_WRITE.getCode());
+		queueEntity.setMinId(0L);
+		update(queueEntity);
+	}
+
+	// 次数需要将truncate 队列操作的时候,先将数据库标志位改为0
+	@Override
+	public void doDeleteMessage(QueueEntity queueEntity) {
+		uiAuditLogService.recordAudit(QueueEntity.TABLE_NAME, queueEntity.getId(),
+				"待删除之前的queue为：" + JsonUtil.toJson(queueEntity));
 		uiAuditLogService.recordAudit(TopicEntity.TABLE_NAME, queueEntity.getTopicId(),
-				"truncate之后：" + JsonUtil.toJson(queueEntity));
+				"待删除之前的queue为：" + JsonUtil.toJson(queueEntity));
+		// 将队列变为不可用
+		// queueEntity.setIsActive(1);
 		clearQueueProperty(queueEntity);
+		uiAuditLogService.recordAudit(QueueEntity.TABLE_NAME, queueEntity.getId(), "删除完成");
+		uiAuditLogService.recordAudit(TopicEntity.TABLE_NAME, queueEntity.getTopicId(), "删除完成");
+
 	}
 
 	/**
@@ -692,10 +720,9 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 	 * @return
 	 */
 	public UiResponse clearQueueProperty(QueueEntity queueEntity) {
-		queueEntity.setTopicId(0);
-		queueEntity.setTopicName("");
+		queueEntity.setTopicId(Long.MAX_VALUE);
+		queueEntity.setTopicName(TopicService.NEED_DELETED_TOPIC_NANE);
 		queueEntity.setReadOnly(ReadWriteEnum.READ_WRITE.getCode());
-		queueEntity.setMinId(0L);
 		update(queueEntity);
 		return UiResponseHelper.buildSuccessUiResp();
 	}
@@ -760,8 +787,8 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 			if (!qMap.containsKey(t1.getDbNodeId())) {
 				qMap.put(t1.getDbNodeId(), new ArrayList<QueueEntity>(10));
 			}
-			if(qMap.get(t1.getDbNodeId()).size()<10) {
-			    qMap.get(t1.getDbNodeId()).add(t1);
+			if (qMap.get(t1.getDbNodeId()).size() < 10) {
+				qMap.get(t1.getDbNodeId()).add(t1);
 			}
 		});
 		sortDbNodeIdIp.forEach(t1 -> {
@@ -807,4 +834,17 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 			return new ArrayList<Long>(normalNodeIdSet);
 		}
 	}
+
+	@Override
+	public List<QueueEntity> getListBy(Map<String, Object> conditionMap, long page, long pageSize) {
+		conditionMap.put("start1", (page - 1) * pageSize);
+		conditionMap.put("offset1", pageSize);
+		return queueRepository.getListBy(conditionMap);
+	}
+
+	@Override
+	public long countBy(Map<String, Object> conditionMap) {
+		return queueRepository.countBy(conditionMap);
+	}
+
 }

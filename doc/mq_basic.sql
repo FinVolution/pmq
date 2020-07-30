@@ -88,6 +88,8 @@ CREATE TABLE `consumer_group` (
   `meta_update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '元数据更新时间',
   `mode` int(11) NOT NULL DEFAULT '1' COMMENT '1，为集群模式，2，为广播模式,3，为代理模式',
   `origin_name` varchar(50) DEFAULT NULL COMMENT '原始的消费者组名',
+  `sub_env` varchar(45) NOT NULL DEFAULT 'default'  COMMENT '子环境名称',
+  `push_flag` int(11) NOT NULL DEFAULT '0' COMMENT '1，表示实时推送，0，表示非实时推送',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_index` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -192,16 +194,6 @@ CREATE TABLE `dic` (
   UNIQUE KEY `key_index` (`key1`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- ----------------------------
--- Table structure for group_topic
--- ----------------------------
-DROP TABLE IF EXISTS `group_topic`;
-CREATE TABLE `group_topic` (
-  `group_id` int(11) DEFAULT NULL,
-  `group_name` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `topic_id` int(11) DEFAULT NULL,
-  `topic_name` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for message_01
@@ -329,6 +321,7 @@ CREATE TABLE `queue_offset` (
   `meta_update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '元数据更新时间',
   `origin_consumer_group_name` varchar(50) DEFAULT NULL COMMENT '原始的消费者组名',
   `consumer_group_mode` int(11) NOT NULL DEFAULT '1' COMMENT '1，为集群模式，2，为广播模式,3，为代理模式',
+  `sub_env` varchar(45) NOT NULL DEFAULT 'default' COMMENT '子环境名称',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_group_id_topic_id` (`consumer_group_id`,`topic_id`,`queue_id`),
   KEY `consumer_group_id_idx` (`consumer_group_id`),
@@ -346,12 +339,14 @@ CREATE TABLE `server` (
   `heart_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `server_type` tinyint(4) DEFAULT '1' COMMENT '1 表示broker，0 表示portal。当值为0时，这个是用在做批量清理时使用。',
   `status_flag` tinyint(4) DEFAULT '1' COMMENT '1 表示状态为up,0 表示状态为down，此状态在系统灰度平滑发布时使用。默认是1 表示up',
+  `server_version` varchar(100) DEFAULT NULL COMMENT 'broker 版本号',
   `insert_by` varchar(100) DEFAULT NULL COMMENT '操作人',
   `insert_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_by` varchar(100) DEFAULT NULL COMMENT '操作人',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `is_active` tinyint(4) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`id`), 
+  UNIQUE KEY `ip_port_uq` (`ip`,`port`),
   KEY `ip_port_idx` (`ip`,`port`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 

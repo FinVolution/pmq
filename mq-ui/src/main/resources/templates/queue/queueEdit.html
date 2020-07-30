@@ -22,5 +22,9 @@
 </div>
 <div layout:fragment="end-load-files">
     <script th:src="@{/js/queue.js}"></script>
+
+<script th:inline="javascript">
+        var loginUserRole = [[${loginUserRole}]];
+    </script>
 </div>
 </html>

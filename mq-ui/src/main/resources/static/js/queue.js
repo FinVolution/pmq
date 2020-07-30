@@ -18,7 +18,7 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     }
 
     $(function(){
-        getListDate($("#id").val(), $("#topicName").val(),$("#dbNodeId").val(), $("#isReadOnly").val(),$("#nodeTypeId").val(),$("#distributeType").val(), '');
+        getListData($("#id").val(), $("#topicName").val(),$("#dbNodeId").val(), $("#isReadOnly").val(),$("#nodeTypeId").val(),$("#distributeType").val(), 1);
     });
 
     $('body').on('click', '.logSearch', function () {
@@ -43,9 +43,10 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         });
 
     }
-	 
+
     window.doSearch = function() {
-        getListDate($("#id").val(), $("#topicName").val(),$("#dbNodeId").val(), $("#isReadOnly").val(),$("#nodeTypeId").val(),$("#distributeType").val(), '');
+        var recodePage = $(".layui-laypage-skip .layui-input").val();
+        getListData($("#id").val(), $("#topicName").val(),$("#dbNodeId").val(), $("#isReadOnly").val(),$("#nodeTypeId").val(),$("#distributeType").val(), recodePage);
     }
 
 
@@ -57,7 +58,6 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         }else{
             doManualExpand(topicId, id);
 
-            layer.closeAll();
         }
     });
 
@@ -126,26 +126,12 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
         });
     };
 
-    function requestCallback(result, xhr) {
-
-        if (xhr === 'success') {
-            if (result.code ==yesFlag) {
-                successBox(result.msg);
-            } else {
-                failBox(result.msg);
-            }
-            parent.window.refresh1("/queue/list");
-        } else {
-            failBox("网络异常！"+xhr);
-        }
-    }
 
     function refreshAllDate() {
-        getListDate($("#id").val(),$("#topicName").val(),$("#dbNodeId").val(),$("#isReadOnly").val(),$("#nodeTypeId").val(),$("#distributeType").val(),'');
-        //countQueue();
+        getListData($("#id").val(),$("#topicName").val(),$("#dbNodeId").val(),$("#isReadOnly").val(),$("#nodeTypeId").val(),$("#distributeType").val(),1);
     }
 
-    function getListDate(id, topicName, dbNodeId, isReadOnly, nodeType,distributeType) {
+    function getListData(id, topicName, dbNodeId, isReadOnly, nodeType,distributeType,page) {
         table.reload("queueTable", {
             url:'/queue/list/data',
             where: {
@@ -156,21 +142,11 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
                 nodeType : nodeType,
                 distributeType:distributeType
             },page: {
-                curr: 1 //重新从第 1 页开始
+                curr: page //重新从第 1 页开始
             }
         });
     }
 
-    function successBox(msg) {
-        refreshAllDate()
-        layer.msg(msg, {icon: 1})
-        // parent.window.refresh1("queueOffset/list");
-        // parent.window.deleteTab(toDeleteTabId,toOpenTabId);
-    }
-
-    function failBox(msg) {
-        layer.alert(msg, {icon: 2})
-    }
 
     function readOnly(queue) {
         var isReadOnly;
@@ -206,6 +182,29 @@ layui.use(['element', 'table', 'jquery', 'layer', 'form'], function () {
     function removeTopic(topicId,topicName) {
         var url = "/topic/remove/"+topicId+"/"+topicName;
         parent.window.addTab("removeQueue"+topicId, url, '['+topicName+']消息主题缩容');
+    }
+
+    function requestCallback(result, xhr) {
+        if (xhr === 'success') {
+            if (result.code ==yesFlag) {
+                successBox(result.msg);
+            } else {
+                failBox(result.msg);
+            }
+        } else {
+            failBox("网络异常！"+xhr);
+        }
+        layer.closeAll();
+    }
+
+    function successBox(msg) {
+        layer.msg(msg, {icon: 1})
+        parent.window.refresh1("/queue/list");
+    }
+
+
+    function failBox(msg) {
+        layer.alert(msg, {icon: 2})
     }
 
 });

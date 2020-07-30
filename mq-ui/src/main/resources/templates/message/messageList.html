@@ -65,10 +65,14 @@
             </div>
 
             <a class="layui-btn" id="messageSearchList_btn" lay-filter="messageSearchFilter"><i class="layui-icon">&#xe615;</i>查询</a>
+            <a class="layui-btn" id="msgCount_btn" lay-filter="msgCount_btn">消息总量</a>
 
         </div>
 
         <input type="hidden" id="maxNumber" th:value="${maxNumber}"/>
+        <input type="hidden" id="queueOffsetQueueId" th:value="${queueOffsetQueueId}"/>
+        <input type="hidden" id="queueOffsetTopicName" th:value="${queueOffsetTopicName}"/>
+        <input type="hidden" id="userRole" th:value="${userRole}"/>
     </form>
 
     <table id="messageTable" class="layui-table"
@@ -115,9 +119,11 @@
     </script>
 
     <script type="text/html" id="toolbarDemo">
-        <div class="layui-btn-container layui-inline">
+        <div class="layui-inline">
             <button class="layui-btn layui-btn-danger hide" lay-event="sendAllFailMessage" id="sendAllFailMessage">批量重新发送</button>
             <span id="topicBuffer"></span>
+
+            <span id="topicMsgCount"></span>
         </div>
 
     </script>

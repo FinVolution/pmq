@@ -30,6 +30,13 @@
             <div class="layui-input-inline">
                 <input type="text" value="" id="sdkVersion" name="sdkVersion" placeholder="请输入版本号" class="layui-input search_input"/>
             </div>
+            <div class="layui-input-inline" style="width: 150px">
+                <select id="heartBeat" name="HeartBeat" lay-verify="">
+                    <option value="0">请选择心跳类型</option>
+                    <option value="1">心跳正常</option>
+                    <option value ="2">心跳超时</option>
+                </select>
+            </div>
             <a class="layui-btn" id="consumerList_btn" lay-filter="consumerSearchFilter"><i class="layui-icon">&#xe615;</i>查询</a>
         </div>
     </form>
@@ -38,15 +45,14 @@
         <thead>
         <tr>
             <th lay-data="{field: 'id', align: 'center', sort: true,width:80,templet:'#idTpl'}">ID</th>
-            <th lay-data="{field: 'ip', align: 'center', sort: true}">ip</th>
+            <th lay-data="{field: 'ip', align: 'center', sort: true,width:150}">ip</th>
             <th lay-data="{field: 'name', align: 'center', sort: true}">消费者</th>
             <th lay-data="{field: 'consumerGroupNames', align: 'center', sort: true}">消费组</th>
-            <th lay-data="{field: 'ownerNames', align: 'center', sort: true}">负责人</th>
-            <th lay-data="{field: 'sdkVersion', align: 'center', sort: true}">版本号</th>
-            <th lay-data="{field: 'lan', align: 'center', sort: true}">语言</th>
-            <th lay-data="{field: 'heartTime',  align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">心跳时间</th>
+            <th lay-data="{field: 'ownerNames', align: 'center', sort: true,width:150}">负责人</th>
+            <th lay-data="{field: 'sdkVersion', align: 'center', sort: true,width:100}">版本号</th>
+            <th lay-data="{field: 'lan', align: 'center', sort: true,width:70}">语言</th>
+            <th lay-data="{field: 'heartTime',  align: 'center',width:'14%', templet:'#normalFlagTpl', sort: true}">心跳时间</th>
             <th lay-data="{field: 'insertTime', align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">入库时间</th>
-            <th lay-data="{field: 'updateTime', align: 'center',width:'10%', templet:'#normalFlagTpl', sort: true}">更新时间</th>
             <th lay-data="{fixed: 'right', align:'center', width:70, toolbar: '#deleteBar'}">操作</th>
         </tr>
         </thead>

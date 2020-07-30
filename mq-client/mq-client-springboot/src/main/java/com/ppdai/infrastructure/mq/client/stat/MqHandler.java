@@ -12,14 +12,15 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import com.ppdai.infrastructure.mq.client.MqSpringUtil;
 
 @Component
 public class MqHandler implements Handler {
 
-	@Autowired
+	
 	private MqClientStatController mqClientStatController;
 
 	private Map<String, Method> maps = new HashMap<>();
@@ -90,6 +91,10 @@ public class MqHandler implements Handler {
 		if (maps.size() == 0) {
 			synchronized (this) {
 				if (maps.size() == 0) {
+					mqClientStatController=MqSpringUtil.getBean(MqClientStatController.class);
+					if(mqClientStatController==null) {
+						mqClientStatController=new MqClientStatController();
+					}
 					initMap();
 				}
 			}

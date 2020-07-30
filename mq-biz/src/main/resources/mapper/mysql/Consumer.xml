@@ -102,6 +102,13 @@
             <if test="insertTimeEnd != null and insertTimeEnd !=''" >
                 and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
             </if>
+            <if test="heartBeat != null and heartBeat !='' and heartBeat==1 and consumerCheckInterval!=null and consumerCheckInterval!=''" >
+                and heart_time <![CDATA[ > ]]> TIMESTAMPADD(second, -#{consumerCheckInterval}*1000, current_timestamp )
+            </if>
+
+            <if test="heartBeat != null and heartBeat !='' and heartBeat==2 and consumerCheckInterval!=null and consumerCheckInterval!=''" >
+                and heart_time <![CDATA[ <= ]]> TIMESTAMPADD(second, -#{consumerCheckInterval}*1000, current_timestamp )
+            </if>
         </where>
     </select>
 
@@ -158,6 +165,13 @@
             </if>
             <if test="insertTimeEnd != null and insertTimeEnd !=''" >
                 and insert_time <![CDATA[ <= ]]> #{insertTimeEnd}
+            </if>
+            <if test="heartBeat != null and heartBeat !='' and heartBeat==1 and consumerCheckInterval!=null and consumerCheckInterval!=''" >
+                and heart_time <![CDATA[ > ]]> TIMESTAMPADD(second, -#{consumerCheckInterval}*1000, current_timestamp )
+            </if>
+
+            <if test="heartBeat != null and heartBeat !='' and heartBeat==2 and consumerCheckInterval!=null and consumerCheckInterval!=''" >
+                and heart_time <![CDATA[ <= ]]> TIMESTAMPADD(second, -#{consumerCheckInterval}*1000, current_timestamp )
             </if>
         </where>
         order by id desc

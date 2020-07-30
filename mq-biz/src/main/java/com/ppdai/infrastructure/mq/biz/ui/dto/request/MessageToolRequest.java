@@ -12,6 +12,8 @@ public class MessageToolRequest extends BaseUiRequst {
 	private String topicName;
 	private int sendType;
 
+	private String mqSubEnv;
+
 	private MessageDto message;
 
 	public String getTopicName() {
@@ -38,4 +40,11 @@ public class MessageToolRequest extends BaseUiRequst {
 		this.message = message;
 	}
 
+	public String getMqSubEnv() {
+		return mqSubEnv;
+	}
+
+	public void setMqSubEnv(String mqSubEnv) {
+		this.mqSubEnv = mqSubEnv;
+	}
 }

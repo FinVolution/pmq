@@ -2,6 +2,7 @@ package com.ppdai.infrastructure.mq.biz.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity;
@@ -35,12 +36,15 @@ public interface QueueOffsetService extends BaseService<QueueOffsetEntity> {
 	 */
 	void setConsumserIdsToNull(List<Long> consumerIds);
 	List<QueueOffsetEntity> getCacheData();
+	Map<String, List<QueueOffsetEntity>> getConsumerGroupQueueOffsetMap();
+	Map<String, Set<String>> getSubEnvs();
 	void deleteByConsumerGroupId(long consumerGroupId);
 	void deleteByConsumerGroupIdAndOriginTopicName(ConsumerGroupTopicEntity consumerGroupTopicEntity);
 	List<QueueOffsetEntity> getByConsumerGroupTopic(long consumerGroupId,long topicId);
 	void updateStopFlag(long id, int stopFlag,String updateBy);
 	int updateQueueOffset(Map<String, Object> parameterMap);
 	Map<String, QueueOffsetEntity> getUqCache();
+	Map<Long, List<QueueOffsetEntity>> getQueueIdQueueOffsetMap();
 	Map<Long, OffsetVersionEntity> getOffsetVersion();
 	List<QueueOffsetEntity> getUnSubscribeData();	
 	List<QueueOffsetEntity> getAllBasic();	

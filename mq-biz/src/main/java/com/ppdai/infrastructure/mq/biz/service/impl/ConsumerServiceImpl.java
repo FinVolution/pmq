@@ -1,5 +1,6 @@
 package com.ppdai.infrastructure.mq.biz.service.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -27,18 +28,23 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.ppdai.infrastructure.mq.biz.MqConst;
+import com.ppdai.infrastructure.mq.biz.MqEnv;
 import com.ppdai.infrastructure.mq.biz.common.SoaConfig;
 import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
 import com.ppdai.infrastructure.mq.biz.common.util.ConsumerGroupUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.ConsumerUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.EmailUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.HttpClient;
+import com.ppdai.infrastructure.mq.biz.common.util.IHttpClient;
 import com.ppdai.infrastructure.mq.biz.common.util.IPUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dal.meta.ConsumerRepository;
 import com.ppdai.infrastructure.mq.biz.dto.LogDto;
 import com.ppdai.infrastructure.mq.biz.dto.MqConstanst;
+import com.ppdai.infrastructure.mq.biz.dto.NotifyFailVo;
 import com.ppdai.infrastructure.mq.biz.dto.base.MessageDto;
 import com.ppdai.infrastructure.mq.biz.dto.base.ProducerDataDto;
 import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerDeRegisterRequest;
@@ -51,12 +57,13 @@ import com.ppdai.infrastructure.mq.biz.dto.client.FailMsgPublishAndUpdateResultR
 import com.ppdai.infrastructure.mq.biz.dto.client.FailMsgPublishAndUpdateResultResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetMessageCountRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.GetMessageCountResponse;
+import com.ppdai.infrastructure.mq.biz.dto.client.MsgNotifyDto;
+import com.ppdai.infrastructure.mq.biz.dto.client.MsgNotifyRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.PullDataRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.PullDataResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
-import com.ppdai.infrastructure.mq.biz.dto.request.ConsumerGroupTopicCreateRequest;
 import com.ppdai.infrastructure.mq.biz.entity.AuditLogEntity;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerEntity;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupConsumerEntity;
@@ -82,6 +89,11 @@ import com.ppdai.infrastructure.mq.biz.service.QueueService;
 import com.ppdai.infrastructure.mq.biz.service.TopicService;
 import com.ppdai.infrastructure.mq.biz.service.UserInfoHolder;
 import com.ppdai.infrastructure.mq.biz.service.common.AbstractBaseService;
+import com.ppdai.infrastructure.mq.client.MqClient;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 /**
  * @author dal-generator
@@ -94,10 +106,8 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
 	@Autowired
 	private ConsumerGroupConsumerService consumerGroupConsumerService;
-
 	@Autowired
 	private ConsumerGroupTopicService consumerGroupTopicService;
-
 	@Autowired
 	private ConsumerGroupService consumerGroupService;
 
@@ -135,9 +145,20 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	// 记录topic和dbnode 失败的时间
 	protected Map<String, Long> dbFailMap = new ConcurrentHashMap<>();
 
+	// 记录消息推送通知的时间
+	private AtomicReference<Map<Long, Long>> speedLimitMapRef = new AtomicReference<Map<Long, Long>>(
+			new ConcurrentHashMap<>(1000));
+
+	// 记录消息推送失败的信息
+	private AtomicReference<Map<String, NotifyFailVo>> notifyFailMapRef = new AtomicReference<Map<String, NotifyFailVo>>(
+			new ConcurrentHashMap<>(1000));
+
 	private ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
 			new LinkedBlockingQueue<Runnable>(50), SoaThreadFactory.create("ConsumerServiceImpl", true),
 			new ThreadPoolExecutor.DiscardOldestPolicy());
+
+	private final int timeout = 5000;
+	private IHttpClient httpClient = new HttpClient(timeout, timeout);
 
 	@PostConstruct
 	protected void init() {
@@ -146,6 +167,8 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			@Override
 			public void run() {
 				counter.set(new ConcurrentHashMap<>(1000));
+				speedLimitMapRef.set(new ConcurrentHashMap<>(1000));
+				notifyFailMapRef.set(new ConcurrentHashMap<>(1000));
 				Util.sleep(30 * 1000);
 			}
 		});
@@ -207,7 +230,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		}
 		List<AuditLogEntity> auditLogs = new ArrayList<AuditLogEntity>();
 		for (String name : request.getConsumerGroupNames().keySet()) {
-			//防止出现数据查询时，会忽略大小写，所以但是使用的时候 是需要区分大小写的，所以需要二次判断
+			// 防止出现数据查询时，会忽略大小写，所以但是使用的时候 是需要区分大小写的，所以需要二次判断
 			if (!consumerGroupMap.containsKey(name)) {
 				response.setSuc(false);
 				response.setMsg("consumergroup_" + name + "不存在");
@@ -281,7 +304,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	@Override
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	public ConsumerDeRegisterResponse deRegister(ConsumerDeRegisterRequest deRegisterRequest) {
 		ConsumerDeRegisterResponse response = new ConsumerDeRegisterResponse();
 		response.setSuc(true);
@@ -290,7 +313,10 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			response.setMsg("ConsumerDeRegisterRequest id 不能为空！");
 			return response;
 		}
-		doDeleteConsumer(Arrays.asList(deRegisterRequest.getId()), 1);
+		ConsumerEntity consumerEntity = get(deRegisterRequest.getId());
+		if (consumerEntity != null) {
+			doDeleteConsumer(Arrays.asList(consumerEntity), 1);
+		}
 		return response;
 	}
 
@@ -318,19 +344,10 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		return consumerGroupConsumerService.getByConsumerGroupIds(consumerGroupIds);
 	}
 
-	// private void deleteConsumerGroupConsumerByConsumerId(long consumerId) {
-	// consumerGroupConsumerService.deleteByConsumerId(consumerId);
-	// }
-
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public ConsumerGroupRegisterResponse registerConsumerGroup(ConsumerGroupRegisterRequest request) {
 		ConsumerGroupRegisterResponse response = new ConsumerGroupRegisterResponse();
-		response.setSuc(true);
-		if(request==null) {
-			response.setSuc(false);
-			response.setMsg("参数不能为空！");
-			return response;
-		}
 		ConsumerEntity consumerEntity = get(request.getConsumerId());
 		if (consumerEntity == null) {
 			response.setSuc(false);
@@ -339,10 +356,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		}
 		response.setBroadcastConsumerGroupName(new HashMap<>());
 		// 检查广播模式
-		checkBroadcast(request, response);
-		if(!response.isSuc()) {
-			return response;
-		}
+		checkBroadcastAndSubEnv(request, response);
 		doRegisterConsumerGroup(request, response, consumerEntity);
 		if (!response.isSuc()) {
 			addRegisterConsumerGroupLog(request, response);
@@ -350,8 +364,9 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		return response;
 	}
 
-	@Transactional(rollbackFor = Exception.class)
-	protected void checkBroadcast(ConsumerGroupRegisterRequest request, ConsumerGroupRegisterResponse response) {
+
+	protected void checkBroadcastAndSubEnv(ConsumerGroupRegisterRequest request,
+			ConsumerGroupRegisterResponse response) {
 		Map<String, ConsumerGroupEntity> map = consumerGroupService.getCache();
 		if (request == null) {
 			response.setSuc(false);
@@ -372,47 +387,57 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 				return;
 			}
 		}
-		createBroadcast(request, consumerGroupNames, map, response);
+		Map<Long, Map<String, ConsumerGroupTopicEntity>> gtopicMap = consumerGroupTopicService.getCache();
+		request.getConsumerGroupNames().entrySet().forEach(t1 -> {
+			if (map.containsKey(t1.getKey())) {
+				long cid = map.get(t1.getKey()).getId();
+				StringBuilder rs = new StringBuilder();
+				if (gtopicMap.containsKey(cid)) {
+					t1.getValue().forEach(t2 -> {
+						if (!gtopicMap.get(cid).containsKey(t2)) {
+							rs.append(
+									"客户端topic:[" + t2 + "]不在后台消费者组[" + t1.getKey() + "]订阅关系中，请注意！" + System.lineSeparator());
+						}
+					});
+					gtopicMap.get(cid).entrySet().forEach(t2 -> {
+						if (t2.getValue().getTopicType() == 1 && !t1.getValue().contains(t2.getKey())) {
+							rs.append("后台消费者组[" + t1.getKey() + "]中的topic:[" + t2.getKey() + "]不客户端订阅关系中，请注意！"
+									+ System.lineSeparator());
+						}
+					});
+				}
+				String content = rs.toString();
+				if (!Util.isEmpty(content)) {
+					SendMailRequest sendMailRequest = new SendMailRequest();
+					sendMailRequest.setConsumerGroupName(t1.getKey());
+					sendMailRequest.setSubject("客户端订阅关系与后台管理不一致！");
+					sendMailRequest.setContent("客户端ip为" + request.getClientIp() + System.lineSeparator() + content);
+					sendMailRequest.setType(2);
+					emailService.sendConsumerMail(sendMailRequest);
+				}
+			}
+		});
+		checkBroadcastAndSubEnv(request, consumerGroupNames, map, response);
 
 	}
 
-	protected void createBroadcast(ConsumerGroupRegisterRequest request, List<String> consumerGroupNames,
+	private void checkBroadcastAndSubEnv(ConsumerGroupRegisterRequest request, List<String> consumerGroupNames,
 			Map<String, ConsumerGroupEntity> map, ConsumerGroupRegisterResponse response) {
-		Map<Long, Map<String, ConsumerGroupTopicEntity>> ctMap = consumerGroupTopicService.getCache();
 		for (String name : consumerGroupNames) {
 			ConsumerGroupEntity consumerGroupEntity = map.get(name);
 			if (consumerGroupEntity.getMode() == 2) {
+				String newConsumerGroupName = ConsumerGroupUtil.getBroadcastConsumerName(consumerGroupEntity.getName(),
+						request.getClientIp(), request.getConsumerId());
 				// 创建消费者组
 				ConsumerGroupEntity consumerGroupEntityNew = JsonUtil.copy(consumerGroupEntity,
 						ConsumerGroupEntity.class);
-				consumerGroupEntityNew.setName(ConsumerGroupUtil.getBroadcastConsumerName(consumerGroupEntity.getName(),
-						request.getClientIp(), request.getConsumerId()));
-				consumerGroupEntityNew.setId(0);
-				consumerGroupService.insert(consumerGroupEntityNew);
-				consumerGroupService.updateCache();
-				Map<String, ConsumerGroupTopicEntity> consumerTopics = ctMap.get(consumerGroupEntity.getId());
-				if (consumerTopics != null) {
-					for (Map.Entry<String, ConsumerGroupTopicEntity> entry : consumerTopics.entrySet()) {
-						if (entry.getValue().getTopicType() == 1) {
-							ConsumerGroupTopicCreateRequest request2 = new ConsumerGroupTopicCreateRequest();
-							request2.setAlarmEmails(entry.getValue().getAlarmEmails());
-							request2.setConsumerBatchSize(entry.getValue().getConsumerBatchSize());
-							request2.setConsumerGroupId(consumerGroupEntityNew.getId());
-							request2.setConsumerGroupName(consumerGroupEntityNew.getName());
-							request2.setDelayProcessTime(entry.getValue().getDelayProcessTime());
-							request2.setDelayPullTime(entry.getValue().getMaxPullTime());
-							request2.setMaxLag(entry.getValue().getMaxLag());
-							request2.setOriginTopicName(entry.getValue().getOriginTopicName());
-							request2.setPullBatchSize(entry.getValue().getPullBatchSize());
-							request2.setRetryCount(entry.getValue().getRetryCount());
-							request2.setTag(entry.getValue().getTag());
-							request2.setThreadSize(entry.getValue().getThreadSize());
-							request2.setTopicId(entry.getValue().getTopicId());
-							request2.setTopicName(entry.getValue().getTopicName());
-							request2.setTopicType(entry.getValue().getTopicType());
-							request2.setTimeOut(entry.getValue().getTimeOut());
-							consumerGroupTopicService.subscribe(request2);
-						}
+				consumerGroupEntityNew.setSubEnv(request.getSubEnv());
+				consumerGroupEntityNew.setName(newConsumerGroupName);
+				if (!map.containsKey(newConsumerGroupName)) {
+					try {
+						consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
+					} catch (Exception e) {
+						consumerGroupService.updateCache();
 					}
 				}
 				request.getConsumerGroupNames().put(consumerGroupEntityNew.getName(),
@@ -420,6 +445,30 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 				// 注意此时容易出现 ConcurrentModificationException 异常
 				request.getConsumerGroupNames().remove(name);
 				response.getBroadcastConsumerGroupName().put(name, consumerGroupEntityNew.getName());
+				response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
+			} else if (MqClient.getMqEnvironment() != null && !Util.isEmpty(request.getSubEnv())
+					&& !MqConst.DEFAULT_SUBENV.equalsIgnoreCase(request.getSubEnv() + "")
+					&& MqEnv.FAT == MqClient.getMqEnvironment().getEnv()) {
+				String newConsumerGroupName = consumerGroupEntity.getName() + "_" + request.getSubEnv().toLowerCase();
+				// 创建消费者组
+				ConsumerGroupEntity consumerGroupEntityNew = map.get(newConsumerGroupName);
+				if (consumerGroupEntityNew == null) {
+					consumerGroupEntityNew = JsonUtil.copy(consumerGroupEntity, ConsumerGroupEntity.class);
+					consumerGroupEntityNew.setSubEnv(request.getSubEnv());
+					consumerGroupEntityNew.setName(newConsumerGroupName);
+					// consumerGroupEntityNew.setOriginName(newConsumerGroupName);
+					try {
+						consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
+					} catch (Exception e) {
+						consumerGroupService.updateCache();
+					}
+				}
+
+				request.getConsumerGroupNames().put(newConsumerGroupName, request.getConsumerGroupNames().get(name));
+				// 注意此时容易出现 ConcurrentModificationException 异常
+				request.getConsumerGroupNames().remove(name);
+				response.getBroadcastConsumerGroupName().put(name, newConsumerGroupName);
+				response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
 			}
 		}
 	}
@@ -461,6 +510,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		List<ConsumerGroupConsumerEntity> consumerGroupConsumerEntities = new ArrayList<>();
 		// consumergroupid 列表
 		List<Long> ids = new ArrayList<>();
+		List<String> consumerGroupNames = new ArrayList<String>(request.getConsumerGroupNames().keySet());
 		List<AuditLogEntity> auditLogs = new ArrayList<>();
 		request.getConsumerGroupNames().keySet().forEach(t1 -> {
 			if (("," + consumerEntity.getConsumerGroupNames() + ",").indexOf("," + t1 + ",") == -1) {
@@ -476,43 +526,50 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			consumerGroupConsumerEntity.setConsumerName(request.getConsumerName());
 			consumerGroupConsumerEntity.setIp(request.getClientIp());
 			consumerGroupConsumerEntities.add(consumerGroupConsumerEntity);
-
-			AuditLogEntity auditLog = new AuditLogEntity();
-			auditLog.setTbName(ConsumerGroupEntity.TABLE_NAME);
-			auditLog.setRefId(consumerGroupConsumerEntity.getConsumerGroupId());
-			auditLog.setInsertBy(request.getClientIp());
-			if (checkInBlackIp(consumerEntity, t1)) {
-				auditLog.setContent(request.getConsumerName() + "订阅了" + t1 + ",但是客户端ip在黑名单("
-						+ consumerGroupMap.get(t1).getIpBlackList() + ")中所以不触发重平衡！");
-				// ids.add(consumerGroupConsumerEntity.getConsumerGroupId());
-			} else {
-				auditLog.setContent(request.getConsumerName() + "订阅了" + t1 + ",所以需要重平衡！");
-				ids.add(consumerGroupConsumerEntity.getConsumerGroupId());
-			}
-			auditLogs.add(auditLog);
+			ids.add(consumerGroupConsumerEntity.getConsumerGroupId());
 			addRegisterConsumerGroupLog(consumerGroupConsumerEntity, t1, request.getConsumerGroupNames().get(t1));
 		});
+
+		doRegisterConsumerGroup(consumerEntity, consumerGroupConsumerEntities, ids, consumerGroupNames, auditLogs);
 		auditLogService.insertBatch(auditLogs);
-		doRegisterConsumerGroup(consumerEntity, consumerGroupConsumerEntities, ids);
 
 	}
 
-	@Transactional(rollbackFor = Exception.class)
+
 	private void doRegisterConsumerGroup(ConsumerEntity consumerEntity,
-			List<ConsumerGroupConsumerEntity> consumerGroupConsumerEntities, List<Long> ids) {
+			List<ConsumerGroupConsumerEntity> consumerGroupConsumerEntities, List<Long> ids,
+			List<String> consumerGroupNames, List<AuditLogEntity> auditLogs) {
 		update(consumerEntity);
 		registConsumerGroupConsumer(consumerGroupConsumerEntities);
-		consumerGroupService.notifyRb(ids);
-	}
 
-	protected boolean checkInBlackIp(ConsumerEntity consumerEntity, String consumerGroupName) {
-		ConsumerGroupEntity consumerGroupEntity = consumerGroupService.getCache().get(consumerGroupName);
-		if (consumerGroupEntity != null && !Util.isEmpty(consumerEntity.getIp())) {
-			if ((consumerGroupEntity.getIpBlackList() + "").indexOf(consumerEntity.getIp()) != -1) {
-				return true;
+		Map<String, ConsumerGroupEntity> consumerGroupMap = consumerGroupService.getCache();
+		for (String consumerGroupName : consumerGroupNames) {
+			ConsumerGroupEntity consumerGroupEntity = consumerGroupMap.get(consumerGroupName);
+			if (consumerGroupEntity != null) {
+				if (!Util.isEmpty(consumerGroupEntity.getIpBlackList())
+						&& consumerGroupEntity.getIpBlackList().contains(consumerEntity.getIp())) {
+					ids.remove(consumerGroupEntity.getId());
+					AuditLogEntity auditLogEntity = new AuditLogEntity();
+					auditLogEntity.setTbName(ConsumerGroupEntity.TABLE_NAME);
+					auditLogEntity.setRefId(consumerGroupEntity.getId());
+					auditLogEntity.setInsertBy("broker-" + IPUtil.getLocalIP());
+					auditLogEntity.setContent(
+							"因为ip:" + consumerEntity.getIp() + "在黑名单中，所以此ip下消费者组注册，不触发重平衡！" + JsonUtil.toJsonNull(ids));
+					auditLogs.add(auditLogEntity);
+				} else if (!Util.isEmpty(consumerGroupEntity.getIpWhiteList())
+						&& !consumerGroupEntity.getIpWhiteList().contains(consumerEntity.getIp())) {
+					ids.remove(consumerGroupEntity.getId());
+					AuditLogEntity auditLogEntity = new AuditLogEntity();
+					auditLogEntity.setTbName(ConsumerGroupEntity.TABLE_NAME);
+					auditLogEntity.setRefId(consumerGroupEntity.getId());
+					auditLogEntity.setInsertBy("broker-" + IPUtil.getLocalIP());
+					auditLogEntity.setContent("因为ip:" + consumerEntity.getIp() + "不在白名单中，所以此ip下消费者组注册，不触发重平衡！"
+							+ JsonUtil.toJsonNull(ids));
+					auditLogs.add(auditLogEntity);
+				}
 			}
 		}
-		return false;
+		consumerGroupService.notifyRb(ids);
 	}
 
 	private void addRegisterConsumerGroupLog(ConsumerGroupConsumerEntity t1, String consumerGroupName,
@@ -575,8 +632,6 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 				}
 				if (queueEntities.size() > 0) {
 					saveMsg(request, response, queueEntities);
-					// 删除老的失败的消息
-					// deleteOldFailMsg(request, response);
 				}
 			} else {
 				response.setSuc(false);
@@ -584,7 +639,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 				return response;
 			}
 		} catch (Exception e) {
-			log.error("publish_error", e);
+			log.error("publish_error,and request json is " + JsonUtil.toJsonNull(request), e);
 			response.setSuc(false);
 			response.setMsg(e.getMessage());
 		} finally {
@@ -623,7 +678,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		// 关闭限速
 		if (soaConfig.getEnableTopicRate() == 0) {
 			return true;
-		}		
+		}
 		if (!topicPerMax.containsKey(request.getTopicName())) {
 			synchronized (this) {
 				if (!topicPerMax.containsKey(request.getTopicName())) {
@@ -661,14 +716,15 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
 	private void saveMsg(PublishMessageRequest request, PublishMessageResponse response,
 			List<QueueEntity> queueEntities) {
-		if (request.getSynFlag() == 1) {
-			saveSynMsg(request, response, queueEntities);
-		} else {
-			saveAsynMsg(request, response, queueEntities);
-		}
+//		if (request.getSynFlag() == 1) {
+//			saveSynMsg(request, response, queueEntities);
+//		} else {
+//			saveAsynMsg(request, response, queueEntities);
+//		}
+		saveSynMsg1(request, response, queueEntities);
 	}
 
-	protected void saveAsynMsg(PublishMessageRequest request, PublishMessageResponse response,
+	protected void saveSynMsg1(PublishMessageRequest request, PublishMessageResponse response,
 			List<QueueEntity> queueEntities) {
 		Map<Long, QueueEntity> queueMap = new HashMap<>();
 		queueEntities.forEach(t1 -> {
@@ -711,7 +767,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			entity.setSendIp(request.getClientIp());
 			if (t1.getPartitionInfo() != null) {
 				if (!queueMsg.containsKey(t1.getPartitionInfo().getQueueId())) {
-					queueMsg.put(t1.getPartitionInfo().getQueueId(), new ArrayList<>());
+					queueMsg.put(t1.getPartitionInfo().getQueueId(), new ArrayList<>(10));
 				}
 				queueMsg.get(t1.getPartitionInfo().getQueueId()).add(entity);
 				partitionMap.put(t1.getTraceId(), t1.getPartitionInfo());
@@ -738,7 +794,12 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		int tryCount = 0;
 		int queueSize = queueEntities.size();
 		Exception last = null;
-		Transaction transaction = Tracer.newTransaction("Publish", request.getTopicName());
+		Transaction transaction = null;
+		if (request.getSynFlag() == 1) {
+			transaction = Tracer.newTransaction("Publish", request.getTopicName());
+		}else {
+			transaction = Tracer.newTransaction("Publish-Asyn", request.getTopicName());
+		}
 		String key = request.getTopicName();
 		Map<String, AtomicInteger> counterTemp = counter.get();
 		if (!counterTemp.containsKey(key)) {
@@ -798,8 +859,10 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	protected void sendPublishFailMail(PublishMessageRequest request, Exception last, int type) {
 		if (soaConfig.enableSendFailTopicMail(request.getTopicName())) {
 			SendMailRequest request2 = new SendMailRequest();
-			request2.setSubject("topic:" + request.getTopicName() + "最终发送失败");
-			request2.setContent(last.getMessage());
+			request2.setServer(true);
+			request2.setSubject("服务端,发送失败,topic:" + request.getTopicName());
+			request2.setContent(last.getMessage() + " and request json is " + JsonUtil.toJsonNull(request)
+					+ ",注意此邮件只是发给管理员注意情况,不代表消息发送最终失败,消息发送最终失败以客户端发送的邮件为准!");
 			request2.setType(type);
 			request2.setTopicName(request.getTopicName());
 			request2.setKey("topic:" + request.getTopicName() + "-发送失败！");
@@ -856,22 +919,29 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	// private AtomicInteger counter111=new AtomicInteger(0);
+
 	protected void doSaveMsg(List<Message01Entity> message01Entities, PublishMessageRequest request,
 			PublishMessageResponse response, QueueEntity temp) {
 		// Transaction transaction = Tracer.newTransaction("PubInner-" +
 		// temp.getIp(), request.getTopicName());
 		message01Service.setDbId(temp.getDbNodeId());
-		// Transaction transaction = Tracer.newTransaction("Publish-Data",
-		// temp.getIp());
+		Transaction transaction = Tracer.newTransaction("Publish-Data", temp.getIp());
 		try {
+			transaction.addData("topic", request.getTopicName());
 			message01Service.insertBatchDy(request.getTopicName(), temp.getTbName(), message01Entities);
+			// 如果订阅该queue的组，开启了实时消息，则给对应的客户端发送异步通知
+			if (soaConfig.getMqPushFlag() == 1) {// apollo开关
+				notifyClient(temp);
+			}
 			dbFailMap.put(getFailDbUp(temp), System.currentTimeMillis() - soaConfig.getDbFailWaitTime() * 2000L);
 			response.setSuc(true);
-			// transaction.setStatus(Transaction.SUCCESS);
+			transaction.setStatus(Transaction.SUCCESS);
+			return;
 		} catch (Exception e) {
 			// sendPublishFailMail(request, e, 1);
-			// transaction.setStatus(e);
-			if (e.getCause() instanceof DataIntegrityViolationException) {
+			transaction.setStatus(e);
+			if (e instanceof DataIntegrityViolationException
+					|| e.getCause() instanceof DataIntegrityViolationException) {
 				response.setSuc(false);
 				response.setMsg(e.getMessage());
 				return;
@@ -879,10 +949,175 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			dbFailMap.put(getFailDbUp(temp), System.currentTimeMillis());
 			// transaction.setStatus(e);
 			throw new RuntimeException(e);
+		} finally {
+			transaction.complete();
 		}
-//		finally {
-//			transaction.complete();
+	}
+
+	public void notifyClient(QueueEntity queueEntity) {
+
+		Transaction transaction = Tracer.newTransaction("mq-publish", "notifyClient");
+		try {
+			Map<Long, List<QueueOffsetEntity>> queueIdQueueOffsetMap = queueOffsetService.getQueueIdQueueOffsetMap();
+			Map<String, ConsumerGroupEntity> consumerGroupMap = consumerGroupService.getCache();
+			List<QueueOffsetEntity> queueOffsetList = queueIdQueueOffsetMap.get(queueEntity.getId());
+			transaction.setStatus(Transaction.SUCCESS);
+			if (queueOffsetList == null) {
+				return;
+			}
+			Map<String, List<MsgNotifyDto>> notifyMap = new HashMap<>();
+			for (QueueOffsetEntity queueOffset : queueOffsetList) {
+				// 如果消费者组开启了实时消息，则给对应的客户端发送异步通知。
+				if (consumerGroupMap.get(queueOffset.getConsumerGroupName()).getPushFlag() == 1
+						&& speedLimit(queueEntity.getId())) {
+
+					ConsumerUtil.ConsumerVo consumerVo = ConsumerUtil.parseConsumerId(queueOffset.getConsumerName());
+					if (StringUtils.isEmpty(consumerVo.port)) {
+						continue;
+					}
+					String clienturl = "http://" + consumerVo.ip + ":" + consumerVo.port;
+
+					if (!notifyMap.containsKey(clienturl)) {
+						notifyMap.put(clienturl, new ArrayList<>());
+					}
+					MsgNotifyDto msgNotifyDto = new MsgNotifyDto();
+					msgNotifyDto.setConsumerGroupName(queueOffset.getConsumerGroupName());
+					msgNotifyDto.setQueueId(queueEntity.getId());
+					notifyMap.get(clienturl).add(msgNotifyDto);
+				}
+			}
+			speedLimitMapRef.get().put(queueEntity.getId(), System.currentTimeMillis());
+			for (String url : notifyMap.keySet()) {
+				// 给对应的客户端发送拉取通知
+				try {
+					MsgNotifyRequest request = new MsgNotifyRequest();
+					request.setMsgNotifyDtos(notifyMap.get(url));
+					if (notifyFailTentativeLimit(url)) {
+						httpClient.postAsyn(url + "/mq/client/notify", request, new NotifyCallBack(url));
+					}
+
+				} catch (Exception e) {
+					log.error("给客户端发送拉取通知异常：", e);
+				}
+			}
+			transaction.setStatus(Transaction.SUCCESS);
+
+		} catch (Exception e) {
+			transaction.setStatus(e);
+		} finally {
+			transaction.complete();
+		}
+	}
+
+	private boolean speedLimit(Long queueId) {
+		Long lastTime = speedLimitMapRef.get().get(queueId);
+		if (lastTime == null) {
+			return true;
+		}
+//		System.out.println("差值："+(System.currentTimeMillis() - lastTime)+"----"+(System.currentTimeMillis() - lastTime > soaConfig.getMqClientNotifyTime()));
+
+		if (System.currentTimeMillis() - lastTime > soaConfig.getMqClientNotifyTime()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private void setFailStatus(String url) {
+		NotifyFailVo notifyFailVo = notifyFailMapRef.get().get(url);
+		if (notifyFailVo == null) {
+			NotifyFailVo notifyFailVo1 = new NotifyFailVo();
+			notifyFailVo1.getIsRetrying().set(false);
+			notifyFailVo1.setStatus(false);
+			notifyFailMapRef.get().put(url, notifyFailVo1);
+		} else {
+			notifyFailVo.setStatus(false);
+			notifyFailVo.getIsRetrying().set(false);
+		}
+
+	}
+
+	private void setSucStatus(String url) {
+
+//		if(System.currentTimeMillis()%100!=4){//模拟测试使用
+//			setFailStatus(url);
+//			return;
 //		}
+
+		NotifyFailVo notifyFailVo = notifyFailMapRef.get().get(url);
+		// 如果该url之前推送失败过
+		if (notifyFailVo != null) {
+			// 并且处于调不通的状态
+			if (!notifyFailVo.isStatus()) {
+				// 成功之后则把状态改为可以调通
+				notifyFailVo.setStatus(true);
+				notifyFailVo.getIsRetrying().set(false);
+			}
+		}
+
+	}
+
+	/**
+	 * 如果通知失败，每隔5秒释放一个线程请求，去探测。
+	 * 
+	 * @param url
+	 * @return
+	 */
+	private boolean notifyFailTentativeLimit(String url) {
+		NotifyFailVo notifyFailVo = notifyFailMapRef.get().get(url);
+		if (notifyFailVo == null) {
+			return true;
+		}
+		// 处于成功状态
+		if (notifyFailVo.isStatus()) {
+			return true;
+		}
+
+		// 探测的时间间隔，要大于httpClient的超时时间.否则会出现多个线程去探测的可能
+		int retryTime = (soaConfig.getMqNotifyFailTime() > timeout ? soaConfig.getMqNotifyFailTime() : timeout);
+		if (System.currentTimeMillis() - notifyFailVo.getLastRetryTime() > retryTime) {
+			// 处于重试失败状态
+			// 如果已经有线程去试探了，直接返回
+			if (notifyFailVo.getIsRetrying().get()) {
+				return false;
+			} else {// 否则试探一次
+				if (notifyFailVo.getIsRetrying().compareAndSet(false, true)) {
+					notifyFailVo.setLastRetryTime(System.currentTimeMillis());
+//						System.out.println("url:"+url+"上次试探时间："+Util.formateDate(new Date()));
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+		} else {
+			return false;
+		}
+
+	}
+
+	class NotifyCallBack implements Callback {
+		private String url;
+
+		NotifyCallBack(String url) {
+			this.url = url;
+		}
+
+		@Override
+		public void onFailure(Call call, IOException e) {
+			// 设置失败状态
+			setFailStatus(url);
+		}
+
+		@Override
+		public void onResponse(Call call, Response response) throws IOException {
+			try {
+				setSucStatus(url);
+				response.close();
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}
 	}
 
 	protected boolean checkFailTime(String topicName, QueueEntity entity, List<String> logLst) {
@@ -891,7 +1126,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 						* 1000L) {
 			if (logLst == null) {
 				log.info("topicName_{}_queueid_{}_is_fail", topicName, entity.getId());
-			} 
+			}
 			return false;
 		}
 		return true;
@@ -965,10 +1200,10 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	protected boolean checkStatus(QueueEntity temp, Map<Long, DbNodeEntity> dbNodeMap) {
-		if (!dbNodeMap.containsKey(temp.getDbNodeId())) {			
+		if (!dbNodeMap.containsKey(temp.getDbNodeId())) {
 			return false;
 		}
-		if (dbNodeMap.get(temp.getDbNodeId()).getReadOnly() == 3) {			
+		if (dbNodeMap.get(temp.getDbNodeId()).getReadOnly() == 3) {
 			return false;
 		}
 		return true;
@@ -999,7 +1234,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	public GetMessageCountResponse getMessageCount(GetMessageCountRequest request) {
 		GetMessageCountResponse response = new GetMessageCountResponse();
 		response.setSuc(true);
-		if (request==null||StringUtils.isEmpty(request.getConsumerGroupName())) {
+		if (request == null || StringUtils.isEmpty(request.getConsumerGroupName())) {
 			response.setSuc(false);
 			response.setMsg("ConsumerGroupName不能为空！");
 			return response;
@@ -1054,26 +1289,29 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	public boolean deleteByConsumers(List<ConsumerEntity> consumers) {
 		if (CollectionUtils.isEmpty(consumers))
 			return true;
-		List<Long> consumerIds = new ArrayList<>();
-		for (ConsumerEntity consumer : consumers) {
-			consumerIds.add(consumer.getId());
-		}
-		return doDeleteConsumer(consumerIds, 0);
+//		List<Long> consumerIds = new ArrayList<>();
+//		for (ConsumerEntity consumer : consumers) {
+//			consumerIds.add(consumer.getId());
+//		}
+		return doDeleteConsumer(consumers, 0);
 	}
 
 	// 0 表示心跳超时类型，1表示下线类型
-	private boolean doDeleteConsumer(List<Long> consumerIds, int type) {
+	private boolean doDeleteConsumer(List<ConsumerEntity> consumers, int type) {
 		boolean result = false;
-
-		List<Long> consumerGroupIds = new ArrayList<>();
-		List<Long> broadConsumerGroupIds = new ArrayList<>();
-
+		List<Long> consumerIds = new ArrayList<Long>(consumers.size());
+		for (ConsumerEntity consumer : consumers) {
+			consumerIds.add(consumer.getId());
+		}
+		List<Long> consumerGroupIds = new ArrayList<>(10);
+		List<Long> broadConsumerGroupIds = new ArrayList<>(10);
 		List<ConsumerGroupConsumerEntity> consumerGroupConsumers = consumerGroupConsumerService
 				.getByConsumerIds(consumerIds);
-		List<AuditLogEntity> auditLogs = new ArrayList<>();
-
+		Map<Long, AuditLogEntity> logMap = new HashMap<Long, AuditLogEntity>(consumerGroupIds.size());
+		Map<Long, String> logContentMap = new HashMap<Long, String>(consumerGroupIds.size());
 		Map<Long, ConsumerGroupEntity> consumerGroupMap = consumerGroupService.getIdCache();
 		Map<String, ConsumerGroupEntity> consumerGroupNameMap = consumerGroupService.getCache();
+
 		for (ConsumerGroupConsumerEntity consumerGroupConsumer : consumerGroupConsumers) {
 			ConsumerGroupEntity temp = consumerGroupMap.get(consumerGroupConsumer.getConsumerGroupId());
 			long consumerGroupId = consumerGroupConsumer.getConsumerGroupId();
@@ -1089,29 +1327,27 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			auditLog.setInsertBy("broker-" + IPUtil.getLocalIP());
 			auditLog.setTbName(ConsumerGroupEntity.TABLE_NAME);
 			auditLog.setRefId(consumerGroupId);
-			setDoDeleteConsumerLog(type, consumerGroupConsumer, auditLog);
-			auditLogs.add(auditLog);
+			if (type == 0) {
+				logContentMap.put(consumerGroupId, consumerGroupConsumer.getConsumerName() + "超过"
+						+ soaConfig.getConsumerInactivityTime() + "秒未发送心跳,此consumer会被删除！");
+				auditLog.setContent(consumerGroupConsumer.getConsumerName() + "超过"
+						+ soaConfig.getConsumerInactivityTime() + "秒未发送心跳,此consumer会被删除,将进行重平衡处理！");
+			} else if (type == 1) {
+				logContentMap.put(consumerGroupId, consumerGroupConsumer.getConsumerName() + "下线，此consumer会被删除！");
+				auditLog.setContent(consumerGroupConsumer.getConsumerName() + "下线，此consumer会被删除,将进行重平衡处理！");
+			}
+			logMap.put(consumerGroupId, auditLog);
 		}
 		try {
 			deleteBroadConsumerGroup(broadConsumerGroupIds);
-			auditLogService.insertBatch(auditLogs);
-			doDeleteConsumerIds(consumerIds, consumerGroupIds);
+			doDeleteConsumerIds(consumerGroupConsumers, consumerIds, consumerGroupIds, logMap, logContentMap);
+			auditLogService.insertBatch(new ArrayList<AuditLogEntity>(logMap.values()));
 			addDeleteByConsumersLog(consumerGroupConsumers);
 			result = true;
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
 		return result;
-	}
-
-	protected void setDoDeleteConsumerLog(int type, ConsumerGroupConsumerEntity consumerGroupConsumer,
-			AuditLogEntity auditLog) {
-		if (type == 0) {
-			auditLog.setContent(consumerGroupConsumer.getConsumerName() + "超过"
-					+ soaConfig.getConsumerInactivityTime() + "秒未发送心跳,此consumer会被删除,将进行重平衡处理！");
-		} else if (type == 1) {
-			auditLog.setContent(consumerGroupConsumer.getConsumerName() + "下线，此consumer会被删除,将进行重平衡处理！");
-		}
 	}
 
 	private void deleteBroadConsumerGroup(List<Long> broadConsumerGroupIds) {
@@ -1144,11 +1380,57 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 		}
 	}
 
-	@Transactional(rollbackFor = Exception.class)
-	private void doDeleteConsumerIds(List<Long> consumerIds, List<Long> consumerGroupIds) {
+
+	private void doDeleteConsumerIds(List<ConsumerGroupConsumerEntity> consumerGroupConsumers, List<Long> consumerIds,
+			List<Long> consumerGroupIds, Map<Long, AuditLogEntity> logMap, Map<Long, String> logContentMap) {
 		consumerGroupConsumerService.deleteByConsumerIds(consumerIds);
 		queueOffsetService.setConsumserIdsToNull(consumerIds);
 		consumerRepository.batchDelete(consumerIds);
+
+		Map<Long, ConsumerGroupEntity> consumerGroupMap = consumerGroupService.getIdCache();
+		for (ConsumerGroupConsumerEntity consumerGroupConsumer : consumerGroupConsumers) {
+			ConsumerGroupEntity consumerGroupEntity = consumerGroupMap.get(consumerGroupConsumer.getConsumerGroupId());
+			if (consumerGroupEntity != null) {
+				if (!Util.isEmpty(consumerGroupEntity.getIpBlackList())
+						&& consumerGroupEntity.getIpBlackList().contains(consumerGroupConsumer.getIp())) {
+					consumerGroupIds.remove(consumerGroupEntity.getId());
+					if (logMap.containsKey(consumerGroupEntity.getId())) {
+						logMap.get(consumerGroupEntity.getId())
+								.setContent(logContentMap.get(consumerGroupEntity.getId()) + "因为实例ip在黑名单("
+										+ consumerGroupEntity.getIpBlackList() + ")中，所以不用重平衡！");
+					}
+
+				} else if (!Util.isEmpty(consumerGroupEntity.getIpWhiteList())
+						&& !consumerGroupEntity.getIpWhiteList().contains(consumerGroupConsumer.getIp())) {
+					consumerGroupIds.remove(consumerGroupEntity.getId());
+					if (logMap.containsKey(consumerGroupEntity.getId())) {
+						logMap.get(consumerGroupEntity.getId())
+								.setContent(logContentMap.get(consumerGroupEntity.getId()) + "因为实例ip不在白名单("
+										+ consumerGroupEntity.getIpWhiteList() + ")中，所以不用重平衡！");
+					}
+				}
+			}
+		}
+		for (ConsumerGroupConsumerEntity consumerGroupConsumer : consumerGroupConsumers) {
+			ConsumerGroupEntity consumerGroupEntity = consumerGroupMap.get(consumerGroupConsumer.getConsumerGroupId());
+			if (consumerGroupEntity != null) {
+				if (!Util.isEmpty(consumerGroupEntity.getIpBlackList())
+						&& !consumerGroupEntity.getIpBlackList().contains(consumerGroupConsumer.getIp())) {
+					consumerGroupIds.add(consumerGroupEntity.getId());
+					if (logMap.containsKey(consumerGroupEntity.getId())) {
+						logMap.get(consumerGroupEntity.getId())
+								.setContent(logContentMap.get(consumerGroupEntity.getId()) + "需要重平衡！");
+					}
+				} else if (!Util.isEmpty(consumerGroupEntity.getIpWhiteList())
+						&& consumerGroupEntity.getIpWhiteList().contains(consumerGroupConsumer.getIp())) {
+					consumerGroupIds.add(consumerGroupEntity.getId());
+					if (logMap.containsKey(consumerGroupEntity.getId())) {
+						logMap.get(consumerGroupEntity.getId())
+								.setContent(logContentMap.get(consumerGroupEntity.getId()) + "需要重平衡！");
+					}
+				}
+			}
+		}
 		consumerGroupService.notifyRb(consumerGroupIds);
 	}
 

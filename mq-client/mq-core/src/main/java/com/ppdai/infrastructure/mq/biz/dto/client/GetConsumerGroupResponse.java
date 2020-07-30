@@ -1,18 +1,20 @@
 package com.ppdai.infrastructure.mq.biz.dto.client;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.ppdai.infrastructure.mq.biz.dto.BaseResponse;
 
 public class GetConsumerGroupResponse extends BaseResponse {
 
 	private long sleepTime;
-	//key 为消费者组名称
+	// key 为消费者组名称
 	private Map<String, ConsumerGroupOneDto> consumerGroups;
-	
+	private Map<String, Set<String>> consumerGroupSubEnvMap;
+
 	private int consumerDeleted;
 
-	private int brokerMetaMode;	
+	private int brokerMetaMode;
 
 	public int getBrokerMetaMode() {
 		return brokerMetaMode;
@@ -36,6 +38,14 @@ public class GetConsumerGroupResponse extends BaseResponse {
 
 	public void setSleepTime(long sleepTime) {
 		this.sleepTime = sleepTime;
+	}
+
+	public Map<String, Set<String>> getConsumerGroupSubEnvMap() {
+		return consumerGroupSubEnvMap;
+	}
+
+	public void setConsumerGroupSubEnvMap(Map<String, Set<String>> consumerGroupSubEnvMap) {
+		this.consumerGroupSubEnvMap = consumerGroupSubEnvMap;
 	}
 
 	public Map<String, ConsumerGroupOneDto> getConsumerGroups() {

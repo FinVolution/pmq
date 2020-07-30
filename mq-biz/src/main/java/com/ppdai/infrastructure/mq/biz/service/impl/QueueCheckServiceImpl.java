@@ -59,10 +59,13 @@ public class QueueCheckServiceImpl implements RedundanceCheckService {
                 if (topicMap.containsKey(queueEntity.getTopicName())) {
                     if (topicMap.get(queueEntity.getTopicName()).getId() != queueEntity.getTopicId()) {
                         resultBuilder.append("queue表中的queueId为：" + qId + "的queue，对应的topic：" + queueEntity.getTopicName() +
-                                "名字和id不一致" + "<br/>");
+                                "名字和id不一致" +"<br/>");
                     }
                 } else {
-                    resultBuilder.append("queue表中的queueId为：" + qId + "的queue，对应的topic" + queueEntity.getTopicName() + "不存在,建议清除该记录中topic的相关信息" + "<br/>");
+                    if(!topicService.NEED_DELETED_TOPIC_NANE.equals(queueEntity.getTopicName())){
+                        resultBuilder.append("queue表中的queueId为：" + qId + "的queue，对应的topic" + queueEntity.getTopicName() + "不存在,建议清除该记录中topic的相关信息" + "<br/>");
+                    }
+
                 }
             }
 

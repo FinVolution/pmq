@@ -36,12 +36,14 @@ import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dal.meta.TopicRepository;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
 import com.ppdai.infrastructure.mq.biz.entity.LastUpdateEntity;
+import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
 import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
 import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
 import com.ppdai.infrastructure.mq.biz.exceptions.ConcurrentException;
 import com.ppdai.infrastructure.mq.biz.service.AuditLogService;
 import com.ppdai.infrastructure.mq.biz.service.CacheUpdateService;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupTopicService;
+import com.ppdai.infrastructure.mq.biz.service.Message01Service;
 import com.ppdai.infrastructure.mq.biz.service.QueueService;
 import com.ppdai.infrastructure.mq.biz.service.TopicService;
 import com.ppdai.infrastructure.mq.biz.service.UserInfoHolder;
@@ -76,6 +78,9 @@ public class TopicServiceImpl extends AbstractBaseService<TopicEntity>
 
 	@Autowired
 	private QueueService queueService;
+
+	@Autowired
+	private Message01Service message01Service;
 
 	@PostConstruct
 	private void init() {
@@ -121,6 +126,7 @@ public class TopicServiceImpl extends AbstractBaseService<TopicEntity>
 			TraceMessageItem traceMessageItem = new TraceMessageItem();
 			List<TopicEntity> data = topicRepository.getAll();
 			if (CollectionUtils.isEmpty(data)) {
+				transaction.setStatus(Transaction.SUCCESS);
 				return;
 			}
 			MqReadMap<String, TopicEntity> topicCacheMap = new MqReadMap<String, TopicEntity>(data.size());
@@ -403,6 +409,28 @@ public class TopicServiceImpl extends AbstractBaseService<TopicEntity>
 			}
 		}
 		throw new RuntimeException("topic创建成功，队列分配失败。目前队列分配频繁，抢占严重，请稍后再手动启动分配队列");
+	}
+
+	@Override
+	public long getMsgCount(String topicName, String start, String end) {
+		List<QueueEntity> data= queueService.getAllLocatedTopicQueue().get(topicName);
+		long count=0;
+		if(data!=null&&start!=null&&end!=null) {
+			for(QueueEntity queueEntity :data) {
+				message01Service.setDbId(queueEntity.getDbNodeId());
+				List<Message01Entity> msgs=message01Service.getListByTime(queueEntity.getTbName(),start);
+				if(!CollectionUtils.isEmpty(msgs)) {
+					count=count-msgs.get(0).getId();
+				}
+				message01Service.setDbId(queueEntity.getDbNodeId());
+				msgs=message01Service.getListByTime(queueEntity.getTbName(),end);
+				if(!CollectionUtils.isEmpty(msgs)) {
+					count=count+msgs.get(0).getId();
+				}
+				Util.sleep(10);
+			}
+		}
+		return count;
 	}
 
 }
