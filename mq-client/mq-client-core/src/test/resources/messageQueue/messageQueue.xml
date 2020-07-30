@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<messageQueue>
-	<consumer groupName="testSub">
-		<topics>
-			<topic name="test"
-				receiverType="com.ppdai.infrastructure.mq.client.TestSub"></topic>
-		</topics>
-	</consumer>
-</messageQueue>
