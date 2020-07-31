@@ -59,7 +59,7 @@ CREATE TABLE `consumer_group` (
   `mode` int(11) NOT NULL DEFAULT '1' COMMENT '1，为集群模式，2，为广播模式,3，为代理模式',
   `origin_name` varchar(50) DEFAULT NULL COMMENT '原始的消费者组名',
   `sub_env` varchar(45) NOT NULL DEFAULT 'default',
-  `push_flag` int(11) NOT NULL DEFAULT '0' COMMENT '1,表示实时推送，0，表示非实时推送'
+  `push_flag` int(11) NOT NULL DEFAULT '0' COMMENT '1,表示实时推送，0，表示非实时推送',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_index` (`name`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='消费者组元数据表';
