@@ -532,6 +532,11 @@ public class MqClient {
 				request.setMsgs(messages);
 				request.setSynFlag(0);
 				boolean rs = msgsAsyn.offer(request);
+				if(!rs) {
+					Transaction transaction=Tracer.newTransaction("publish-asyn-lose", topic);
+					transaction.setStatus("丢失了"+ messages.size());
+					transaction.complete();
+				}
 				publishAsyn();
 				return rs;
 			} catch (Exception e) {
