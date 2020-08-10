@@ -345,7 +345,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
+	//@Transactional(rollbackFor = Exception.class)
 	public ConsumerGroupRegisterResponse registerConsumerGroup(ConsumerGroupRegisterRequest request) {
 		ConsumerGroupRegisterResponse response = new ConsumerGroupRegisterResponse();
 		ConsumerEntity consumerEntity = get(request.getConsumerId());
@@ -437,7 +437,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 					try {
 						consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
 					} catch (Exception e) {
-						consumerGroupService.updateCache();
+						
 					}
 				}
 				request.getConsumerGroupNames().put(consumerGroupEntityNew.getName(),
@@ -460,7 +460,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 					try {
 						consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
 					} catch (Exception e) {
-						consumerGroupService.updateCache();
+						//consumerGroupService.updateCache();
 					}
 				}
 
@@ -471,6 +471,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 				response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
 			}
 		}
+		consumerGroupService.updateCache();
 	}
 
 	protected void addRegisterConsumerGroupLog(ConsumerGroupRegisterRequest request,
