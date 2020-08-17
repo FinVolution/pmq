@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.ppdai.infrastructure.mq.biz.dto.request.ConsumerGroupTopicCreateRequest;
 import com.ppdai.infrastructure.mq.biz.dto.response.ConsumerGroupTopicCreateResponse;
 import com.ppdai.infrastructure.mq.biz.dto.response.ConsumerGroupTopicDeleteResponse;
+import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
 import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity;
 import com.ppdai.infrastructure.mq.biz.service.common.BaseService;
 
@@ -28,6 +29,7 @@ public interface ConsumerGroupTopicService extends BaseService<ConsumerGroupTopi
 	void updateCache();
 	void updateEmailByGroupName(String groupName,String alarmEmails);
 	ConsumerGroupTopicCreateResponse subscribe(ConsumerGroupTopicCreateRequest consumerGroupTopicCreateRequest);
+	ConsumerGroupTopicCreateResponse subscribe(ConsumerGroupTopicCreateRequest consumerGroupTopicCreateRequest,Map<String, ConsumerGroupEntity> consumerGroupMap) ;
 	ConsumerGroupTopicDeleteResponse deleteConsumerGroupTopic(long consumerGroupTopicId);
 	ConsumerGroupTopicEntity createConsumerGroupTopic(
 			ConsumerGroupTopicCreateRequest consumerGroupTopicCreateRequest);

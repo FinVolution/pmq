@@ -33,6 +33,7 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void notifyOffset(long consumerGroupId);
 	void updateCache();
 	Map<String,ConsumerGroupEntity> getCache();
+	Map<String,ConsumerGroupEntity> getData();
 	Map<Long,ConsumerGroupEntity> getIdCache();
 	List<String> getSubEnvList();
 	ConsumerGroupTopicEntity getTopic(String consumerGroupName,String topicName);

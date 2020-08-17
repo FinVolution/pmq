@@ -712,11 +712,12 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void copyAndNewConsumerGroup(ConsumerGroupEntity consumerGroupEntityOld,
 			ConsumerGroupEntity consumerGroupEntityNew) {
 		consumerGroupEntityNew.setId(0);
 		insert(consumerGroupEntityNew);
-		updateCache();
+		Map<String, ConsumerGroupEntity> consumerGroupMap = getData();
 		Map<Long, Map<String, ConsumerGroupTopicEntity>> ctMap = consumerGroupTopicService.getCache();
 		Map<String, ConsumerGroupTopicEntity> consumerTopics = ctMap.get(consumerGroupEntityOld.getId());
 		if (consumerTopics != null) {
@@ -739,13 +740,19 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 					request2.setTopicName(entry.getValue().getTopicName());
 					request2.setTopicType(entry.getValue().getTopicType());
 					request2.setTimeOut(entry.getValue().getTimeOut());
-					try {
-						consumerGroupTopicService.subscribe(request2);
-					} catch (Exception e) {
-						// TODO: handle exception
-					}
+				    consumerGroupTopicService.subscribe(request2,consumerGroupMap);					
 				}
 			}
 		}
+	}
+
+	@Override
+	public Map<String, ConsumerGroupEntity> getData() {
+		List<ConsumerGroupEntity> consumerGroupEntities = getList();
+		Map<String, ConsumerGroupEntity> dataMap = new HashMap<>(consumerGroupEntities.size());
+		consumerGroupEntities.forEach(t1 -> {
+			dataMap.put(t1.getName(), t1);
+		});
+		return dataMap;
 	}
 }

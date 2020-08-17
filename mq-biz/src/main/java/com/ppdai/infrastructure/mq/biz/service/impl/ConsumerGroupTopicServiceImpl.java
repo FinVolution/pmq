@@ -323,19 +323,24 @@ public class ConsumerGroupTopicServiceImpl extends AbstractBaseService<ConsumerG
 	 * @param consumerGroupTopicCreateRequest
 	 * @return
 	 */
-	@Transactional(rollbackFor = Exception.class)
-	@Override
-	public ConsumerGroupTopicCreateResponse subscribe(ConsumerGroupTopicCreateRequest consumerGroupTopicCreateRequest) {
-		// 缓存数据
-		Map<String, ConsumerGroupEntity> consumerGroupMap = consumerGroupService.getCache();
-		//如果是广播模式，并且为原始消费者组，则为镜像消费者组添加订阅
-		ConsumerGroupEntity consumerGroupEntity=consumerGroupMap.get(consumerGroupTopicCreateRequest.getConsumerGroupName());
-		if(consumerGroupEntity.getMode()==2&&consumerGroupEntity.getOriginName().equals(consumerGroupEntity.getName())){
-			createConsumerGroupTopicByOrigin(consumerGroupTopicCreateRequest,consumerGroupMap);
-		}
-		return createConsumerGroupTopicAndFailTopic(consumerGroupTopicCreateRequest,consumerGroupMap);
+	 @Transactional(rollbackFor = Exception.class)
+	 @Override
+	 public ConsumerGroupTopicCreateResponse subscribe(ConsumerGroupTopicCreateRequest consumerGroupTopicCreateRequest) {
+	     return subscribe(consumerGroupTopicCreateRequest, consumerGroupService.getCache());
 
-	}
+     }
+	 @Override
+	 public ConsumerGroupTopicCreateResponse subscribe(ConsumerGroupTopicCreateRequest consumerGroupTopicCreateRequest,Map<String, ConsumerGroupEntity> consumerGroupMap) {
+	    // 如果是广播模式，并且为原始消费者组，则为镜像消费者组添加订阅
+	    ConsumerGroupEntity consumerGroupEntity = consumerGroupMap
+	                .get(consumerGroupTopicCreateRequest.getConsumerGroupName());
+	    if (consumerGroupEntity.getMode() == 2
+	                && consumerGroupEntity.getOriginName().equals(consumerGroupEntity.getName())) {
+	           createConsumerGroupTopicByOrigin(consumerGroupTopicCreateRequest, consumerGroupMap);
+	     }
+
+	     return createConsumerGroupTopicAndFailTopic(consumerGroupTopicCreateRequest, consumerGroupMap);
+	 }	    
 
 	/**
 	 * 镜像消费者组添加订阅
@@ -411,6 +416,7 @@ public class ConsumerGroupTopicServiceImpl extends AbstractBaseService<ConsumerG
 		}catch (Exception e){
 			consumerGroupTopicCreateResponse.setMsg(e.getMessage());
 			consumerGroupTopicCreateResponse.setCode("1");
+			throw new RuntimeException(e);
 		}
 
 		return consumerGroupTopicCreateResponse;
