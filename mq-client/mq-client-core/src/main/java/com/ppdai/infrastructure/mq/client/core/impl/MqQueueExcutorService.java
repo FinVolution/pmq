@@ -520,8 +520,9 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 			if (messageMap.size() > 0) {
 				traceMessageItem.status = "maxId：" + maxId;
 				traceMessageItem.msg = "开始消费,起始时间为" + Util.formateDate(new Date());
-				traceMsgDeal.add(traceMessageItem);
 				List<Long> failIds = invokeMessage(pre, messageMap);
+				traceMessageItem.msg = traceMessageItem.msg + ",消费结束,结束时间为" + Util.formateDate(new Date());
+				traceMsgDeal.add(traceMessageItem);
 				List<Long> sucIds = new ArrayList<>();
 				Map<Long, MessageDto> failMsg = getFailMsg(pre, failIds, sucIds, messageMap);
 				addExcuteLog(failMsg, pre, messageMap);
@@ -531,13 +532,13 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 				PublishMessageRequest failRequest = getFailMsgRequest(pre, new ArrayList<>(failMsg.values()));
 				// 如果是失败消息更新失败消息执行成功结果
 				publishAndUpdateResultFailMsg(failRequest, pre, sucIds);
-				traceMessageItem.msg = traceMessageItem.msg + ",消费结束,结束时间为" + Util.formateDate(new Date());
 				return maxId;
 			} else {
 				if (flag) {
 					return maxId;
 				} else {
 					traceMessageItem.status = "当前数据缓存为空";
+					traceMsgDeal.add(traceMessageItem);
 				}
 			}
 
