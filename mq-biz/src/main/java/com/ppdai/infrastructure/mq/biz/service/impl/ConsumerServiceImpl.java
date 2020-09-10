@@ -219,7 +219,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	protected Map<String, ConsumerGroupEntity> checkTopic(ConsumerGroupRegisterRequest request,
-			ConsumerGroupRegisterResponse response) {
+														  ConsumerGroupRegisterResponse response) {
 
 		Map<String, ConsumerGroupEntity> consumerGroupMap = consumerGroupService
 				.getByNames(new ArrayList<>(request.getConsumerGroupNames().keySet()));
@@ -355,6 +355,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 			return response;
 		}
 		response.setBroadcastConsumerGroupName(new HashMap<>());
+		response.setConsumerGroupNameNew(new HashMap<>());
 		// 检查广播模式
 		checkBroadcastAndSubEnv(request, response);
 		doRegisterConsumerGroup(request, response, consumerEntity);
@@ -366,7 +367,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
 
 	protected void checkBroadcastAndSubEnv(ConsumerGroupRegisterRequest request,
-			ConsumerGroupRegisterResponse response) {
+										   ConsumerGroupRegisterResponse response) {
 		Map<String, ConsumerGroupEntity> map = consumerGroupService.getCache();
 		if (request == null) {
 			response.setSuc(false);
@@ -422,7 +423,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	private void checkBroadcastAndSubEnv(ConsumerGroupRegisterRequest request, List<String> consumerGroupNames,
-			Map<String, ConsumerGroupEntity> map, ConsumerGroupRegisterResponse response) {
+										 Map<String, ConsumerGroupEntity> map, ConsumerGroupRegisterResponse response) {
 		for (String name : consumerGroupNames) {
 			ConsumerGroupEntity consumerGroupEntity = map.get(name);
 			if (consumerGroupEntity.getMode() == 2) {
@@ -437,7 +438,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 					try {
 						consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
 					} catch (Exception e) {
-						
+
 					}
 				}
 				request.getConsumerGroupNames().put(consumerGroupEntityNew.getName(),
@@ -475,7 +476,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	protected void addRegisterConsumerGroupLog(ConsumerGroupRegisterRequest request,
-			ConsumerGroupRegisterResponse response) {
+											   ConsumerGroupRegisterResponse response) {
 		String json = JsonUtil.toJsonNull(request);
 		if (request != null && request.getConsumerGroupNames() != null) {
 			List<AuditLogEntity> auditLogs = new ArrayList<>(request.getConsumerGroupNames().size());
@@ -501,7 +502,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	protected void doRegisterConsumerGroup(ConsumerGroupRegisterRequest request, ConsumerGroupRegisterResponse response,
-			ConsumerEntity consumerEntity) {
+										   ConsumerEntity consumerEntity) {
 		response.setSuc(true);
 		Map<String, ConsumerGroupEntity> consumerGroupMap = checkTopic(request, response);
 		if (!response.isSuc()) {
@@ -538,8 +539,8 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
 
 	private void doRegisterConsumerGroup(ConsumerEntity consumerEntity,
-			List<ConsumerGroupConsumerEntity> consumerGroupConsumerEntities, List<Long> ids,
-			List<String> consumerGroupNames, List<AuditLogEntity> auditLogs) {
+										 List<ConsumerGroupConsumerEntity> consumerGroupConsumerEntities, List<Long> ids,
+										 List<String> consumerGroupNames, List<AuditLogEntity> auditLogs) {
 		update(consumerEntity);
 		registConsumerGroupConsumer(consumerGroupConsumerEntities);
 
@@ -574,7 +575,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	private void addRegisterConsumerGroupLog(ConsumerGroupConsumerEntity t1, String consumerGroupName,
-			List<String> topics) {
+											 List<String> topics) {
 		LogDto logDto = new LogDto();
 		logDto.setAction("is_RegisterConsumerGroup");
 		logDto.setConsumerName(t1.getConsumerName());
@@ -716,7 +717,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	private void saveMsg(PublishMessageRequest request, PublishMessageResponse response,
-			List<QueueEntity> queueEntities) {
+						 List<QueueEntity> queueEntities) {
 //		if (request.getSynFlag() == 1) {
 //			saveSynMsg(request, response, queueEntities);
 //		} else {
@@ -726,7 +727,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	protected void saveSynMsg1(PublishMessageRequest request, PublishMessageResponse response,
-			List<QueueEntity> queueEntities) {
+							   List<QueueEntity> queueEntities) {
 		Map<Long, QueueEntity> queueMap = new HashMap<>();
 		queueEntities.forEach(t1 -> {
 			queueMap.put(t1.getId(), t1);
@@ -753,7 +754,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	private void createMsg(PublishMessageRequest request, Map<Long, List<Message01Entity>> queueMsg,
-			Map<String, PartitionInfo> partitionMap) {
+						   Map<String, PartitionInfo> partitionMap) {
 		request.getMsgs().forEach(t1 -> {
 			Message01Entity entity = new Message01Entity();
 			entity.setBizId(t1.getBizId());
@@ -784,14 +785,14 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	private void saveSynMsg(PublishMessageRequest request, PublishMessageResponse response,
-			List<QueueEntity> queueEntities) {
+							List<QueueEntity> queueEntities) {
 		List<Message01Entity> message01Entities = new ArrayList<>(request.getMsgs().size());
 		createMsg(request, message01Entities);
 		doSaveMsg(request, response, queueEntities, message01Entities);
 	}
 
 	private void doSaveMsg(PublishMessageRequest request, PublishMessageResponse response,
-			List<QueueEntity> queueEntities, List<Message01Entity> message01Entities) {
+						   List<QueueEntity> queueEntities, List<Message01Entity> message01Entities) {
 		int tryCount = 0;
 		int queueSize = queueEntities.size();
 		Exception last = null;
@@ -872,7 +873,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	}
 
 	private void addPublishLog(List<Message01Entity> message01Entities, PublishMessageRequest request, int info,
-			Throwable th) {
+							   Throwable th) {
 		message01Entities.forEach(t1 -> {
 			LogDto logDto = new LogDto();
 			logDto.setAction("message_publish");
@@ -922,7 +923,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	// private AtomicInteger counter111=new AtomicInteger(0);
 
 	protected void doSaveMsg(List<Message01Entity> message01Entities, PublishMessageRequest request,
-			PublishMessageResponse response, QueueEntity temp) {
+							 PublishMessageResponse response, QueueEntity temp) {
 		// Transaction transaction = Tracer.newTransaction("PubInner-" +
 		// temp.getIp(), request.getTopicName());
 		message01Service.setDbId(temp.getDbNodeId());
@@ -1060,7 +1061,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
 	/**
 	 * 如果通知失败，每隔5秒释放一个线程请求，去探测。
-	 * 
+	 *
 	 * @param url
 	 * @return
 	 */
@@ -1124,7 +1125,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 	protected boolean checkFailTime(String topicName, QueueEntity entity, List<String> logLst) {
 		if (dbFailMap.containsKey(getFailDbUp(entity))
 				&& (System.currentTimeMillis() - dbFailMap.get(getFailDbUp(entity))) < soaConfig.getDbFailWaitTime()
-						* 1000L) {
+				* 1000L) {
 			if (logLst == null) {
 				log.info("topicName_{}_queueid_{}_is_fail", topicName, entity.getId());
 			}
@@ -1383,7 +1384,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
 
 	private void doDeleteConsumerIds(List<ConsumerGroupConsumerEntity> consumerGroupConsumers, List<Long> consumerIds,
-			List<Long> consumerGroupIds, Map<Long, AuditLogEntity> logMap, Map<Long, String> logContentMap) {
+									 List<Long> consumerGroupIds, Map<Long, AuditLogEntity> logMap, Map<Long, String> logContentMap) {
 		consumerGroupConsumerService.deleteByConsumerIds(consumerIds);
 		queueOffsetService.setConsumserIdsToNull(consumerIds);
 		consumerRepository.batchDelete(consumerIds);

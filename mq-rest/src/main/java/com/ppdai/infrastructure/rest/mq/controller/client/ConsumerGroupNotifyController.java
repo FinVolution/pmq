@@ -122,7 +122,7 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 	}
 
 	private void setSubEnv(GetConsumerGroupRequest request, GetConsumerGroupResponse response) {
-		if (!soaConfig.isPro() && MqClient.getMqEnvironment().getEnv() == MqEnv.FAT
+		if (!soaConfig.isPro() &&MqClient.getMqEnvironment()!=null && MqClient.getMqEnvironment().getEnv() == MqEnv.FAT
 				&& soaConfig.getMqBrokerSetSubEnvFlag() == 1) {
 			if (request != null) {
 				Map<String, Set<String>> consumerGroupSubEnvMap = new HashMap<>(
@@ -180,8 +180,8 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 			}
 		} catch (Throwable e) {
 			//防止出现数据库出问题，客户端重新注册
-		    Util.sleep(1000L);
-		}	
+			Util.sleep(1000L);
+		}
 		Map<String, ConsumerGroupOneDto> dataRs = new HashMap<>();
 		// t1,key 为consumergroupname,value为consumergroup对应的版本号
 		for (Map.Entry<String, Long> t1 : request.getConsumerGroupVersion().entrySet()) {

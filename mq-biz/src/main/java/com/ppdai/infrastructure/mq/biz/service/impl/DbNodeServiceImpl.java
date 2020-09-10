@@ -91,7 +91,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 		minIdle = soaConfig.getInitDbCount();
 		maxActive = soaConfig.getMaxDbCount();
 		minEvictableIdleTimeMillis = soaConfig.getDbMinEvictableIdleTimeMillis();
-		start();		
+		start();
 		registerDbConfigChanged();
 
 	}
@@ -197,7 +197,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 	protected void checkSlave(DbNodeEntity dbNodeEntity) throws SQLException {
 		// 检查slave
 		if (hasSlave(dbNodeEntity)) {
-			DruidDataSource dataSource = dataSourceFactory.createDataSource();			
+			DruidDataSource dataSource = dataSourceFactory.createDataSource();
 			dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 			dataSource.setUsername(dbNodeEntity.getDbUserNameBak());
 			dataSource.setPassword(dbNodeEntity.getDbPassBak());
@@ -215,7 +215,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 
 	private void checkMaster(DbNodeEntity dbNodeEntity) throws SQLException {
 		DruidDataSource dataSource = dataSourceFactory.createDataSource();
-		
+
 		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 		dataSource.setUsername(dbNodeEntity.getDbUserName());
 		dataSource.setPassword(dbNodeEntity.getDbPass());
@@ -223,7 +223,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 		dataSource.setInitialSize(1);
 		dataSource.setMinIdle(0);
 		dataSource.setMaxActive(1);
-		
+
 		List<Filter> filters = new ArrayList<Filter>();
 		filters.add(new DruidConnectionFilter(DbUtil.getDbIp(dataSource.getUrl())));
 		dataSource.setProxyFilters(filters);
@@ -274,14 +274,14 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 
 	}
 
-	String conF = "jdbc:mysql://%s:%s/information_schema?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&rewriteBatchedStatements=true";
+	String conF = "jdbc:mysql://%s:%s/information_schema?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=CONVERT_TO_NULL&useSSL=false&rewriteBatchedStatements=true";
 
 	public void initDataSource(DbNodeEntity t1, String key, Map<String, DataSource> dataMap, boolean isMaster,
-			Transaction transaction) {
+							   Transaction transaction) {
 		try {
 			// if (soaConfig.isUseDruid())
 			{
-				DruidDataSource dataSource = dataSourceFactory.createDataSource();			
+				DruidDataSource dataSource = dataSourceFactory.createDataSource();
 				dataSource.setDriverClassName("com.mysql.jdbc.Driver");
 				if (isMaster) {
 					dataSource.setUsername(t1.getDbUserName());
@@ -332,7 +332,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 //		if (cacheNodeMap.get().containsKey(dbNodeId)) {
 //			return getConKey(cacheNodeMap.get().get(dbNodeId), isMaster);
 //		}
-//		return ""; 
+//		return "";
 //	}
 
 	protected String getConKey(DbNodeEntity t1, boolean isMaster) {
@@ -458,8 +458,8 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 				flag = true;
 			} else if (lastUpdateEntity != null && temp != null
 					&& (temp.getMaxId() != lastUpdateEntity.getMaxId()
-							|| temp.getLastDate().getTime() != lastUpdateEntity.getLastDate().getTime()
-							|| temp.getCount() != lastUpdateEntity.getCount())) {
+					|| temp.getLastDate().getTime() != lastUpdateEntity.getLastDate().getTime()
+					|| temp.getCount() != lastUpdateEntity.getCount())) {
 				lastUpdateEntity = temp;
 				flag = true;
 			}
