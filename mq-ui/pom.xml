@@ -177,40 +177,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>com.spotify</groupId>
-				<artifactId>docker-maven-plugin</artifactId>
-				<version>1.2.3-ppdtoken-release</version>
-				<configuration>
-					<!--镜像名格式：应用名称 -->
-					<imageName>${docker.img.name}</imageName>
-					<imageTags>
-						<imageTag>${image.version}</imageTag>
-					</imageTags>
-					<dockeryardAccessToken>
-						${dockerToken}
-					</dockeryardAccessToken>
-					<entryPoint>java -jar -server ${heap.xm} -XX:+UseG1GC
-						${project.build.finalName}.jar </entryPoint>
 
-					<resources>
-						<resource>
-							<directory>${project.build.directory}</directory>
-							<include>${project.build.finalName}.jar</include>
-						</resource>
-					</resources>
-				</configuration>
-
-				<!-- <executions> -->
-				<!-- <execution> -->
-				<!-- <id>build-image</id> -->
-				<!-- <phase>install</phase> -->
-				<!-- <goals> -->
-				<!-- <goal>build</goal> -->
-				<!-- </goals> -->
-				<!-- </execution> -->
-				<!-- </executions> -->
-			</plugin>
 		</plugins>
 	</build>
 </project>
