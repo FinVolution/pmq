@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -712,7 +713,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class, propagation= Propagation.NESTED)
 	public void copyAndNewConsumerGroup(ConsumerGroupEntity consumerGroupEntityOld,
 			ConsumerGroupEntity consumerGroupEntityNew) {
 		consumerGroupEntityNew.setId(0);
