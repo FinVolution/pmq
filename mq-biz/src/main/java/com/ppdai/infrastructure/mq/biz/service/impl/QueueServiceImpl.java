@@ -170,7 +170,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 	@Override
 	public void updateCache() {
 		if (updateFlag.compareAndSet(false, true)) {
-			if (checkChanged() || isPortal) {
+			if (checkChanged()) {
 				forceUpdateCache();
 			}
 			updateFlag.set(false);
