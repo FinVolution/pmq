@@ -8,12 +8,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ppdai.infrastructure.mq.biz.common.util.PropUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupOneDto;
 import com.ppdai.infrastructure.mq.biz.event.IAsynSubscriber;
 import com.ppdai.infrastructure.mq.biz.event.ISubscriber;
 import com.ppdai.infrastructure.mq.client.config.ConsumerGroupVo;
 import com.ppdai.infrastructure.mq.client.event.MqEvent;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
+import com.ppdai.infrastructure.mq.client.resource.MqResource;
 
 public class MqContext {
 	private volatile long consumerId;
@@ -37,6 +39,7 @@ public class MqContext {
 	private transient IMqResource mqHtResource = null;
 
 	private transient IMqResource mqPollingResource = null;
+	private transient IMqResource mqBakResource = null;
 
 	private List<String> lstGroup1 = null, lstGroup2 = null;
 
@@ -45,11 +48,40 @@ public class MqContext {
 	// private int logOrigData = 0;
 
 	private volatile String metricUrl;
+	// 标记是否记录原始数据
+	private String bakUrl;
 
 	private MqConfig config = new MqConfig();
 
 	private MqEvent mqEvent = new MqEvent();
 	private MqEnvironment mqEnvironment = null;
+
+	public String getBakUrl() {
+		return bakUrl;
+	}
+
+	public void setBakUrl(String bakUrl1) {
+		if (!Util.isEmpty(bakUrl1)) {
+			if (Util.isEmpty(bakUrl)) {
+				mqBakResource = new MqResource(bakUrl1, 10_000, 10_000);
+				this.bakUrl = bakUrl1;
+			} else if (!this.bakUrl.equalsIgnoreCase(bakUrl1)) {
+				mqBakResource = new MqResource(bakUrl1, 10_000, 10_000);
+				this.bakUrl = bakUrl1;
+			}
+		}else{
+			this.bakUrl = "";
+			mqBakResource=null;
+		}
+	}
+
+	public IMqResource getMqBakResource() {
+		return mqBakResource;
+	}
+
+	public void setMqBakResource(IMqResource mqBakResource) {
+		this.mqBakResource = mqBakResource;
+	}
 
 	public MqContext() {
 		this.sdkVersion = PropUtil.getSdkVersion();

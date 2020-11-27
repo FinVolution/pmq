@@ -120,7 +120,7 @@ public class MqTopicQueueRefreshService implements IMqTopicQueueRefreshService {
 		}
 		try {
 			executor.shutdown();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 		}
 		startFlag.set(false);
 		executor = null;

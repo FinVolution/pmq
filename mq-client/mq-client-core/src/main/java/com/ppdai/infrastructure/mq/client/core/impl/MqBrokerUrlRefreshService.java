@@ -80,7 +80,7 @@ public class MqBrokerUrlRefreshService implements IMqBrokerUrlRefreshService {
 			} else if (mqContext.getBrokerMetaMode() == -1 || !mqContext.getConfig().isMetaMode()) {
 				mqContext.setBrokerUrls(new ArrayList<>(),new ArrayList<>());
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error("updateBrokerError", e);
 		}
 

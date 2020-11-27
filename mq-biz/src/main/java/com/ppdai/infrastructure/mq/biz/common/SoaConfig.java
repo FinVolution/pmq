@@ -81,7 +81,7 @@ public class SoaConfig {
 					}
 					Util.sleep(1000);
 				}
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				// TODO: handle exception
 			}
 		});
@@ -116,7 +116,7 @@ public class SoaConfig {
 			for (Runnable runnable : changed.keySet()) {
 				try {
 					runnable.run();
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					log.error("onchange-error", e);
 				}
 			}
@@ -3116,4 +3116,12 @@ public class SoaConfig {
 
 			return getMqTopicRouteMap;
 		}
+		private final String env_getMqBakUrl_key = "mq.bak.url";
+		private final String env_getMqBakUrl_defaultValue = "";
+		private final String env_getMqBakUrl_des = "mq备份集群url";
+
+		public String getMqBakUrl() {
+			return env.getProperty(env_getMqBakUrl_key, env_getMqBakUrl_defaultValue);
+		}
+
 }

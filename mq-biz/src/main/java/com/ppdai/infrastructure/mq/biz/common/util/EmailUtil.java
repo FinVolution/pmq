@@ -49,7 +49,7 @@ public class EmailUtil {
 				while (true) {
 					try {
 						emailVo = emailVos.take();
-					} catch (Exception e) {
+					} catch (Throwable e) {
 
 					}
 					if (emailVo != null) {

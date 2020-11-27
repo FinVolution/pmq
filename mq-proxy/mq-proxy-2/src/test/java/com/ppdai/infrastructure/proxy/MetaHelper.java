@@ -86,7 +86,7 @@ public class MetaHelper {
 		final Request request = new Request.Builder().url(url).post(formBody).build();
 		try {
 			response = httpClient.newCall(request).execute();
-		} catch (IOException e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return response;

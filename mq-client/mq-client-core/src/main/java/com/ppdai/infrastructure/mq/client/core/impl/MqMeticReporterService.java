@@ -48,7 +48,7 @@ public class MqMeticReporterService implements IMqMeticReporterService {
 			try {
 				reporter.stop();
 				reporter = null;
-			} catch (Exception e) {
+			} catch (Throwable e) {
 			}
 		}
 

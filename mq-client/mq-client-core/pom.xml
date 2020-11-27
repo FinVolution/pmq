@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>mq-client</artifactId>
 		<groupId>com.ppdai.infrastructure</groupId>
-		<version>5.1.0</version>
+		<version>5.5.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>mq-client-core</artifactId>

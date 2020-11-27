@@ -77,7 +77,7 @@ public class DbReportService {
 
 							}
 							conMapRef.set(conMap);
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							// TODO: handle exception
 						}
 						Util.sleep(10000);

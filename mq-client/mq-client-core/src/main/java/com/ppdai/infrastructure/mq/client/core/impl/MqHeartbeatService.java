@@ -5,6 +5,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.ppdai.infrastructure.mq.biz.common.util.Util;
+import com.ppdai.infrastructure.mq.biz.dto.client.HeartbeatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +29,9 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 	private MqContext mqContext;
 	private IMqResource mqResource;
 	private volatile boolean isStop = false;
+	private long count = 0;
 
-	public MqHeartbeatService() {	
+	public MqHeartbeatService() {
 		this(MqClient.getMqFactory().createMqResource(MqClient.getContext().getConfig().getUrl(), 3500, 3500));
 	}
 
@@ -37,6 +40,7 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 		this.mqResource = mqResource;
 		mqContext.setMqHtResource(this.mqResource);
 	}
+
 
 	public void start() {
 		if (startFlag.compareAndSet(false, true)) {
@@ -53,24 +57,36 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 				public void run() {
 					if (!isStop) {
 						doHeartbeat();
+						count++;
 					}
 				}
 			}, 1, 10, TimeUnit.SECONDS);
 		}
 	}
 
-	protected void doHeartbeat() { 
+	private void doHeartbeat() {
 		if (mqContext.getConsumerId() > 0) {
 			if (request == null) {
 				request = new HeartbeatRequest();
-				request.setConsumerId(mqContext.getConsumerId());
 			}
+			request.setConsumerId(mqContext.getConsumerId());
 			TraceMessageItem traceMessageItem = new TraceMessageItem();
 			try {
-				mqResource.heartbeat(request);
+				request.setAsyn(count % 3==0 ? 0:1);
+				HeartbeatResponse response = mqResource.heartbeat(request);
+				if (response != null && response.getDeleted() == 1) {
+					traceMessageItem.status = "restart";
+					log.warn("client restart,"+mqContext.getConsumerId());
+					MqClient.reStart();
+					Util.sleep(5000);
+				}
+				if(response!=null){
+					mqContext.setBakUrl(response.getBakUrl());
+				}
 				log.debug("consumer_client_{}_heartbeat_end", mqContext.getConsumerId());
 				traceMessageItem.status = "suc";
-			} catch (Exception e) {
+				traceMessageItem.msg="心跳正常";
+			} catch (Throwable e) {
 				traceMessageItem.status = "fail";
 				traceMessageItem.msg = e.getMessage();
 			}
@@ -83,7 +99,7 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 		isStop = true;
 		try {
 			executor.shutdown();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 		}
 		startFlag.set(false);
 		request = null;

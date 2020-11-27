@@ -247,7 +247,7 @@ public class ConsumerGroupCacheServiceImpl implements ConsumerGroupCacheService 
 			}
 
 			catTransaction.setStatus(Transaction.SUCCESS);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error("doCheckPollingData_error,更新异常", e);
 			catTransaction.setStatus(e);
 		} finally {

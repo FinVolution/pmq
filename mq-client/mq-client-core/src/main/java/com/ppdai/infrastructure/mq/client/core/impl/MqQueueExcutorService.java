@@ -249,7 +249,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 				executor.shutdownNow();
 				executor = null;
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
 
 		}
 		clearTrace();
@@ -320,7 +320,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 						}
 					}
 					transaction.setStatus(Transaction.SUCCESS);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					traceMessageItem.status = "拉取消息失败";
 					traceMessageItem.msg = e.getMessage();
 					transaction.setStatus(e);
@@ -344,7 +344,9 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 				executor.execute(new Runnable() {
 					@Override
 					public void run() {
-						pullingData();
+						try{
+						 pullingData();
+						}catch (Throwable e){}
 					}
 
 				});
@@ -353,8 +355,12 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 					public void run() {
 						while (!isStop) {
 							if (isRunning) {
-								// 注意此处不能加锁，因为有些会出现延消费，然后出现阻塞
-								handleData();
+								try {
+									// 注意此处不能加锁，因为有些会出现延消费，然后出现阻塞
+									handleData();
+								}catch (Throwable e){
+
+								}
 
 							} else {
 								Util.sleep(50);
@@ -452,7 +458,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 		batchExcute(pre, startThread, batchRecorderId, countDownLatch);
 		try {
 			countDownLatch.await();
-		} catch (InterruptedException e) {
+		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 
 		}
@@ -972,7 +978,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 					maxId = threadExcute(pre);
 					updateOffset(pre, maxId);
 				}
-			} catch (Exception e) {
+			} catch (Throwable e) {
 
 			}
 			batchRecorderItem = batchRecorder.end(batchRecorderId, maxId);
@@ -981,7 +987,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 			}
 			try {
 				countDownLatch.countDown();
-			} catch (Exception e) {
+			} catch (Throwable e) {
 
 			}
 			this.timeOutCount.decrementAndGet();

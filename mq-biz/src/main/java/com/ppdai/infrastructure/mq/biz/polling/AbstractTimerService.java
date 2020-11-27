@@ -88,7 +88,7 @@ public abstract class AbstractTimerService implements PortalTimerService {
 					doStart();
 					log.info(key + "_work_end");
 					transaction.setStatus(Transaction.SUCCESS);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					transaction.setStatus(e);
 					log.error(key + "_work_error", e);
 				} finally {
@@ -107,7 +107,7 @@ public abstract class AbstractTimerService implements PortalTimerService {
 			try {
 				//根据心跳判断是否还占有锁
 				isMaster = mqLockService.updateHeatTime();
-			} catch (Exception e) {
+			} catch (Throwable e) {
 
 			}
 			Util.sleep(soaConfig.getMqLockHeartBeatTime() * 1000);

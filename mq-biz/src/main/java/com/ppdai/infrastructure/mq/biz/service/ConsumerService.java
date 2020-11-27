@@ -35,7 +35,7 @@ public interface ConsumerService extends BaseService<ConsumerEntity> {
 	PullDataResponse pullData(PullDataRequest request);
 	FailMsgPublishAndUpdateResultResponse publishAndUpdateResultFailMsg(FailMsgPublishAndUpdateResultRequest request);
 	GetMessageCountResponse getMessageCount(GetMessageCountRequest request);
-	void heartbeat(List<Long> ids);
+	int heartbeat(List<Long> ids);
 	List<ConsumerEntity> findByHeartTimeInterval(long heartTimeInterval);
 	boolean deleteByConsumers(List<ConsumerEntity>consumers);
 	ConsumerEntity getConsumerByConsumerGroupId(Long consumerGroupId);

@@ -35,7 +35,7 @@ public class HttpClient implements IHttpClient{
 		    response = client.newCall(request).execute();	
 		    transaction.setStatus(Transaction.SUCCESS);
 			return response.isSuccessful();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			transaction.setStatus(e);			
 			return false;
 		} finally {			
@@ -80,7 +80,7 @@ public class HttpClient implements IHttpClient{
 		} catch (IOException e) {
 			transaction.setStatus(e);
 			throw e;
-		}catch (Exception e) {
+		}catch (Throwable e) {
 			transaction.setStatus(e);
 			throw e;
 		}
@@ -166,7 +166,7 @@ public class HttpClient implements IHttpClient{
 						response.code() + " error,and message is " + response.message());				
 				throw exception;
 			}
-		} catch (Exception e) {			
+		} catch (Throwable e) {
 			transaction.setStatus(e);
 			throw new RuntimeException(e);
 		} finally {

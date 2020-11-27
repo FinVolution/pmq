@@ -1,9 +1,6 @@
 package com.ppdai.infrastructure.rest.mq.controller.client;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -53,9 +50,9 @@ public class ConsumerHeartbeatController {
 	private void init() {
 		heartBeatThreadSize = soaConfig.getHeartBeatThreadSize();
 		executor = new ThreadPoolExecutor(1, 1, 3L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10),
-				SoaThreadFactory.create("heartbeat",Thread.MAX_PRIORITY, true), new ThreadPoolExecutor.CallerRunsPolicy());
+				SoaThreadFactory.create("heartbeat", Thread.MAX_PRIORITY, true), new ThreadPoolExecutor.CallerRunsPolicy());
 		executorRun = new ThreadPoolExecutor(heartBeatThreadSize, heartBeatThreadSize, 10L, TimeUnit.SECONDS,
-				new ArrayBlockingQueue<>(5000), SoaThreadFactory.create("heartbeat-run",Thread.MAX_PRIORITY-1, true),
+				new ArrayBlockingQueue<>(5000), SoaThreadFactory.create("heartbeat-run", Thread.MAX_PRIORITY - 1, true),
 				new ThreadPoolExecutor.CallerRunsPolicy());
 		soaConfig.registerChanged(new Runnable() {
 			@Override
@@ -65,7 +62,6 @@ public class ConsumerHeartbeatController {
 					executorRun.setCorePoolSize(heartBeatThreadSize);
 					executorRun.setMaximumPoolSize(heartBeatThreadSize);
 				}
-
 			}
 		});
 		executor.execute(() -> {
@@ -77,7 +73,10 @@ public class ConsumerHeartbeatController {
 
 	private void heartbeat() {
 		while (true) {
-			exeHeartBeat();
+			try {
+				exeHeartBeat();
+			} catch (Throwable e) {
+			}
 			// 通过随机的方式来避免数据库的洪峰压力
 			Util.sleep(soaConfig.getHeartbeatSleepTime());
 		}
@@ -86,7 +85,8 @@ public class ConsumerHeartbeatController {
 	private void exeHeartBeat() {
 		if (mapAppPolling.size() > 0) {
 			heartBeatCounter.compareAndSet(Long.MAX_VALUE, 0);
-			long counter = heartBeatCounter.incrementAndGet();			
+			long counter = heartBeatCounter.incrementAndGet();
+			log.info("doHeartBeat_start");
 			Transaction catTransaction = null;
 			try {
 				catTransaction = Tracer.newTransaction("Timer-service",
@@ -104,11 +104,12 @@ public class ConsumerHeartbeatController {
 					}
 				}
 				catTransaction.setStatus(Transaction.SUCCESS);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				catTransaction.setStatus(e);
 			} finally {
 				catTransaction.complete();
-			}			
+			}
+			log.info("doHeartBeat_end");
 		}
 	}
 
@@ -117,10 +118,10 @@ public class ConsumerHeartbeatController {
 		try {
 			catTransaction = Tracer.newTransaction("Service",
 					MqConstanst.CONSUMERPRE + "/heartbeat-" + soaConfig.getHeartbeatBatchSize());
-			consumerService.heartbeat(ids);			
+			consumerService.heartbeat(ids);
 			catTransaction.setStatus(Transaction.SUCCESS);
 
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error("heartBeatfail失败", e);
 			catTransaction.setStatus(e);
 		}
@@ -133,20 +134,26 @@ public class ConsumerHeartbeatController {
 		HeartbeatResponse response = new HeartbeatResponse();
 		response.setSuc(true);
 		response.setHeatbeatTime(soaConfig.getConsumerHeartBeatTime());
+		response.setBakUrl(soaConfig.getMqBakUrl());
 		try {
 			if (request != null) {
-				if (request.getConsumerId() > 0) {
-					mapAppPolling.put(request.getConsumerId(), true);
-				}
-				if (!CollectionUtils.isEmpty(request.getConsumerIds())) {
-					request.getConsumerIds().forEach(t1 -> {
-						mapAppPolling.put(t1, true);
-					});
+				if (request.getAsyn() == 1) {
+					if (request.getConsumerId() > 0) {
+						mapAppPolling.put(request.getConsumerId(), true);
+					}
+					if (!CollectionUtils.isEmpty(request.getConsumerIds())) {
+						request.getConsumerIds().forEach(t1 -> {
+							mapAppPolling.put(t1, true);
+						});
+					}
+				}else {
+					response.setDeleted(consumerService.heartbeat(Arrays.asList(request.getConsumerId()))>0?0:1);
 				}
 			}
-		} catch (Exception e) {
+
+		} catch (Throwable e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return response;
 	}

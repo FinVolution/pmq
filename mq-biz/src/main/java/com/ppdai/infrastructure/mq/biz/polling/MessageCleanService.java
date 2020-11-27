@@ -140,7 +140,7 @@ public class MessageCleanService extends AbstractTimerService {
 					try {
 						clearOneDbData(queueMinOffset, entry1, queueCounter, queueCountMap.get(0));
 						transaction.setStatus(Transaction.SUCCESS);
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						transaction.setStatus(e);
 					}
 					transaction.complete();

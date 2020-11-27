@@ -244,7 +244,7 @@ public class MqResource implements IMqResource {
 				String url = MqConstanst.TOOLPRE + "/addCat";
 				try {
 					post(request, url, 1, CatResponse.class, false);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					// TODO: handle exception
 				}
 			}
@@ -285,7 +285,7 @@ public class MqResource implements IMqResource {
 				addCat(request2);
 			}
 			return response.isSuc();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			MetricSingleton.getMetricRegistry().counter("mq.client.publish.fail.count?topic=" + request.getTopicName())
 					.inc();
 			logger.error("publish_error", e);
@@ -303,7 +303,7 @@ public class MqResource implements IMqResource {
 			mailRequest.setType(2);
 			mailRequest.setTopicName(request.getTopicName());
 			sendMail(mailRequest);
-			return false;
+			throw new RuntimeException(e);
 		} finally {
 			transaction.complete();
 			timer1.stop();
@@ -350,16 +350,17 @@ public class MqResource implements IMqResource {
 
 	}
 
-	public void heartbeat(HeartbeatRequest request) {
+	public HeartbeatResponse heartbeat(HeartbeatRequest request) {
 		if (request == null) {
-			return;
+			return null;
 		}
 		String url = MqConstanst.CONSUMERPRE + "/heartbeat";
 		try {
-			post(request, url, 3, HeartbeatResponse.class, false);
-		} catch (Exception e) {
+			return post(request, url, 3, HeartbeatResponse.class, false);
+		} catch (Throwable e) {
 			// TODO: handle exception
 		}
+		return null;
 	}
 
 	public GetConsumerGroupResponse getConsumerGroup(GetConsumerGroupRequest request) {
@@ -422,7 +423,7 @@ public class MqResource implements IMqResource {
 				String url = MqConstanst.TOOLPRE + "/addLog";
 				try {
 					post(request, url, 1, LogResponse.class, false);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 
 				}
 			}
@@ -440,7 +441,7 @@ public class MqResource implements IMqResource {
 				String url = MqConstanst.TOOLPRE + "/addOpLog";
 				try {
 					post(request, url, 5, OpLogResponse.class, false);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					// TODO: handle exception
 				}
 
@@ -459,7 +460,7 @@ public class MqResource implements IMqResource {
 				String url = MqConstanst.TOOLPRE + "/sendMail";
 				try {
 					post(request, url, 1, SendMailResponse.class, false);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					// TODO: handle exception
 				}
 			}

@@ -110,7 +110,7 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 					countDownLatch.await();
 				}
 				transaction.setStatus(Transaction.SUCCESS);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				transaction.setStatus(e);
 			} finally {
 				transaction.complete();
@@ -146,7 +146,7 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 				catTransaction.setStatus(Transaction.SUCCESS);
 
 				return true;
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				failMapAppPolling.put(request.getQueueOffsetId(), request);
 				log.error("doSubmitOffset失败", e);
 				catTransaction.setStatus(e);
@@ -237,7 +237,7 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 		try {
 			isRunning = false;
 			executorRun.shutdown();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			// TODO: handle exception
 		}
 

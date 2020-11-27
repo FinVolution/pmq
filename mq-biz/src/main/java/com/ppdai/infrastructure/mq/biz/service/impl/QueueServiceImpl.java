@@ -130,7 +130,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 						updateCache();
 						lastUpdateTime = System.currentTimeMillis();
 
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("QueueServiceImpl_initCache_error", e);
 					}
 					Util.sleep(soaConfig.getMqQueueCacheInterval());
@@ -156,7 +156,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 							initMaxTrace.add(traceMessageItem);
 							lastUpdateTime = System.currentTimeMillis();
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("QueueServiceImpl_initMax_error", e);
 					}
 					Util.sleep(soaConfig.getMqQueueMaxRebuildInterval());
@@ -338,7 +338,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 		try {
 			executor.shutdown();
 			isRunning = false;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 		}
 	}
 

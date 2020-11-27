@@ -118,7 +118,7 @@ public class UiQueueService implements TimerService {
 								}
 							}
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("UiQueueServiceImpl_initCache_error", e);
 					}
 					if (queueListAvg.get().size() == 0) {

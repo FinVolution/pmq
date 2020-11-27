@@ -111,7 +111,7 @@ public class ConsumerGroupTopicServiceImpl extends AbstractBaseService<ConsumerG
 					while (isRunning) {
 						try {
 							updateCache();
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							log.error("ConsumerGroupTopicService_updateCache_error", e);
 						}
 						Util.sleep(soaConfig.getMqConsumerGroupTopicCacheInterval());

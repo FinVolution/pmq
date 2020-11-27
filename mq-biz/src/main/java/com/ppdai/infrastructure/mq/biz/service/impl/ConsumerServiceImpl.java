@@ -321,10 +321,11 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
     }
 
     @Override
-    public void heartbeat(List<Long> ids) {
+    public int heartbeat(List<Long> ids) {
         if (!CollectionUtils.isEmpty(ids)) {
-            consumerRepository.heartbeat(ids);
+           return consumerRepository.heartbeat(ids);
         }
+        return 0;
     }
 
     @Override

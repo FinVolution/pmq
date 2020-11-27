@@ -132,7 +132,7 @@ public class UiTopicService implements TimerService {
 								}
 							}
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("UiQueueServiceImpl_initCache_error", e);
 					}
 					if (uiQueueService.getQueueListCount().size() == 0) {

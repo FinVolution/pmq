@@ -77,7 +77,7 @@ public class ProxyService {
 						try {
 							checkConfig();
 							transaction.setStatus(Transaction.SUCCESS);
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							transaction.setStatus(e);
 						} finally {
 							transaction.complete();
@@ -100,7 +100,7 @@ public class ProxyService {
 							}
 						}
 						transaction.setStatus(Transaction.SUCCESS);
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						transaction.setStatus(e);
 					} finally {
 						transaction.complete();

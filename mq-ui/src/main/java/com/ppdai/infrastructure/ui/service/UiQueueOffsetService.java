@@ -131,7 +131,7 @@ public class UiQueueOffsetService implements TimerService {
 								}
 							}
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("UiQueueOffsetServiceImpl_initCache_error", e);
 					}
 					if (queueOffsetVos.get().size() == 0) {
