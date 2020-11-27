@@ -31,7 +31,7 @@ public interface Message01Repository extends BaseRepository<Message01Entity> {
 
 	Message01Entity getNearByMessageById(@Param("tbName") String tbName, @Param("id") long id);
 
-	void deleteDy(@Param("tbName") String tbName, @Param("start") long start, @Param("end") long end);
+	int deleteDy(@Param("tbName") String tbName, @Param("nextId") long nextId, @Param("date") String date);
 
 	void deleteByIds(@Param("tbName") String tbName, @Param("ids") List<Long> ids);
 
@@ -56,5 +56,6 @@ public interface Message01Repository extends BaseRepository<Message01Entity> {
 			@Param("retryCount") int retryCount);
 
 	int deleteOldFailMsg(@Param("tbName") String tbName, @Param("id") long id, @Param("retryCount") int retryCount);
+	Long getNextId(@Param("tbName") String tbName, @Param("id") long id, @Param("size") int size);
 
 }

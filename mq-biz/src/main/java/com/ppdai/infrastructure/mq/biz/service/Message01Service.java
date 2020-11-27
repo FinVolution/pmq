@@ -30,7 +30,7 @@ public interface Message01Service {
 
 	Message01Entity getNearByMessageById(String tbName, long id);
 
-	void deleteDy(String tbName, long start, long end);
+	int deleteDy(String tbName, long nextId, String date);
 	
 	void deleteByIds(String tbName, List<Long> ids);
 
@@ -76,4 +76,6 @@ public interface Message01Service {
 	void updateFailMsgResult(String tbName, List<Long> ids, int retryCount);
 
 	int deleteOldFailMsg(String tbName, long id, int retryCount);
+	long getNextId(String tbName, long id,  int size);
+
 }

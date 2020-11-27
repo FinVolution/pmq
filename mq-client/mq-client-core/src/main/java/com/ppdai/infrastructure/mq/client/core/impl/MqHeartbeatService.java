@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.client.HeartbeatResponse;
+import com.ppdai.infrastructure.mq.client.server.StatService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,7 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 					}
 				}
 			}, 1, 10, TimeUnit.SECONDS);
+			StatService.start();
 		}
 	}
 

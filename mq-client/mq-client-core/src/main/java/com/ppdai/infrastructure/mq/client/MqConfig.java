@@ -26,7 +26,14 @@ public class MqConfig {
 	private int pullDeltaTime = 1000;
 	// 异步发送最大等待时间
 	private int publishAsynTimeout=1000;
+	private boolean mqclientopen=true;
+	public boolean isMqclientopen() {
+		return mqclientopen;
+	}
 
+	public void setMqclientopen(boolean mqclientopen) {
+		this.mqclientopen = mqclientopen;
+	}
 	public int getPublishAsynTimeout() {
 		return publishAsynTimeout;
 	}

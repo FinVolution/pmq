@@ -139,12 +139,16 @@
 	</select>
 
 
+
 	<delete id="deleteDy" parameterType="java.util.Map"
-		statementType="STATEMENT">
-	     <![CDATA[
-	       delete from ${tbName} where id<=${end}
+			statementType="STATEMENT">
+		<![CDATA[
+	       delete from ${tbName} where id<=${nextId} and send_time <'${date}'
 	      ]]>
 	</delete>
+	<select id="getNextId" resultType="java.lang.Long" useCache="false">
+		select id from ${tbName} where id>=${id} order by id asc limit ${size},1
+	</select>
 	<delete id="deleteByIds">
 		delete from ${tbName} where id in
 		(

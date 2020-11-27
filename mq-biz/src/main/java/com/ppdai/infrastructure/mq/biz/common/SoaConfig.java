@@ -355,7 +355,7 @@ public class SoaConfig {
 	private volatile String _getCleanMessageInterval = "";
 	private volatile int getCleanMessageInterval = 0;
 	private final String env_getCleanMessageInterval_key = "mq.msg.clean.interval";
-	private final String env_getCleanMessageInterval_defaultValue = "86400";
+	private final String env_getCleanMessageInterval_defaultValue = "1800";
 	private final String env_getCleanMessageInterval_des = "审计日志和历史消息定时清理时间";
 
 	// 审计日志和历史消息定时清理时间
@@ -367,13 +367,13 @@ public class SoaConfig {
 						env_getCleanMessageInterval_defaultValue);
 				getCleanMessageInterval = Integer.parseInt(
 						env.getProperty(env_getCleanMessageInterval_key, env_getCleanMessageInterval_defaultValue));
-				if (getCleanMessageInterval < 86400) {
-					getCleanMessageInterval = 86400;
+				if (getCleanMessageInterval < 1800) {
+					getCleanMessageInterval = 1800;
 				}
 				onChange();
 			}
 		} catch (Exception e) {
-			getCleanMessageInterval = 86400;
+			getCleanMessageInterval = 1800;
 			onChange();
 			log.error("getgetCleanMessageInterval_SoaConfig_error", e);
 		}
@@ -2748,7 +2748,7 @@ public class SoaConfig {
 	private final String env_getSkipTime_defaultValue = "";
 	private final String env_getSkipTime_des = "消息清理跳过时间格式为, 00:00-1:00,2:00-3:00";
 
-	private volatile String _getSkipTime = "";
+	public volatile String _getSkipTime = "";
 	private AtomicReference<List<TimeRange>> getSkipTime = new AtomicReference<List<TimeRange>>(new ArrayList<>());
 
 	public List<TimeRange> getSkipTime() {

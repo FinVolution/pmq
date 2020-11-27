@@ -82,20 +82,6 @@ public class Message01ServiceImpl implements Message01Service {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
-	public void deleteDy(String tbName, long start, long end) {
-		try {
-			setMaster(true); 
-			message01Repository.deleteDy(getDbName() + "." + tbName, start, end);
-		} catch (Exception e) {
-			otherFailCounter.inc();
-			throw new RuntimeException(e);
-		} finally {
-			clearDbId();
-		}
-	}
-
-	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
 	public List<Message01Entity> getListDy(String topic, String tbName, long start, long end) {
 		List<Message01Entity> rs = new ArrayList<>();
 		setMaster(false);
@@ -367,6 +353,20 @@ public class Message01ServiceImpl implements Message01Service {
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
+	public int deleteDy(String tbName, long nextId, String date) {
+		try {
+			setMaster(true);
+			return  message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date);
+		} catch (Throwable e) {
+			otherFailCounter.inc();
+			return 0;
+		} finally {
+			clearDbId();
+		}
+	}
+
+	@Override
 	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
 	public String getMaxConnectionsCount() {
 		try {
@@ -417,6 +417,24 @@ public class Message01ServiceImpl implements Message01Service {
 		} finally {
 			clearDbId();
 		}
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
+	public long getNextId(String tbName, long id, int size) {
+		try {
+			setMaster(true);
+			Long maxId= message01Repository.getNextId(getDbName() + "." + tbName, id,size);
+			if(maxId==null){
+				return 0;
+			}
+			return maxId;
+		} catch (Throwable e) {
+			log.error("getNextId_error",e);
+		} finally {
+			clearDbId();
+		}
+		return 0;
 	}
 
 	@Override
