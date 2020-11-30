@@ -218,6 +218,9 @@ public class MessageCleanService extends AbstractTimerService {
 					transaction.setStatus(Transaction.SUCCESS);
 					break;
 				}
+				if(lastMinId==0){
+					lastMinId=minId;
+				}
 				message01Service.setDbId(queueEntity.getDbNodeId());
 				long nextId=message01Service.getNextId(queueEntity.getTbName(),minId,soaConfig.getCleanBatchSize());
 				if(nextId==0){
