@@ -7,17 +7,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
+import com.ppdai.infrastructure.mq.biz.entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -27,16 +26,7 @@ import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
 import com.ppdai.infrastructure.mq.biz.common.util.EmailUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
-import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
-import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity;
-import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
-import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
-import com.ppdai.infrastructure.mq.biz.service.EmailService;
 import com.ppdai.infrastructure.mq.biz.service.Message01Service;
-import com.ppdai.infrastructure.mq.biz.service.QueueOffsetService;
 import com.ppdai.infrastructure.mq.biz.service.QueueService;
 import com.ppdai.infrastructure.mq.biz.service.TopicService;
 
@@ -114,7 +104,7 @@ public class MessageCleanService extends AbstractTimerService {
 			return;
 		}
 		createThreadExcutor(dbNodeTopicMap.size());
-		CountDownLatch countDownLatch = new CountDownLatch(executor.getPoolSize());
+		CountDownLatch countDownLatch = new CountDownLatch(dbNodeTopicMap.size());
 
 		log.info("begin to clean all db queue!");
 		for (Map.Entry<String, Map<String, TopicVo>> entry1 : dbNodeTopicMap.entrySet()) {
@@ -145,9 +135,15 @@ public class MessageCleanService extends AbstractTimerService {
 	private void clearOneDbData(
 			Map.Entry<String, Map<String, TopicVo>> entry1) {
 		Map<String, TopicVo> dataTopic = entry1.getValue();
+		int count=0;
 		for (Map.Entry<String, TopicVo> entry : dataTopic.entrySet()) {
-			deleteOldData(entry.getValue(),  entry1.getKey());
-			log.info("deleted "+entry.getKey());
+			if(isMaster()){
+				deleteOldData(entry.getValue(), entry1.getKey());
+				count++;
+				log.info("deleted " + entry.getKey()+","+ count+ " of "+dataTopic.size()+" in ip "+entry1.getKey());
+			}else{
+				return;
+			}
 		}
 	}
 
@@ -197,8 +193,9 @@ public class MessageCleanService extends AbstractTimerService {
 		return Util.formateDate(date);
 	}
 
-	private void clearOneQueue(TopicEntity topicEntity, QueueEntity queueEntity, String ip,String date) {
-		long lastMinId=0;
+	private void clearOneQueue(TopicEntity topicEntity, QueueEntity queueEntity, String ip, String date) {
+		long lastMinId = 0;
+		long nextId = 0;
 		while (true && isMaster() && soaConfig.isEnbaleMessageClean()) {
 			topicEntity = topicService.getCache().get(topicEntity.getName());
 			if (topicEntity == null) {
@@ -209,42 +206,47 @@ public class MessageCleanService extends AbstractTimerService {
 				// 说明队列分配发生了变化
 				break;
 			}
-			Transaction transaction = Tracer.newTransaction("mq-msg", "clear-msg-"+topicEntity.getName());
+			Transaction transaction = Tracer.newTransaction("mq-msg", "clear-msg-" + topicEntity.getName());
 			try {
-				message01Service.setDbId(queueEntity.getDbNodeId());
-				Long minId=message01Service.getTableMinId(queueEntity.getTbName());
-				//lastMinId=minId;
-				if(minId==null || minId==0){
-					transaction.setStatus(Transaction.SUCCESS);
-					break;
+				if (lastMinId == 0) {
+					message01Service.setDbId(queueEntity.getDbNodeId());
+					Long minId = message01Service.getTableMinId(queueEntity.getTbName());
+					if (minId == null || minId == 0) {
+						transaction.setStatus(Transaction.SUCCESS);
+						TableInfoEntity tableInfoEntity= message01Service.getSingleTableInfoFromCache(temp);
+						if(tableInfoEntity!=null){
+						  lastMinId=tableInfoEntity.getMaxId()-tableInfoEntity.getTbRows()-1;
+						}
+						break;
+					}
+					else{
+						lastMinId = minId;
+					}
+					message01Service.setDbId(queueEntity.getDbNodeId());
+					nextId = message01Service.getNextId(queueEntity.getTbName(), minId, soaConfig.getCleanBatchSize());
+					if (nextId == 0) {
+						transaction.setStatus(Transaction.SUCCESS);
+						break;
+					}
+				} else {
+					nextId = nextId + soaConfig.getCleanBatchSize();
 				}
-				if(lastMinId==0){
-					lastMinId=minId;
-				}
-				message01Service.setDbId(queueEntity.getDbNodeId());
-				long nextId=message01Service.getNextId(queueEntity.getTbName(),minId,soaConfig.getCleanBatchSize());
-				if(nextId==0){
-					transaction.setStatus(Transaction.SUCCESS);
-					break;
-				}
-				//lastMinId=nextId;
 				long sleepTime = getSkipTime();
 				if (sleepTime != 0) {
 					log.info("当前时间在skip时间内，需要等待" + sleepTime + "ms");
 					Util.sleep(sleepTime);
 				}
 				message01Service.setDbId(queueEntity.getDbNodeId());
-				int rows=message01Service.deleteDy(queueEntity.getTbName(),nextId,date);
-				if(rows==0){
+				int rows = message01Service.deleteDy(queueEntity.getTbName(), nextId, date);
+				if (rows == 0) {
 					transaction.setStatus(Transaction.SUCCESS);
 					break;
-				}
-				else{
+				} else {
 					counter.addAndGet(rows);
-					lastMinId=lastMinId+rows;
+					lastMinId = lastMinId + rows;
 				}
-				if(!topicMap.containsKey(topicEntity.getName())){
-					topicMap.put(topicEntity.getName(),new AtomicLong(0));
+				if (!topicMap.containsKey(topicEntity.getName())) {
+					topicMap.put(topicEntity.getName(), new AtomicLong(0));
 				}
 				topicMap.get(topicEntity.getName()).addAndGet(rows);
 				transaction.setStatus(Transaction.SUCCESS);
@@ -255,8 +257,8 @@ public class MessageCleanService extends AbstractTimerService {
 			}
 			Util.sleep(soaConfig.getCleanSleepTime());
 		}
-		if(queueEntity.getMinId()<lastMinId){
-			queueService.updateMinId(queueEntity.getId(),lastMinId);
+		if (queueEntity.getMinId() < lastMinId) {
+			queueService.updateMinId(queueEntity.getId(), lastMinId);
 		}
 	}
 

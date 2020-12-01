@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
+import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
+import com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity;
 
 /**
  * @author dal-generator
@@ -48,7 +50,10 @@ public interface Message01Service {
 	/*
 	 * key为dbname,里面的key为tbname value为id ,注意此id为下一次的插入的id
 	 */
+	Map<String, Map<String, Long>> getMaxIdByIp(String ip);
 	Map<String, Map<String, Long>> getMaxId();
+
+	Map<String,Map<String,Map<String, TableInfoEntity>>> getTableInfoCache();
 
 	void truncate(String tbName);
 
@@ -77,5 +82,6 @@ public interface Message01Service {
 
 	int deleteOldFailMsg(String tbName, long id, int retryCount);
 	long getNextId(String tbName, long id,  int size);
+	TableInfoEntity getSingleTableInfoFromCache(QueueEntity queueEntity);
 
 }

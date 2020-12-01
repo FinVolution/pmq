@@ -2,10 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ppdai.infrastructure.mq.biz.dal.msg.Message01Repository">
 	<resultMap id="TableInfoMap"
-		type="com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity">
-		<result column="auto_increment" property="autoIncrement" />
+			   type="com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity">
+		<result column="auto_increment" property="maxId" />
 		<result column="table_name" property="tbName" />
-		<result column="table_schema" property="tableSchema" />
+		<result column="table_schema" property="dbName" />
+		<result column="table_rows" property="tbRows"/>
+		<result column="dataSize" property="dataSize"/>
 	</resultMap>
 	<!-- 业务逻辑sql请写在这个文件内 -->
 	<insert id="insertBatchDy" useGeneratedKeys="false">
@@ -171,7 +173,7 @@
 
 	<select id="getMaxIdByDb" resultMap="TableInfoMap" useCache="false">
 		select
-		table_schema,table_name,auto_increment from
+		table_schema,table_name,auto_increment,table_rows ,round(data_length/1024/1024/1024,2) as dataSize from
 		information_schema.tables
 		where table_type='BASE TABLE'
 	</select>

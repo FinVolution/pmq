@@ -523,7 +523,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 			// Map<Long, Long> maxMap = new HashMap<>(data.size());
 			dbIpIdMap.entrySet().forEach(t1 -> {
 				message01Service.setDbId(t1.getValue());
-				Map<String, Map<String, Long>> maxNode = message01Service.getMaxId();
+				Map<String, Map<String, Long>> maxNode = message01Service.getMaxIdByIp(t1.getKey());
 				maxNode.entrySet().forEach(t2 -> {
 					t2.getValue().entrySet().forEach(t3 -> {
 						String key = getKey(t1.getKey(), t2.getKey(), t3.getKey());

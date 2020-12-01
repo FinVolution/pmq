@@ -231,14 +231,14 @@ public class Message01ServiceImplTest extends AbstractTest {
 		message01ServiceImpl.setDbId(1);
 		List<TableInfoEntity> dataLst = new ArrayList<TableInfoEntity>();
 		TableInfoEntity tableInfoEntity = new TableInfoEntity();
-		tableInfoEntity.setAutoIncrement(1L);
-		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setMaxId(1L);
+		tableInfoEntity.setDbName("test");
 		tableInfoEntity.setTbName("t1");
 
 		dataLst.add(tableInfoEntity);
 		tableInfoEntity = new TableInfoEntity();
-		tableInfoEntity.setAutoIncrement(1L);
-		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setMaxId(1L);
+		tableInfoEntity.setDbName("test");
 		tableInfoEntity.setTbName("t2");
 		dataLst.add(tableInfoEntity);
 		when(message01Repository.getMaxIdByDb()).thenReturn(dataLst);
@@ -272,8 +272,8 @@ public class Message01ServiceImplTest extends AbstractTest {
 		
 		List<TableInfoEntity> dataLst =new ArrayList<TableInfoEntity>();
 		TableInfoEntity tableInfoEntity=new TableInfoEntity();
-		tableInfoEntity.setAutoIncrement(1L);
-		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setMaxId(1L);
+		tableInfoEntity.setDbName("test");
 		tableInfoEntity.setTbName("test");
 		dataLst.add(tableInfoEntity);
 		message01ServiceImpl.setDbId(1);		

@@ -5,9 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.sql.DataSource;
 
+import com.ppdai.infrastructure.mq.biz.common.util.Util;
+import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -242,14 +245,21 @@ public class Message01ServiceImpl implements Message01Service {
 		return null;
 	}
 
+	//key:ip,key:dbName,key:tbName,value:info
+	private AtomicReference<Map<String,Map<String,Map<String,TableInfoEntity>>>> tbInfoRef=new AtomicReference<>(new HashMap<>());
 	/*
 	 * 注意是某个数据库实例下面的数据库名和表名对应的 最大id
 	 */
 	@Override
-	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
-	public Map<String, Map<String, Long>> getMaxId() {
-		setMaster(true); 
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
+	public Map<String, Map<String, Long>> getMaxIdByIp(String ip) {
+		setMaster(true);
 		Map<String, Map<String, Long>> map = new HashMap<>();
+		//key:dbName,key:tbName,value:info
+		Map<String,Map<String,TableInfoEntity>> dbMap= null;
+		if(!Util.isEmpty(ip)){
+			dbMap=new HashMap<>(100000);
+		}
 		try {
 			if (getDataSource() == null) {
 				// throw new RuntimeException("db_is_null_and_id_is_" +
@@ -257,17 +267,23 @@ public class Message01ServiceImpl implements Message01Service {
 				return map;
 			}
 			List<TableInfoEntity> dataLst = message01Repository.getMaxIdByDb();
+			Map<String, Map<String, TableInfoEntity>> finalDbMap = dbMap;
 			dataLst.forEach(t1 -> {
-				if (!map.containsKey(t1.getTableSchema())) {
-					map.put(t1.getTableSchema(), new HashMap<>());
+				if (!map.containsKey(t1.getDbName())) {
+					map.put(t1.getDbName(), new HashMap<>());
+				}
+				if(!Util.isEmpty(ip)) {
+					Map<String, TableInfoEntity> tbMap = new HashMap<>();
+					if (!finalDbMap.containsKey(t1.getDbName())) {
+						finalDbMap.put(t1.getDbName(), tbMap);
+					}
+					finalDbMap.get(t1.getDbName()).put(t1.getTbName(), t1);
 				}
 				// map.putIfAbsent(t1.getTableSchema(), new HashMap<>());
-				if (!map.get(t1.getTableSchema()).containsKey(t1.getTbName())) {
-					map.get(t1.getTableSchema()).put(t1.getTbName(),
-							t1.getAutoIncrement() == null ? 1 : t1.getAutoIncrement());
+				if (!map.get(t1.getDbName()).containsKey(t1.getTbName())) {
+					map.get(t1.getDbName()).put(t1.getTbName(),
+							t1.getMaxId() == null ? 1 : t1.getMaxId());
 				}
-				// map.get(t1.getTableSchema()).putIfAbsent(t1.getTbName(),
-				// t1.getAutoIncrement() == null ? 1 : t1.getAutoIncrement());
 
 			});
 		} catch (Exception e) {
@@ -276,8 +292,21 @@ public class Message01ServiceImpl implements Message01Service {
 		} finally {
 			clearDbId();
 		}
+		if(!Util.isEmpty(ip)) {
+			tbInfoRef.get().put(ip,dbMap);
+		}
 		return map;
 	}
+
+	/*
+	 * 注意是某个数据库实例下面的数据库名和表名对应的 最大id
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
+	public Map<String, Map<String, Long>> getMaxId() {
+		return getMaxIdByIp(null);
+	}
+
 
 	@Override
 	@Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
@@ -450,4 +479,20 @@ public class Message01ServiceImpl implements Message01Service {
 		}
 	}
 
+	//ip,dbname,tbname,tbinfo
+	@Override
+	public Map<String, Map<String, Map<String, TableInfoEntity>>> getTableInfoCache() {
+		return tbInfoRef.get();
+	}
+
+
+	@Override
+	public TableInfoEntity getSingleTableInfoFromCache(QueueEntity queueEntity) {
+		Map<String, Map<String, Map<String, TableInfoEntity>>> tableInfoCache = getTableInfoCache();
+		if (tableInfoCache.containsKey(queueEntity.getIp()) && tableInfoCache.get(queueEntity.getIp()).containsKey(queueEntity.getDbName()) && tableInfoCache.get(queueEntity.getIp()).get(queueEntity.getDbName()).containsKey(queueEntity.getTbName())) {
+			TableInfoEntity tableInfoEntity = tableInfoCache.get(queueEntity.getIp()).get(queueEntity.getDbName()).get(queueEntity.getTbName());
+			return tableInfoEntity;
+		}
+		return null;
+	}
 }

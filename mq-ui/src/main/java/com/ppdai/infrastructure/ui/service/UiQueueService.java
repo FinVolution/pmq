@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
 
+import com.ppdai.infrastructure.mq.biz.entity.*;
 import com.ppdai.infrastructure.mq.biz.ui.dto.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +37,6 @@ import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.UserInfo;
 import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity;
-import com.ppdai.infrastructure.mq.biz.entity.DbNodeEntity;
-import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity;
-import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
 import com.ppdai.infrastructure.mq.biz.service.AuditLogService;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
 import com.ppdai.infrastructure.mq.biz.service.DbNodeService;
@@ -167,35 +161,29 @@ public class UiQueueService implements TimerService {
 					}
 					long maxId = queueMaxIdMap.get(queueEntity.getId());
 					long minId = queueEntity.getMinId();
-					queueVo.setMsgCount(maxId - minId - 1);
+
 					queueVo.setMaxId(maxId);
 
 					message01Service.setDbId(queueEntity.getDbNodeId());
-					// 取倒数第2000条消息
-					Message01Entity message01Entity1 = message01Service.getMessageById(queueEntity.getTbName(),
-							minId + 1 + soaConfig.getCleanBatchSize());
-
-					message01Service.setDbId(queueEntity.getDbNodeId());
 					// 取倒数第一条消息
-					Message01Entity message01Entity2 = message01Service.getMessageById(queueEntity.getTbName(),
+					Message01Entity message01Entity1 = message01Service.getMessageById(queueEntity.getTbName(),
 							minId + 1);
+					TableInfoEntity tableInfo = message01Service.getSingleTableInfoFromCache(queueEntity);
+					queueVo.setMsgCount(tableInfo.getTbRows());
 					queueVo.setAvgCount(queueVo.getMsgCount() / topicEntity.getSaveDayNum());
+					queueVo.setDataSize(tableInfo.getDataSize());
+
+					if(!StringUtils.isEmpty(topicEntity.getOwnerNames())){
+						queueVo.setTopicOwnerName(topicEntity.getOwnerNames());
+						queueVo.setSaveDayNum(topicEntity.getSaveDayNum());
+					}
 
 					if (message01Entity1 != null) {
 						queueVo.setMinTime(message01Entity1.getSendTime());
 						if ((System.currentTimeMillis()
 								- message01Entity1.getSendTime().getTime()) > (topicEntity.getSaveDayNum() + 1) * 24
-										* 60 * 60 * 1000) {
+								* 60 * 60 * 1000) {
 							queueVo.setIsException(1);
-						}
-					} else {
-						if (message01Entity2 != null) {
-							queueVo.setMinTime(message01Entity2.getSendTime());
-							if ((System.currentTimeMillis()
-									- message01Entity2.getSendTime().getTime()) > (topicEntity.getSaveDayNum() + 1)
-											* 24 * 60 * 60 * 1000) {
-								queueVo.setIsException(1);
-							}
 						}
 					}
 					queueVosAvg.add(queueVo);
