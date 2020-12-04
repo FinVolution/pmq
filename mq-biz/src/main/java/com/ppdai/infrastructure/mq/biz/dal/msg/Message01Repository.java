@@ -58,4 +58,5 @@ public interface Message01Repository extends BaseRepository<Message01Entity> {
 	int deleteOldFailMsg(@Param("tbName") String tbName, @Param("id") long id, @Param("retryCount") int retryCount);
 	Long getNextId(@Param("tbName") String tbName, @Param("id") long id, @Param("size") int size);
 
+	Message01Entity getMinIdMsg(@Param("tbName") String tbName);
 }

@@ -83,5 +83,5 @@ public interface Message01Service {
 	int deleteOldFailMsg(String tbName, long id, int retryCount);
 	long getNextId(String tbName, long id,  int size);
 	TableInfoEntity getSingleTableInfoFromCache(QueueEntity queueEntity);
-
+	Message01Entity getMinIdMsg(String tbName);
 }

@@ -251,5 +251,8 @@
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 		COLLATE=utf8mb4_unicode_ci COMMENT='消息'
 	</update>
-
+	<select id="getMinIdMsg" resultMap="BaseResultMap" useCache="false">
+		select *
+		from ${tbName} order by id asc limit 1
+	</select>
 </mapper>
