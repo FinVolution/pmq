@@ -383,10 +383,10 @@ public class Message01ServiceImpl implements Message01Service {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
-	public int deleteDy(String tbName, long nextId, String date) {
+	public int deleteDy(String tbName, long nextId, String date,int size) {
 		try {
 			setMaster(true);
-			return  message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date);
+			return  message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date,size);
 		} catch (Throwable e) {
 			otherFailCounter.inc();
 			return 0;

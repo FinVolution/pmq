@@ -435,7 +435,7 @@ public class SoaConfig {
 	private volatile String _getCleanSleepTime = "";
 	private volatile int getCleanSleepTime = 100;
 	private final String env_getCleanSleepTime_key = "mq.message.clean.sleep.time";
-	private final String env_getCleanSleepTime_defaultValue = "10";
+	private final String env_getCleanSleepTime_defaultValue = "50";
 	private final String env_getCleanSleepTime_des = "历史消息清理间隔时间";
 
 	// 历史消息清理间隔时间
@@ -446,8 +446,8 @@ public class SoaConfig {
 				_getCleanSleepTime = env.getProperty(env_getCleanSleepTime_key, env_getCleanSleepTime_defaultValue);
 				getCleanSleepTime = Integer
 						.parseInt(env.getProperty(env_getCleanSleepTime_key, env_getCleanSleepTime_defaultValue));
-				if (getCleanSleepTime < 2) {
-					getCleanSleepTime = 2;
+				if (getCleanSleepTime < 10) {
+					getCleanSleepTime = 10;
 				}
 				onChange();
 			}

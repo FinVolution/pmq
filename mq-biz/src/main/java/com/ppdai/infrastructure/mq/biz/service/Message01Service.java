@@ -32,7 +32,7 @@ public interface Message01Service {
 
 	Message01Entity getNearByMessageById(String tbName, long id);
 
-	int deleteDy(String tbName, long nextId, String date);
+	int deleteDy(String tbName, long nextId, String date,int size);
 	
 	void deleteByIds(String tbName, List<Long> ids);
 

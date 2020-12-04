@@ -31,7 +31,7 @@ public interface Message01Repository extends BaseRepository<Message01Entity> {
 
 	Message01Entity getNearByMessageById(@Param("tbName") String tbName, @Param("id") long id);
 
-	int deleteDy(@Param("tbName") String tbName, @Param("nextId") long nextId, @Param("date") String date);
+	int deleteDy(@Param("tbName") String tbName, @Param("nextId") long nextId, @Param("date") String date,@Param("size") int size);
 
 	void deleteByIds(@Param("tbName") String tbName, @Param("ids") List<Long> ids);
 

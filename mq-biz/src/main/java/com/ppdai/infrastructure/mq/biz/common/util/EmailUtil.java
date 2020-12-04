@@ -1,9 +1,6 @@
 package com.ppdai.infrastructure.mq.biz.common.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -11,10 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.SimpleEmail;
+import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
+import org.apache.commons.mail.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,18 +25,18 @@ public class EmailUtil {
 	private static final Logger log = LoggerFactory.getLogger(EmailUtil.class);
 	@Autowired
 	private SoaConfig soaConfig;
-	private final String[] arrInfo = { "info", "warn", "error" };
+	private final String[] arrInfo = {"info", "warn", "error"};
 	private volatile String adminEmail = "";
 	private volatile List<String> adminEmailLst = new ArrayList<>();
 	private final Object lokObj = new Object();
-	private LinkedBlockingDeque<EmailVo> emailVos = new LinkedBlockingDeque<>(3000);
+	private LinkedBlockingDeque<EmailVo> emailVos = new LinkedBlockingDeque<>(4000);
 	private ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 3L, TimeUnit.SECONDS,
 			new ArrayBlockingQueue<>(50), SoaThreadFactory.create("EmailUtil", true),
 			new ThreadPoolExecutor.DiscardPolicy());
 
 	@PostConstruct
 	public void init() {
-		System.setProperty("mail.mime.charset","UTF-8"); 
+		System.setProperty("mail.mime.charset", "UTF-8");
 		executor.submit(new Runnable() {
 			@Override
 			public void run() {
@@ -73,93 +68,95 @@ public class EmailUtil {
 		return adminEmailLst;
 	}
 
-	public void sendInfoMail(String title, String content, List<String> rev) {
+	public boolean sendInfoMail(String title, String content, List<String> rev) {
 		try {
-			sendMail(title, content, rev, 0);
+			return sendMail(title, content, rev, 0);
 		} catch (Exception e) {
-
+			return false;
 		}
 	}
 
-	public void sendInfoMail(String title, String content, String rev) {
-		try {
-			rev = rev + "";
-			sendMail(title, content, Arrays.asList(rev.split(",")), 0);
-		} catch (Exception e) {
-
-		}
-	}
-
-	public void sendInfoMail(String title, String content) {
-		try {
-			sendMail(title, content, new ArrayList<>(), 0);
-		} catch (Exception e) {
-
-		}
-	}
-
-	public void sendWarnMail(String title, String content, List<String> rev) {
-		try {
-			sendMail(title, content, rev, 1);
-		} catch (Exception e) {
-
-		}
-	}
-
-	public void sendWarnMail(String title, String content, String rev) {
+	public boolean sendInfoMail(String title, String content, String rev) {
 		try {
 			rev = rev + "";
-			sendMail(title, content, Arrays.asList(rev.split(",")), 1);
+			return sendMail(title, content, Arrays.asList(rev.split(",")), 0);
 		} catch (Exception e) {
-
+			return false;
 		}
 	}
 
-	public void sendWarnMail(String title, String content) {
+	public boolean sendInfoMail(String title, String content) {
 		try {
-			sendMail(title, content, new ArrayList<>(), 1);
+			return sendMail(title, content, new ArrayList<>(), 0);
 		} catch (Exception e) {
-
+			return false;
 		}
 	}
 
-	public void sendErrorMail(String title, String content, List<String> rev) {
+	public boolean sendWarnMail(String title, String content, List<String> rev) {
 		try {
-			sendMail(title, content, rev, 2);
+			return sendMail(title, content, rev, 1);
 		} catch (Exception e) {
-
+			return false;
 		}
 	}
 
-	public void sendErrorMail(String title, String content, String rev) {
+	public boolean sendWarnMail(String title, String content, String rev) {
 		try {
 			rev = rev + "";
-			sendMail(title, content, Arrays.asList(rev.split(",")), 2);
+			return sendMail(title, content, Arrays.asList(rev.split(",")), 1);
 		} catch (Exception e) {
-
+			return false;
 		}
 	}
 
-	public void sendErrorMail(String title, String content) {
+	public boolean sendWarnMail(String title, String content) {
 		try {
-			sendMail(title, content, new ArrayList<>(), 2);
+			return sendMail(title, content, new ArrayList<>(), 1);
 		} catch (Exception e) {
-
+			return false;
 		}
 	}
 
-	public void sendMail(String title, String content, List<String> rev, int type) {
+	public boolean sendErrorMail(String title, String content, List<String> rev) {
+		try {
+			return sendMail(title, content, rev, 2);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean sendErrorMail(String title, String content, String rev) {
+		try {
+			rev = rev + "";
+			return sendMail(title, content, Arrays.asList(rev.split(",")), 2);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean sendErrorMail(String title, String content) {
+		try {
+			return sendMail(title, content, new ArrayList<>(), 2);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public boolean sendMail(String title, String content, List<String> rev, int type) {
 		if (!soaConfig.isEmailEnable()) {
-			return;
+			return true;
 		}
-		if (!CollectionUtils.isEmpty(rev) || !CollectionUtils.isEmpty(getAdminEmail())||emailVos.size()<3000) {
+		if (!CollectionUtils.isEmpty(rev) || !CollectionUtils.isEmpty(getAdminEmail())) {
 			try {
-				emailVos.add(new EmailVo(title, content+",and send time is "+Util.formateDate(new Date()), rev, type));
+				emailVos.add(new EmailVo(title, content + ",and send time is " + Util.formateDate(new Date()), rev, type));
+				return true;
 			} catch (Exception e) {
-				// TODO: handle exception
+				return false;
 			}
 			// doSendMail(title, content, rev, type);
 		}
+		return true;
 	}
 
 	private void doSendMail(EmailVo emailVo) {
@@ -179,7 +176,7 @@ public class EmailUtil {
 			email.setSubject("[Mq3-" + arrInfo[emailVo.getType()] + "-" + soaConfig.getEnvName() + "环境]:"
 					+ emailVo.getTitle() + " ,send by " + IPUtil.getLocalIP());
 			email.setMsg(emailVo.getContent());
-			if (!CollectionUtils.isEmpty(emailVo.getRev())&&!soaConfig.isOnlyEmailAdmin()) {
+			if (!CollectionUtils.isEmpty(emailVo.getRev()) && !soaConfig.isOnlyEmailAdmin()) {
 				emailVo.getRev().forEach(t1 -> {
 					try {
 						if (!StringUtils.isEmpty(t1)) {
@@ -201,16 +198,53 @@ public class EmailUtil {
 				}
 			});
 			email.send();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error("sendMail_error", e);
 		}
 	}
+	public boolean sendImmediately(EmailVo emailVo, int maxRetry) {
+		String[] receivers = filterInvalidEmail(emailVo.getRev());
+		if(receivers.length <= 0) {
+			return false;
+		}
 
-	class EmailVo {
+		HtmlEmail email = new HtmlEmail();
+		email.setHostName(soaConfig.getEmailHost());
+		email.setSmtpPort(soaConfig.getEmailPort());
+		email.setAuthenticator(new DefaultAuthenticator(soaConfig.getEmailAuName(), soaConfig.getEmailAuPass()));
+		email.setSSLOnConnect(false);
+		email.setCharset("UTF-8");
+		email.setSubject(emailVo.getTitle());
+		int retries = 1;
+		do {
+			try {
+				email.setFrom(soaConfig.getEmailAuName(), emailVo.getSenderName());
+				email.setHtmlMsg(emailVo.getContent());
+				email.setTextMsg("你的邮件客户端不支持html邮件");
+				email.addTo(receivers);
+				email.send();
+				return true;
+			} catch (EmailException e) {
+				if( retries >= maxRetry) {
+					Tracer.logError(e);
+				}
+				retries++;
+			}
+		} while(retries <= maxRetry);
+		return false;
+	}
+
+	private String[] filterInvalidEmail(Collection<String> addresses) {
+		return addresses.stream().toArray(String[]::new);
+	}
+
+	public static class EmailVo {
 		String title;
 		String content;
 		List<String> rev;
 		int type;
+		String senderName;
+
 
 		public EmailVo() {
 
@@ -255,5 +289,14 @@ public class EmailUtil {
 			this.type = type;
 		}
 
+		public String getSenderName() {
+			return senderName;
+		}
+
+		public EmailVo setSenderName(String senderName) {
+			this.senderName = senderName;
+			return this;
+		}
 	}
+
 }

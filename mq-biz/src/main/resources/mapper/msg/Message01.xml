@@ -145,7 +145,7 @@
 	<delete id="deleteDy" parameterType="java.util.Map"
 			statementType="STATEMENT">
 		<![CDATA[
-	       delete from ${tbName} where id<=${nextId} and send_time <'${date}' and send_time<date_sub(now(), interval 1 day)
+	       delete from ${tbName} where id<=${nextId} and send_time <'${date}' and send_time<date_sub(now(), interval 1 day) limit ${size}
 	      ]]>
 	</delete>
 	<select id="getNextId" resultType="java.lang.Long" useCache="false">
