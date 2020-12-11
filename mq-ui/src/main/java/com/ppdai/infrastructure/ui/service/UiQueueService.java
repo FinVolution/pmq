@@ -160,14 +160,12 @@ public class UiQueueService implements TimerService {
 						continue;
 					}
 					long maxId = queueMaxIdMap.get(queueEntity.getId());
-					long minId = queueEntity.getMinId();
 
 					queueVo.setMaxId(maxId);
 
 					message01Service.setDbId(queueEntity.getDbNodeId());
 					// 取倒数第一条消息
-					Message01Entity message01Entity1 = message01Service.getMessageById(queueEntity.getTbName(),
-							minId + 1);
+					Message01Entity message01Entity1 = message01Service.getMinIdMsg(queueEntity.getTbName());
 					TableInfoEntity tableInfo = message01Service.getSingleTableInfoFromCache(queueEntity);
 					queueVo.setMsgCount(tableInfo.getTbRows());
 					queueVo.setAvgCount(queueVo.getMsgCount() / topicEntity.getSaveDayNum());
