@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/xhtml" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>MQ队列单表容量告警日报</title>
+</head>
+<body>
+<div>
+    <div style=" ">
+        <div>
+            <span>大家好：</span>
+        </div>
+        <div  style="margin: 10px 5px">
+            <span>截至昨日，总告警数：</span><span th:text="${totalNumber}" ></span>
+        </div>
+        <div >
+            <div class="layui-table-body layui-table-main">
+                <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                    <thead>
+                    <tr style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; background-color: #c7c7c7">
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 320px;">
+                            <div  align="center">
+                                <span style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">Topic 名称</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 120px;">
+                            <div align="center">
+                                <span style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">目前单表大小/GB</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">目前单表行数</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">消息存储天数</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">每天消息量</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">负责人</span>
+                            </div>
+                        </th>
+
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">数据源名称</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">数据库名称</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">表名称</span>
+                            </div>
+                        </th>
+
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="queueInfo : ${queueForReportDataList}">
+                        <td style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.topicName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    测试
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.dataSize}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    0
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.msgCount}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    0
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.saveDayNum}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    0
+                                </span>
+                            </div>
+                        </td>
+
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.avgCount}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.topicOwnerName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.ip}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.dbName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.tbName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div  style="margin: 10px 5px">
+            <span>存在过期消息的Topic数量：</span><span th:text="${QueuesWithExpiredMessagesNumber}" ></span>
+        </div>
+        <div >
+            <div class="layui-table-body layui-table-main">
+                <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                    <thead>
+                    <tr style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; background-color: #c7c7c7">
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 320px;">
+                            <div  align="center">
+                                <span style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">Topic 名称</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 120px;">
+                            <div align="center">
+                                <span style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">目前单表大小/GB</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">目前单表行数</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">消息存储天数</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">每天消息量</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">负责人</span>
+                            </div>
+                        </th>
+
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">数据源名称</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">数据库名称</span>
+                            </div>
+                        </th>
+                        <th style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse; width: 163px;">
+                            <div align="center">
+                                <span  style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;">表名称</span>
+                            </div>
+                        </th>
+
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="queueInfo : ${QueuesWithExpiredMessageList}">
+                        <td style="text-align: left; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.topicName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    测试
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.dataSize}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    0
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.msgCount}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    0
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: right; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.saveDayNum}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                    0
+                                </span>
+                            </div>
+                        </td>
+
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.avgCount}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.topicOwnerName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.ip}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.dbName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                        <td style="text-align: center; border-width: 1px; border-style: solid; border-color: #858585; border-collapse: collapse;">
+                            <div style="margin: 2px 5px;">
+                                <span th:text="${queueInfo.tbName}" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; box-sizing: border-box; font-size: 14px; margin: 5px;" >
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div style="margin: 20px;">
+            请及时到消息后台管理页面中了解详细情况!
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

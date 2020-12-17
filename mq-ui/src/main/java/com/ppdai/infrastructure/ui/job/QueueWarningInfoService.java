@@ -49,47 +49,64 @@ public class QueueWarningInfoService extends AbstractTimerService {
         // 每天8点发送
         Date date = new Date();
         int hours = date.getHours();
-        Integer mailSendTime = Integer.parseInt(environment.getProperty("queue.warning.mail.time", "8")) ;
-        if(hours != mailSendTime){
-            return;
+        Integer mailSendTime = Integer.parseInt(environment.getProperty("queue.warning.mail.time", "8"));
+        // 提前触发,
+        if (hours == (mailSendTime - 2) || hours == (mailSendTime - 1)) {
+            getReport();
+        } else if (hours == mailSendTime) {
+            doChceck(dataSize, tableRows);
         }
+    }
 
-        QueueGetListRequest queueGetListRequest = new QueueGetListRequest();
-        queueGetListRequest.setPage("1");
-        queueGetListRequest.setLimit("20");
-        QueueReportResponse queueForReport = uiQueueService.getQueueForReport(queueGetListRequest, "");
-        List<QueueVo> queueDataList = queueForReport.getData();
+
+    private void doChceck(int dataSize, int tableRows) {
+        List<QueueVo> queueDataList = uiQueueService.getQueueListAvg();
         List<QueueVo> queueForReportDataList = new ArrayList<QueueVo>();
+        List<QueueVo> QueuesWithExpiredMessageList = new ArrayList<QueueVo>();
 
         for (QueueVo queueVo : queueDataList) {
             // 返回单表大小大于5g, 行数大于1千万的 队列
-            if((queueVo.getDataSize()>dataSize) || (queueVo.getMsgCount()>tableRows)){
+            if ((queueVo.getDataSize() > dataSize) || (queueVo.getMsgCount() > tableRows)) {
                 if (queueVo != null) {
                     queueForReportDataList.add(queueVo);
                 }
             }
+            // 找出消息过期的队列
+            if (queueVo.getIsException() == 1) {
+                QueuesWithExpiredMessageList.add(queueVo);
+            }
         }
 
         Context context = new Context();
+        // 如果消息库中最早的一条消息的插入日期，加上消息的保存天数，比今天的日期大，则为异常。
         context.setVariable("totalNumber", queueForReportDataList.size());
+        context.setVariable("QueuesWithExpiredMessagesNumber", QueuesWithExpiredMessageList.size());
         context.setVariable("queueForReportDataList", queueForReportDataList);
+        context.setVariable("QueuesWithExpiredMessageList", QueuesWithExpiredMessageList);
         logger.info(soaConfig.getEnvName() + "- MQ单表容量告警邮件开始发送");
         StringWriter content = new StringWriter();
         templateEngine.process("queue/queueReportEmail", context, content);
 
-//        String revConfig = environment.getProperty("queue.report.receivers");
         String revConfig = environment.getProperty("queue.report.receivers");
         Set<String> receivers = StringUtils.commaDelimitedListToSet(revConfig);
         EmailUtil.EmailVo email = new EmailUtil.EmailVo();
         email.setContent(content.toString());
         email.setRev(new ArrayList<>(receivers));
-        email.setTitle(soaConfig.getEnvName()+ "- MQ单表容量告警");
+        email.setTitle(soaConfig.getEnvName()  + "- MQ单表容量告警");
         email.setSenderName("MQ队列告警信息");
         boolean result = emailUtil.sendImmediately(email, 3);
 
         if (!result) {
-            logger.info(soaConfig.getEnvName()+ "- MQ单表容量告警, 发送告警失败!!");
+            logger.info(soaConfig.getEnvName()  + "- MQ单表容量告警, 发送告警失败!!");
         }
-        logger.info(soaConfig.getEnvName() + "- MQ单表容量告警, 邮件发送成功");
+        logger.info(soaConfig.getEnvName()  + "- MQ单表容量告警, 邮件发送成功");
     }
+
+    private void getReport() {
+        QueueGetListRequest queueGetListRequest = new QueueGetListRequest();
+        queueGetListRequest.setPage("1");
+        queueGetListRequest.setLimit("20");
+        uiQueueService.getQueueForReport(queueGetListRequest, "");
+    }
+
 }
