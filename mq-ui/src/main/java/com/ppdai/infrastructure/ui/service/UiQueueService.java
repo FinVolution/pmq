@@ -200,7 +200,7 @@ public class UiQueueService implements TimerService {
 					}
 				}
 			}
-			queueSort(queueVosAvg);
+			queueSortAvg(queueVosAvg);
 			queueSort(queueVosCount);
 			queueSortByDataSize(queueVosByDataSize);
 			queueListAvg.set(queueVosAvg);
@@ -250,7 +250,20 @@ public class UiQueueService implements TimerService {
 			}
 		});
 	}
-
+	private void queueSortAvg(List<QueueVo> queueVoList) {
+		// 按照消息总量
+		Collections.sort(queueVoList, new Comparator<QueueVo>() {
+			@Override
+			public int compare(QueueVo q1, QueueVo q2) {
+				if(q1.getAvgCount()>q2.getAvgCount()){
+					return -1;
+				}else if(q1.getAvgCount()<q2.getAvgCount()){
+					return 1;
+				}
+				return 0;
+			}
+		});
+	}
 	private void queueSortByDataSize(List<QueueVo> queueVoList) {
 		// 按照消息容量大小
 		Collections.sort(queueVoList, new Comparator<QueueVo>() {
