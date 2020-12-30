@@ -356,7 +356,7 @@ public class UiQueueOffsetService implements TimerService {
 			long maxId = queueMaxIdMap.get(queueEntity.getId());
 			long currentMaxId = 0;
 			// 如果当前偏移大于缓存中的最大Id
-			if (queueOffsetVo.getOffset() > (maxId - 1)) {
+			if (queueOffsetVo.getOffset() > (maxId - 1)&&maxId!=queueOffsetVo.getOffset()) {
 				if (flag) {
 					try {
 						message01Service.setDbId(queueEntity.getDbNodeId());
@@ -370,8 +370,18 @@ public class UiQueueOffsetService implements TimerService {
 				currentMaxId = maxId;
 			}
 			queueOffsetVo.setMessageNum(currentMaxId - 1 - queueEntity.getMinId());
+			if(queueOffsetVo.getMessageNum()<0){
+				queueOffsetVo.setMessageNum(0);
+			}
 			queueOffsetVo.setPendingMessageNum(currentMaxId - 1 - queueOffsetEntity.getOffset());
-			queueOffsetVo.setMaxId(currentMaxId - 1);
+			if(queueOffsetVo.getPendingMessageNum()<0){
+				queueOffsetVo.setPendingMessageNum(0);
+			}
+			if(currentMaxId>queueOffsetVo.getMinId()){
+				queueOffsetVo.setMaxId(currentMaxId - 1);
+			}else{
+				queueOffsetVo.setMaxId(currentMaxId);
+			}
 			queueOffsetVoList.add(queueOffsetVo);
 
 		}
@@ -545,8 +555,13 @@ public class UiQueueOffsetService implements TimerService {
 		QueueOffsetVo queueOffsetVo = new QueueOffsetVo(queueOffsetEntity);
 		QueueEntity queueEntity = queueService.get(queueOffsetEntity.getQueueId());
 		long maxId = queueMaxIdMap.get(queueOffsetEntity.getQueueId());
-		queueOffsetVo.setMaxId(maxId - 1);
+		//queueOffsetVo.setMaxId(maxId - 1);
 		queueOffsetVo.setMinId(queueEntity.getMinId());
+		if(maxId>queueOffsetVo.getMinId()){
+			queueOffsetVo.setMaxId(maxId - 1);
+		}else{
+			queueOffsetVo.setMaxId(maxId);
+		}
 		return queueOffsetVo;
 	}
 
