@@ -431,6 +431,8 @@ public class MqClient {
 				}
 				consumerPollingService = mqFactory.createConsumerPollingService();
 				consumerPollingService.start();
+				mqBrokerUrlRefreshService=mqFactory.createMqBrokerUrlRefreshService();
+				mqBrokerUrlRefreshService.start();
 				mqCheckService = mqFactory.createMqCheckService();
 				mqCheckService.start();
 				// MqCheckService.getInstance().start(mqContext);
