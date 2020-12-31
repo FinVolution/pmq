@@ -276,7 +276,11 @@ public class MessageCleanService extends AbstractTimerService {
 			}
 			Util.sleep(soaConfig.getCleanSleepTime());
 		}
-		if (queueEntity.getMinId() < lastMinId) {
+		if (clearCount > 0) {
+			if (queueEntity.getMinId() < lastMinId) {
+				queueService.updateMinId(queueEntity.getId(), lastMinId);
+			}
+		} else if (queueEntity.getMinId() + 1 < lastMinId) {
 			queueService.updateMinId(queueEntity.getId(), lastMinId);
 		}
 	}
