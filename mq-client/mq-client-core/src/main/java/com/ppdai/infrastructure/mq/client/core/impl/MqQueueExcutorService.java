@@ -255,6 +255,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 
 		}
 		clearTrace();
+		slowMsgMap.clear();
 		transaction.setStatus(Transaction.SUCCESS);
 		transaction.complete();
 		isStart.set(false);
