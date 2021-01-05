@@ -981,6 +981,11 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 
 		@Override
 		public void run() {
+			try {
+				countDownLatch.countDown();
+			} catch (Throwable e) {
+
+			}
 			this.timeOutCount.incrementAndGet();
 			BatchRecorderItem batchRecorderItem = null;
 			long maxId = 0;
@@ -995,11 +1000,6 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 			batchRecorderItem = batchRecorder.end(batchRecorderId, maxId);
 			if (batchRecorderItem != null && iAsynSubscriber == null) {
 				doCommit(pre, batchRecorderItem);
-			}
-			try {
-				countDownLatch.countDown();
-			} catch (Throwable e) {
-
 			}
 			this.timeOutCount.decrementAndGet();
 		}
