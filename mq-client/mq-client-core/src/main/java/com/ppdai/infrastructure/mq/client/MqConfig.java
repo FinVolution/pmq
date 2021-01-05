@@ -27,6 +27,16 @@ public class MqConfig {
 	// 异步发送最大等待时间
 	private int publishAsynTimeout=1000;
 	private boolean mqclientopen=true;
+	// 消息执行超时告警时间
+	private int warnTimeout=60;
+
+	public int getWarnTimeout() {
+		return warnTimeout;
+	}
+
+	public void setWarnTimeout(int warnTimeout) {
+		this.warnTimeout = warnTimeout;
+	}
 	public boolean isMqclientopen() {
 		return mqclientopen;
 	}

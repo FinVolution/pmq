@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.ppdai.infrastructure.mq.client.dto.TraceMessageDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,8 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 	private String consumerGroupName;
 	private volatile boolean isRunning = false;
 	private volatile long lastId = 0;
-	private BlockingQueue<MessageDto> messages = new ArrayBlockingQueue<>(300);
+	private BlockingQueue<TraceMessageDto> messages = new ArrayBlockingQueue<>(300);
+	private Map<Long, TraceMessageDto> slowMsgMap = new ConcurrentHashMap<>(300);
 	private PullDataRequest request = new PullDataRequest();
 	private ISubscriber iSubscriber = null;
 	private IAsynSubscriber iAsynSubscriber = null;
@@ -619,7 +621,8 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 		pair.item2 = false;
 		int count = 0;
 		while (count < pre.getConsumerBatchSize()) {
-			MessageDto messageDto = messages.poll();
+			TraceMessageDto traceMessageDto = messages.poll();
+			MessageDto messageDto = traceMessageDto.message;
 			if (isRunning && messageDto != null && checkOffsetVersion(pre)) {
 				if (onMsgFilter(messageDto)) {
 					if (checkTag(pre, messageDto)) {
@@ -628,6 +631,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 								messageDto.setTopicName(pre.getOriginTopicName());
 								messageDto.setConsumerGroupName(pre.getConsumerGroupName());
 								messageMap.put(messageDto.getId(), messageDto);
+								traceMessageDto.start();
 							}
 					}
 				}
@@ -832,7 +836,13 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 				// 防止messaes 满了
 				while (true && checkOffsetVersion(pre)) {
 					try {
-						messages.put(t1);
+						TraceMessageDto traceMessageDto=new TraceMessageDto(t1,pre);
+						if(slowMsgMap.size()>200){
+							log.error("slownMsg is "+ com.ppdai.infrastructure.mq.biz.common.util.JsonUtil.toJsonNull(slowMsgMap));
+							slowMsgMap.clear();
+						}
+						slowMsgMap.put(t1.getId(), traceMessageDto);
+						messages.put(traceMessageDto);
 						addPullLog(t1);
 						break;
 					} catch (Exception e) {
@@ -1055,5 +1065,10 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 				mqResource.commitOffset(request);
 			}
 		}
+	}
+
+	@Override
+	public Map<Long, TraceMessageDto> getSlowMsg() {
+		return slowMsgMap;
 	}
 }
