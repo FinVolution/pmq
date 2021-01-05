@@ -62,7 +62,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 	private volatile boolean isRunning = false;
 	private volatile long lastId = 0;
 	private BlockingQueue<TraceMessageDto> messages = new ArrayBlockingQueue<>(300);
-	private Map<Long, TraceMessageDto> slowMsgMap = new ConcurrentHashMap<>(300);
+	private Map<Long, TraceMessageDto> slowMsgMap = new ConcurrentHashMap<>(350);
 	private PullDataRequest request = new PullDataRequest();
 	private ISubscriber iSubscriber = null;
 	private IAsynSubscriber iAsynSubscriber = null;
