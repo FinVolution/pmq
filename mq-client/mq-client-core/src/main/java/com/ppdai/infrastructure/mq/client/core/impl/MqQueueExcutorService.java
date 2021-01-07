@@ -190,6 +190,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 Util.sleep(100);
                 // 再次清理，确保message 里面为空，同时使得拉取消息释放锁。
                 messages.clear();
+                slowMsgMap.clear();
                 // 确保更新拉取消息的起始值，为偏移重置的值，加锁是防止拉取与重置同时操作
                 consumerQueue.setLastId(consumerQueue.getOffset());
                 // 说明修改偏移了需要重新，拉取
