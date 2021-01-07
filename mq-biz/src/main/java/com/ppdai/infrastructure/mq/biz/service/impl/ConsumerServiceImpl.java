@@ -425,6 +425,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
     private void checkBroadcastAndSubEnv(ConsumerGroupRegisterRequest request, List<String> consumerGroupNames,
                                          Map<String, ConsumerGroupEntity> map, ConsumerGroupRegisterResponse response) {
+        boolean flag=false;
         for (String name : consumerGroupNames) {
             ConsumerGroupEntity consumerGroupEntity = map.get(name);
             if (consumerGroupEntity.getMode() == 2) {
@@ -435,12 +436,13 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                         ConsumerGroupEntity.class);
                 consumerGroupEntityNew.setSubEnv(request.getSubEnv());
                 consumerGroupEntityNew.setName(newConsumerGroupName);
-                if (!map.containsKey(newConsumerGroupName)) {
-                    try {
-                        consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
-                    } catch (Exception e) {
-
-                    }
+                Transaction transaction=Tracer.newTransaction("mq-consumergroup","broad");
+                try {
+                    consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
+                    transaction.setStatus(Transaction.SUCCESS);
+                } catch (Exception e) {
+                    log.error("",e);
+                    transaction.setStatus(e);
                 }
                 request.getConsumerGroupNames().put(consumerGroupEntityNew.getName(),
                         request.getConsumerGroupNames().get(name));
@@ -448,6 +450,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                 request.getConsumerGroupNames().remove(name);
                 response.getBroadcastConsumerGroupName().put(name, consumerGroupEntityNew.getName());
                 response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
+                flag=true;
             } else if (MqClient.getMqEnvironment() != null && !Util.isEmpty(request.getSubEnv())
                     && !MqConst.DEFAULT_SUBENV.equalsIgnoreCase(request.getSubEnv() + "")
                     && MqEnv.FAT == MqClient.getMqEnvironment().getEnv()) {
@@ -471,9 +474,14 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                 request.getConsumerGroupNames().remove(name);
                 response.getBroadcastConsumerGroupName().put(name, newConsumerGroupName);
                 response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
+                flag=true;
             }
         }
-        consumerGroupService.updateCache();
+        if(flag){
+            consumerGroupService.forceUpdateCache();
+        }else{
+            consumerGroupService.updateCache();
+        }
     }
 
     protected void addRegisterConsumerGroupLog(ConsumerGroupRegisterRequest request,

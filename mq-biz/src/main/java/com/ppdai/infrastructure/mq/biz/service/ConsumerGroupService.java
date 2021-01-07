@@ -32,6 +32,7 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void notifyMeta(List<Long> consumerGroupIds);
 	void notifyOffset(long consumerGroupId);
 	void updateCache();
+	void forceUpdateCache();
 	Map<String,ConsumerGroupEntity> getCache();
 	Map<String,ConsumerGroupEntity> getData();
 	Map<Long,ConsumerGroupEntity> getIdCache();
