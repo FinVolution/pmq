@@ -28,7 +28,7 @@ public class MqConfig {
 	private int publishAsynTimeout=1000;
 	private boolean mqclientopen=true;
 	// 消息执行超时告警时间
-	private int warnTimeout=60;
+	private int warnTimeout=300;
 
 	public int getWarnTimeout() {
 		return warnTimeout;

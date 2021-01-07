@@ -54,7 +54,7 @@ public class MqClientStartup {
 		String pbRetryTimes = System.getProperty("mq.pb.retry.times", env.getProperty("mq.pb.retry.times", "10"));
 		String readTimeOut = System.getProperty("mq.http.timeout", env.getProperty("mq.http.timeout", "10000"));
 		String pullDeltaTime = System.getProperty("mq.pull.time.delta", env.getProperty("mq.pull.time.delta", "150"));
-		String timeOutWarn=System.getProperty("mq.msg.warn.timeout", env.getProperty("mq.msg.warn.timeout", "60"));
+		String timeOutWarn=System.getProperty("mq.msg.warn.timeout", env.getProperty("mq.msg.warn.timeout", "300"));
 
 		boolean metaMode = "true"
 				.equals(System.getProperty("mq.broker.metaMode", env.getProperty("mq.broker.metaMode", "true")));
@@ -125,7 +125,7 @@ public class MqClientStartup {
 	protected static String subEnvs1 = " ";
 	protected static String publishAsynTimeout1="1000";
 	protected static Map<String, String> properties = null;
-	protected static String warnTimeout1="60";
+	protected static String warnTimeout1="300";
 	private static void monitorConfig() {
 		if (env != null) {
 			if (!startFlag.compareAndSet(false, true)) {
@@ -168,7 +168,7 @@ public class MqClientStartup {
 	}
 	private static void setWarnTimeout() {
 		String warnTimeout = System.getProperty("mq.msg.warn.timeout",
-				env.getProperty("mq.msg.warn.timeout", "60"));
+				env.getProperty("mq.msg.warn.timeout", "300"));
 		if (!warnTimeout.equals(warnTimeout1)) {
 			try {
 				warnTimeout1 = warnTimeout;

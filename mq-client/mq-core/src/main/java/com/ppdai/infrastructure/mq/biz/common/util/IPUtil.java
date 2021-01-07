@@ -1,110 +1,98 @@
 package com.ppdai.infrastructure.mq.biz.common.util;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Enumeration;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.*;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class IPUtil {
-	private static final String NETWORK_CARD = "eth0";
-	private static final String NETWORK_CARD_BAND = "bond0";
-	private static String netWorkCard = "";
+	private static Logger log = LoggerFactory.getLogger(IPUtil.class);
+	private static String m_local;
 
-	public static String getLocalHostName() {
-		try {
-			InetAddress addr = InetAddress.getLocalHost();
-			return addr.getHostName();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return "";
-		}
-	}
-
-	private static String getLinuxLocalIP() {
-		String ip = "";
-		try {
-			Enumeration<NetworkInterface> e1 = (Enumeration<NetworkInterface>) NetworkInterface.getNetworkInterfaces();
-			while (e1.hasMoreElements()) {
-				NetworkInterface ni = e1.nextElement();
-				if (netWorkCard.equals(ni.getName()) || NETWORK_CARD.equals(ni.getName())
-						|| NETWORK_CARD_BAND.equals(ni.getName())) {
-					Enumeration<InetAddress> e2 = ni.getInetAddresses();
-					while (e2.hasMoreElements()) {
-						InetAddress ia = e2.nextElement();
-						if (ia instanceof Inet6Address) {
-							continue;
+	private static InetAddress findValidateIp(List<InetAddress> addresses) {
+		InetAddress local = null;
+		for (InetAddress address : addresses) {
+			if (address instanceof Inet4Address) {
+				if (address.isLoopbackAddress() || address.isSiteLocalAddress()) {
+					if (local == null) {
+						local = address;
+					} else if (address.isSiteLocalAddress() && !address.isLoopbackAddress()) {
+						// site local address has higher priority than other address
+						local = address;
+					} else if (local.isSiteLocalAddress() && address.isSiteLocalAddress()) {
+						// site local address with a host name has higher
+						// priority than one without host name
+						if (local.getHostName().equals(local.getHostAddress()) && !address.getHostName()
+								.equals(address.getHostAddress())) {
+							local = address;
 						}
-						ip = ia.getHostAddress();
 					}
-					break;
 				} else {
-					continue;
+					if (local == null) {
+						local = address;
+					}
 				}
 			}
-		} catch (SocketException e) {
-			e.printStackTrace();
 		}
-		return ip;
+		return local;
 	}
 
-	@SuppressWarnings("finally")
-	private static String getWinLocalIP() {
-		String ip = null;
-		try {
-			ip = InetAddress.getLocalHost().getHostAddress().toString();
-		} finally {
-			return ip;
+	public static String getLocalIP() {
+		if (Util.isEmpty(m_local)) {
+			try {
+				List<NetworkInterface> nis = Collections.list(NetworkInterface.getNetworkInterfaces());
+				List<InetAddress> addresses = new ArrayList<>();
+				InetAddress local = null;
+				try {
+					for (NetworkInterface ni : nis) {
+						if (ni.isUp()) {
+							addresses.addAll(Collections.list(ni.getInetAddresses()));
+						}
+					}
+					local = findValidateIp(addresses);
+				} catch (Exception e) {
+					// ignore
+				}
+				m_local = local.getHostAddress().toString();
+				;
+			} catch (Throwable e) {
+				log.error("", e);
+			}
 		}
+		return m_local;
 	}
-
-	private static volatile String ip1 = ""; 
-	static {
-		if (System.getProperty("os.name").contains("Win")) {
-			ip1 = getWinLocalIP();
-		} else if (System.getProperty("os.name").contains("Mac OS")) {
-			netWorkCard = "en0";
-			ip1 = getLinuxLocalIP();
-		} else {
-			ip1 = getLinuxLocalIP();
-		}
-	}
-	public static String getLocalIP() {		
-		return ip1;
-	}
-	
 
 	private static Map<String, String> ipCache = new ConcurrentHashMap<>();
-	private static Object objLock1 = new Object();
 
-	public static String getLocalIP(String netWorkName) {		
-		if (Util.isEmpty(netWorkName)) {
+	public static String getLocalIP(String netWorkCard) {
+		if (Util.isEmpty(netWorkCard)) {
 			return getLocalIP();
 		}
-		if (!ipCache.containsKey(netWorkCard)||Util.isEmpty(ipCache.get(netWorkName))) {
-			synchronized (objLock1) {
-				if (!ipCache.containsKey(netWorkCard)||Util.isEmpty(ipCache.get(netWorkName))) {
-					String ip = null;
-					if (System.getProperty("os.name").contains("Win")) {
-						ip = getWinLocalIP();
-					} else if (System.getProperty("os.name").contains("Mac OS")) {
-						if (Util.isEmpty(netWorkCard)) {
-							netWorkCard = "en0";
+		if (!ipCache.containsKey(netWorkCard)) {
+			try {
+				Enumeration<NetworkInterface> e1 = (Enumeration<NetworkInterface>) NetworkInterface.getNetworkInterfaces();
+				while (e1.hasMoreElements()) {
+					NetworkInterface ni = e1.nextElement();
+					if (netWorkCard.equals(ni.getName())) {
+						Enumeration<InetAddress> e2 = ni.getInetAddresses();
+						while (e2.hasMoreElements()) {
+							InetAddress ia = e2.nextElement();
+							if (ia instanceof Inet6Address) {
+								continue;
+							}
+							ipCache.put(netWorkCard, ia.getHostAddress());
 						}
-						ip = getLinuxLocalIP();
+						break;
 					} else {
-						ip = getLinuxLocalIP();
+						continue;
 					}
-					ipCache.put(netWorkName, ip);
 				}
+			} catch (Throwable e) {
+				log.error("", e);
 			}
 		}
-
-		if (!ipCache.containsKey(netWorkCard)||Util.isEmpty(ipCache.get(netWorkName))) {
-			throw new RuntimeException("ip获取异常,请指定网卡名称！");
-		}
-		return ipCache.get(netWorkName);
+		return ipCache.get(netWorkCard);
 	}
 }
