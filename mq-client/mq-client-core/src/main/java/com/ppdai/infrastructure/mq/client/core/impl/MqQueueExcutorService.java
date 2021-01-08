@@ -537,6 +537,13 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
             traceMsgCommit.add(item);
         }
+        else{
+            TraceMessageItem item = new TraceMessageItem();
+            mqResource.commitOffset(request);
+            item.status = "提交偏移失败";
+            item.msg = temp.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
+            traceMsgCommit.add(item);
+        }
         batchRecorder.delete(batchRecorderItem.getBatchReacorderId());
     }
 
@@ -708,6 +715,9 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             log.error("消息消费失败,参数为：" + com.ppdai.infrastructure.mq.biz.common.util.JsonUtil.toJson(messageMap.values()),
                     e);
         } finally {
+            if(failIds==null){
+                failIds=new ArrayList<>();
+            }
             transaction.complete();
         }
         try {
