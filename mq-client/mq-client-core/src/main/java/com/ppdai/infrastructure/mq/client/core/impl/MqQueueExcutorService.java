@@ -116,6 +116,10 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 consumerQueue.setConsumerBatchSize(1);
             }
         }
+        if (consumerQueue.getConsumerBatchSize() < 0) {
+            consumerQueue.setConsumerBatchSize(1);
+            log.warn("ConsumerBatchSize error!");
+        }
     }
 
     protected void initTraceAndSubscriber(String consumerGroupName, ConsumerQueueDto consumerQueue) {

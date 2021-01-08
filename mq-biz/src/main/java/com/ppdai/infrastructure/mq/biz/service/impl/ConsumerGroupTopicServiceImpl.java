@@ -369,6 +369,7 @@ public class ConsumerGroupTopicServiceImpl extends AbstractBaseService<ConsumerG
 					request.setAlarmEmails(consumerGroupTopicCreateRequest.getAlarmEmails());
 					request.setDelayPullTime(consumerGroupTopicCreateRequest.getDelayPullTime());
 					request.setTimeOut(consumerGroupTopicCreateRequest.getTimeOut());
+					request.setConsumerBatchSize(consumerGroupTopicCreateRequest.getConsumerBatchSize());
 					createConsumerGroupTopicAndFailTopic(request,consumerGroupMap);
 				}
 			}
