@@ -148,7 +148,7 @@ public class MqClientStatController {
 			rsMap.put("MqQueueExcutorService-拉取状态-" + consumerGroupName + "-queueId-" + queueId, TraceFactory
 					.getInstance("MqQueueExcutorService-拉取过程-" + consumerGroupName + "-queueId-" + queueId));
 			rsMap.put("MqQueueExcutorService-提交偏移-" + consumerGroupName + "-queueId-" + queueId, TraceFactory
-					.getInstance("MqQueueExcutorService-拉取过程-" + consumerGroupName + "-queueId-" + queueId));
+					.getInstance("MqQueueExcutorService-提交偏移-" + consumerGroupName + "-queueId-" + queueId));
 			return JsonUtil.toJsonNull(rsMap);
 		}
 		return "";

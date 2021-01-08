@@ -531,7 +531,11 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             consumerQueueVersionDto.setTopicName(temp.getTopicName());
             // request.setFailIds(preFailIds);
             queueVersionDtos.add(consumerQueueVersionDto);
+            TraceMessageItem item = new TraceMessageItem();
             mqResource.commitOffset(request);
+            item.status = "提交偏移";
+            item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
+            traceMsgCommit.add(item);
         }
         batchRecorder.delete(batchRecorderItem.getBatchReacorderId());
     }
@@ -644,6 +648,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         while (count < pre.getConsumerBatchSize()) {
             TraceMessageDto traceMessageDto = messages.poll();
             if (isRunning && traceMessageDto != null && checkOffsetVersion(pre)) {
+                slowMsgMap.put(traceMessageDto.getId(), traceMessageDto);
                 MessageDto messageDto = traceMessageDto.message;
                 if (onMsgFilter(messageDto)) {
                     if (checkTag(pre, messageDto)) {
@@ -858,11 +863,10 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 while (true && checkOffsetVersion(pre)) {
                     try {
                         TraceMessageDto traceMessageDto = new TraceMessageDto(t1, pre);
-                        if (slowMsgMap.size() > 200) {
+                        if (slowMsgMap.size() > 350) {
                             log.error("slownMsg is " + com.ppdai.infrastructure.mq.biz.common.util.JsonUtil.toJsonNull(slowMsgMap));
                             slowMsgMap.clear();
                         }
-                        slowMsgMap.put(t1.getId(), traceMessageDto);
                         messages.put(traceMessageDto);
                         addPullLog(t1);
                         break;
