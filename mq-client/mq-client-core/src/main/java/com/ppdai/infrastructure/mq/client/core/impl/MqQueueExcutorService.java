@@ -86,6 +86,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
     private BatchRecorder batchRecorder = new BatchRecorder();
     // public volatile boolean timeOutFlag = true;
     private AtomicInteger timeOutCount = new AtomicInteger(0);
+    private AtomicInteger taskCounter=new AtomicInteger(0);
 
     public MqQueueExcutorService(String consumerGroupName, ConsumerQueueDto consumerQueue) {
         this.mqContext = MqClient.getContext();
@@ -389,7 +390,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         runStatus = false;
         int msgSize = messages.size();
         refreshSubscriber();
-        if (temp != null && msgSize > 0 && temp.getThreadSize() + 2 - executor.getActiveCount() > 0
+        if (temp != null && msgSize > 0 && temp.getThreadSize()  - taskCounter.get() > 0
                 && (iSubscriber != null || iAsynSubscriber != null)
                 && (temp.getTimeout() == 0 || (temp.getTimeout() > 0 && timeOutCount.get() == 0))) {
             if (!checkPreHand(temp)) {
@@ -457,7 +458,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 
     private void doHandleData(ConsumerQueueDto pre, int msgSize) {
         // int threadSize =threadRemain.get();
-        int threadSize = pre.getThreadSize() + 2 - executor.getActiveCount();
+        int threadSize = pre.getThreadSize()  -taskCounter.get();
         int startThread = (int) ((msgSize + pre.getConsumerBatchSize() - 1) / pre.getConsumerBatchSize());
         if (startThread >= threadSize) {
             startThread = threadSize;
@@ -642,8 +643,8 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         int count = 0;
         while (count < pre.getConsumerBatchSize()) {
             TraceMessageDto traceMessageDto = messages.poll();
-            MessageDto messageDto = traceMessageDto.message;
-            if (isRunning && messageDto != null && checkOffsetVersion(pre)) {
+            if (isRunning && traceMessageDto != null && checkOffsetVersion(pre)) {
+                MessageDto messageDto = traceMessageDto.message;
                 if (onMsgFilter(messageDto)) {
                     if (checkTag(pre, messageDto)) {
                         if (checkDelay(messageDto, pre))
@@ -983,6 +984,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         @Override
         public void run() {
             this.timeOutCount.incrementAndGet();
+            taskCounter.incrementAndGet();
             BatchRecorderItem batchRecorderItem = null;
             long maxId = 0;
             try {
@@ -993,7 +995,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                     countDownLatch.countDown();
                 }
             } catch (Throwable e) {
-
+                log.error("",e);
             }
             synchronized (lockObject) {
                 batchRecorderItem = batchRecorder.end(batchRecorderId, maxId);
@@ -1002,6 +1004,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 }
             }
             this.timeOutCount.decrementAndGet();
+            taskCounter.decrementAndGet();
         }
     }
 
