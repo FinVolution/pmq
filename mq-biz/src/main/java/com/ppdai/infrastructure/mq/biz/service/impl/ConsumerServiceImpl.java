@@ -462,11 +462,15 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                     consumerGroupEntityNew.setSubEnv(request.getSubEnv());
                     consumerGroupEntityNew.setName(newConsumerGroupName);
                     // consumerGroupEntityNew.setOriginName(newConsumerGroupName);
+                    Transaction transaction=Tracer.newTransaction("mq-consumergroup","subenv");
                     try {
                         consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
-                    } catch (Exception e) {
+                        transaction.setStatus(Transaction.SUCCESS);
+                    } catch (Throwable e) {
+                        transaction.setStatus(e);
                         //consumerGroupService.updateCache();
                     }
+                    transaction.complete();
                 }
 
                 request.getConsumerGroupNames().put(newConsumerGroupName, request.getConsumerGroupNames().get(name));
