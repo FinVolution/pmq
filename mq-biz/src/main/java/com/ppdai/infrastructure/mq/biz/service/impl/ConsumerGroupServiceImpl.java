@@ -718,7 +718,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			ConsumerGroupEntity consumerGroupEntityNew) {
 		consumerGroupEntityNew.setId(0);
 		insert(consumerGroupEntityNew);
-		Map<String, ConsumerGroupEntity> consumerGroupMap = getData();
+		Map<String, ConsumerGroupEntity> consumerGroupMap = getConsumerGroupByName(consumerGroupEntityOld.getName());
 		Map<Long, Map<String, ConsumerGroupTopicEntity>> ctMap = consumerGroupTopicService.getCache();
 		Map<String, ConsumerGroupTopicEntity> consumerTopics = ctMap.get(consumerGroupEntityOld.getId());
 		if (consumerTopics != null) {
@@ -755,5 +755,15 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			dataMap.put(t1.getName(), t1);
 		});
 		return dataMap;
+	}
+	private Map<String, ConsumerGroupEntity> getConsumerGroupByName(String name) {
+		Map<String,Object> condition=new HashMap<>();
+		condition.put(ConsumerGroupEntity.FdOriginName,name);
+		List<ConsumerGroupEntity> consumerGroupEntities=  getList(condition);
+		Map<String,ConsumerGroupEntity> map=new HashMap<>();
+		consumerGroupEntities.forEach(t->{
+			map.put(t.getName(),t);
+		});
+		return map;
 	}
 }
