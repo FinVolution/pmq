@@ -561,6 +561,9 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
         for (String consumerGroupName : consumerGroupNames) {
             ConsumerGroupEntity consumerGroupEntity = consumerGroupMap.get(consumerGroupName);
             if (consumerGroupEntity != null) {
+                Transaction transaction=Tracer.newTransaction("ConsumerGroupRegister",consumerGroupEntity.getOriginName());
+                transaction.setStatus(Transaction.SUCCESS);
+                transaction.complete();
                 if (!Util.isEmpty(consumerGroupEntity.getIpBlackList())
                         && consumerGroupEntity.getIpBlackList().contains(consumerEntity.getIp())) {
                     ids.remove(consumerGroupEntity.getId());
