@@ -562,6 +562,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
             ConsumerGroupEntity consumerGroupEntity = consumerGroupMap.get(consumerGroupName);
             if (consumerGroupEntity != null) {
                 Transaction transaction=Tracer.newTransaction("ConsumerGroupRegister",consumerGroupEntity.getOriginName());
+                transaction.addData("clientIp",consumerEntity.getIp());
                 transaction.setStatus(Transaction.SUCCESS);
                 transaction.complete();
                 if (!Util.isEmpty(consumerGroupEntity.getIpBlackList())
