@@ -1,8 +1,8 @@
 
-# ![](doc/assets/mq.png)PMQ 拍拍贷微服务`消息队列`介绍
+# ![](doc/assets/mq.png)PMQ 信也科技微服务`消息队列`介绍
 
 
-PMQ是拍拍贷自研的一款轻量级分布式消息队列，能够保证消息的不丢失，具有部署和运维简单的特性。消息队列采用mysql数据库进行消息存储，能够非常方便和简单的进行水平扩展。
+PMQ是信也科技自研的一款轻量级分布式消息队列，能够保证消息的不丢失，具有部署和运维简单的特性。消息队列采用mysql数据库进行消息存储，能够非常方便和简单的进行水平扩展。
 
 消息队列基于Spring Boot开发，打包后可以直接运行，不需要额外安装Tomcat等应用容器。
 
@@ -40,4 +40,4 @@ PMQ是拍拍贷自研的一款轻量级分布式消息队列，能够保证消�
 <img src="doc/assets/qq.png"  alt="QQ" align=center />
 
 # 参考资料
-相关文档请参考 <a href='doc/最终版+李乘胜+拍拍贷消息系统架构演进.pptx'>ppt</a> 和 <a href='https://mp.weixin.qq.com/s/5e-yC0r18FZ04vMvGxIL-w'>在线介绍</a>
+相关文档请参考 <a href='doc/最终版+李乘胜+信也科技消息系统架构演进.pptx'>ppt</a> 和 <a href='https://mp.weixin.qq.com/s/5e-yC0r18FZ04vMvGxIL-w'>在线介绍</a>
