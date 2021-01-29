@@ -51,7 +51,7 @@ public class ConsumerController {
 
 	@PostMapping("/registerConsumerGroup")
 	public ConsumerGroupRegisterResponse consumerGroupRegister(@RequestBody ConsumerGroupRegisterRequest request) {
-		Transaction transaction= Tracer.newTransaction("ConsumerGroupRegist", "Group-"+ JsonUtil.toJsonNull(request.getConsumerGroupNames()));
+		Transaction transaction= Tracer.newTransaction("ConsumerGroupRegist", "Group-"+ JsonUtil.toJsonNull(request.getConsumerGroupNames().keySet()));
 		ConsumerGroupRegisterResponse response = consumerService.registerConsumerGroup(request);
 		transaction.addData("clientIp",request.getClientIp());
 		transaction.setStatus(Transaction.SUCCESS);
