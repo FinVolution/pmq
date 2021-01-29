@@ -2,6 +2,9 @@ package com.ppdai.infrastructure.rest.mq.controller.client;
 
 import java.util.HashMap;
 
+import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
+import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
+import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,7 +51,11 @@ public class ConsumerController {
 
 	@PostMapping("/registerConsumerGroup")
 	public ConsumerGroupRegisterResponse consumerGroupRegister(@RequestBody ConsumerGroupRegisterRequest request) {
+		Transaction transaction= Tracer.newTransaction("ConsumerGroupRegist", "Group-"+ JsonUtil.toJsonNull(request.getConsumerGroupNames()));
 		ConsumerGroupRegisterResponse response = consumerService.registerConsumerGroup(request);
+		transaction.addData("clientIp",request.getClientIp());
+		transaction.setStatus(Transaction.SUCCESS);
+		transaction.complete();
 		return response;
 	}
 
