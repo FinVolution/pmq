@@ -75,7 +75,7 @@ public class MetaServerController {
 				if(!Util.isEmpty(soaConfig.getBrokerDomain())){
 					if(httpClient.check("http://"+soaConfig.getBrokerDomain()+"/hs")){
 						for(int i=response.getBrokerIpG1().size();i<soaConfig.getMinServerCount();i++){
-							response.getBrokerIpG1().add(soaConfig.getBrokerDomain());
+							response.getBrokerIpG1().add("http://"+soaConfig.getBrokerDomain());
 						}
 					}
 				}
