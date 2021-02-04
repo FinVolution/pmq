@@ -39,6 +39,8 @@ import com.ppdai.infrastructure.mq.biz.service.ServerService;
 @RestController
 @RequestMapping(MqConstanst.METAPRE)
 public class MetaServerController {
+	public static final String HTTP = "http://";
+	public static final String HS = "/hs";
 	@Autowired
 	private ServerService serverService;
 	@Autowired
@@ -71,20 +73,24 @@ public class MetaServerController {
 			response.setBrokerIpG1(lstData);
 		}else{
 			response.setBrokerIpG1(lstData.subList(groupCount, lstData.size()));
-			if(soaConfig.isPro()&&response.getBrokerIpG1().size()<soaConfig.getMinServerCount()){
-				if(!Util.isEmpty(soaConfig.getBrokerDomain())){
-					if(httpClient.check("http://"+soaConfig.getBrokerDomain()+"/hs")){
-						for(int i=response.getBrokerIpG1().size();i<soaConfig.getMinServerCount();i++){
-							response.getBrokerIpG1().add("http://"+soaConfig.getBrokerDomain());
-						}
-					}
-				}
-			}
+			addUrl(response);
 			response.setBrokerIpG2(lstData.subList(0, groupCount));
 		}
 		return response;
 	}
-	
+	private void addUrl(GetMetaGroupResponse response) {
+		if (response.getBrokerIpG1().size() < soaConfig.getMinServerCount()&&!Util.isEmpty(soaConfig.getBrokerDomain())) {
+			if (httpClient.check(HTTP + soaConfig.getBrokerDomain() + HS)) {
+				List<String> rs=new ArrayList<>(soaConfig.getMinServerCount());
+				rs.addAll(response.getBrokerIpG1());
+				for (int i = rs.size(); i < soaConfig.getMinServerCount(); i++) {
+					rs.add(HTTP +soaConfig.getBrokerDomain());
+				}
+				response.setBrokerIpG1(rs);
+			}
+		}
+	}
+
 	@PostMapping("/getTopic")
 	public GetTopicResponse getTopic(@RequestBody GetTopicRequest request) {
 		GetTopicResponse response = new GetTopicResponse();
