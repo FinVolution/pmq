@@ -819,6 +819,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
         } else {
             transaction = Tracer.newTransaction("Publish-Asyn", request.getTopicName());
         }
+        transaction.addData("arg-data",request.getTopicName()+"-"+request.getClientIp());
         String key = request.getTopicName();
         Map<String, AtomicInteger> counterTemp = counter.get();
         if (!counterTemp.containsKey(key)) {
@@ -1166,6 +1167,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
         if (checkFailTime(request.getTopicName(), temp, null) && checkStatus(temp, dbNodeMap)) {
             message01Service.setDbId(temp.getDbNodeId());
             transaction = Tracer.newTransaction("Pull-Data", temp.getIp());
+            transaction.addData("arg-data", request.getConsumerGroupName() + "-" + request.getTopicName() + "-" + request.getQueueId() + "-" + request.getClientIp());
             try {
                 entities = message01Service.getListDy(temp.getTopicName(), temp.getTbName(), request.getOffsetStart(),
                         request.getOffsetEnd());
