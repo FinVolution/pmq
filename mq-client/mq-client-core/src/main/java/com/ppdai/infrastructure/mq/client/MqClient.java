@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.ppdai.infrastructure.mq.client.core.*;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,12 +50,6 @@ import com.ppdai.infrastructure.mq.biz.event.PreHandleListener;
 import com.ppdai.infrastructure.mq.biz.event.PreSendListener;
 import com.ppdai.infrastructure.mq.client.config.ClientConfigHelper;
 import com.ppdai.infrastructure.mq.client.config.ConsumerGroupVo;
-import com.ppdai.infrastructure.mq.client.core.IConsumerPollingService;
-import com.ppdai.infrastructure.mq.client.core.IMqBrokerUrlRefreshService;
-import com.ppdai.infrastructure.mq.client.core.IMqCheckService;
-import com.ppdai.infrastructure.mq.client.core.IMqGroupExcutorService;
-import com.ppdai.infrastructure.mq.client.core.IMqHeartbeatService;
-import com.ppdai.infrastructure.mq.client.core.IMqQueueExcutorService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqMeticReporterService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqTopicQueueRefreshService;
 import com.ppdai.infrastructure.mq.client.event.RegisterConsumerGroupListener;
@@ -76,6 +71,7 @@ public class MqClient {
 	private static IMqCheckService mqCheckService = null;
 	private static MqContext mqContext = new MqContext();
 	private static IConsumerPollingService consumerPollingService = null;
+	private static IMqCommitService mqCommitService = null;
 	private static ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 5, 5L, TimeUnit.SECONDS,
 			new ArrayBlockingQueue<>(50), SoaThreadFactory.create("MqClient", true),
 			new ThreadPoolExecutor.CallerRunsPolicy());
@@ -445,6 +441,8 @@ public class MqClient {
 				consumerPollingService.start();
 				mqCheckService = mqFactory.createMqCheckService();
 				mqCheckService.start();
+				mqCommitService=mqFactory.createCommitService();
+				mqCommitService.start();
 				// MqCheckService.getInstance().start(mqContext);
 				log.info(groupNames + "  subscribe_suc,订阅成功！ and json is " + JsonUtil.toJson(request));
 			} else {
@@ -709,6 +707,10 @@ public class MqClient {
 			if (consumerPollingService != null) {
 				consumerPollingService.close();
 				consumerPollingService = null;
+			}
+			if(mqCommitService!=null){
+				mqCommitService.close();
+				mqCommitService = null;
 			}
 			// ConsumerPollingService.getInstance().close();
 			deRegister();

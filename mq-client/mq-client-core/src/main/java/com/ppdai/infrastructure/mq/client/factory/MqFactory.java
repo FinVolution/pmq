@@ -1,16 +1,9 @@
 package com.ppdai.infrastructure.mq.client.factory;
 
 import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerQueueDto;
+import com.ppdai.infrastructure.mq.client.core.IMqCommitService;
 import com.ppdai.infrastructure.mq.client.core.IMsgNotifyService;
-import com.ppdai.infrastructure.mq.client.core.impl.ConsumerPollingService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqBrokerUrlRefreshService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqCheckService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqGroupExcutorService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqHeartbeatService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqMeticReporterService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqQueueExcutorService;
-import com.ppdai.infrastructure.mq.client.core.impl.MqTopicQueueRefreshService;
-import com.ppdai.infrastructure.mq.client.core.impl.MsgNotifyService;
+import com.ppdai.infrastructure.mq.client.core.impl.*;
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 import com.ppdai.infrastructure.mq.client.resource.MqResource;
 
@@ -112,5 +105,19 @@ public class MqFactory implements IMqFactory {
 			}
 		}
 		return msgNotifyService;
+	}
+
+	private IMqCommitService iMqCommitService;
+
+	@Override
+	public IMqCommitService createCommitService() {
+		if (iMqCommitService == null) {
+			synchronized (lockObj) {
+				if (iMqCommitService == null) {
+					iMqCommitService = new MqCommitService();
+				}
+			}
+		}
+		return iMqCommitService;
 	}
 }

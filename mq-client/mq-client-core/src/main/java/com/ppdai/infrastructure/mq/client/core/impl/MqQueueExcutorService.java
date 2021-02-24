@@ -57,6 +57,7 @@ import com.ppdai.infrastructure.mq.client.hystrix.MessageInvokeCommandForThreadI
 import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 
 public class MqQueueExcutorService implements IMqQueueExcutorService {
+    public static final int COMMIT_TIME_DELTA = 20_000;
     private Logger log = LoggerFactory.getLogger(MqQueueExcutorService.class);
     private AtomicReference<ConsumerQueueDto> consumerQueueRef = new AtomicReference<ConsumerQueueDto>();
     private ThreadPoolExecutor executor = null;
@@ -254,6 +255,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 break;
             }
         }
+        commit();
         messages.clear();
         try {
             if (executor != null) {
@@ -515,36 +517,64 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         }
     }
 
+    private ConsumerQueueVersionDto consumerQueueVersionDto = new ConsumerQueueVersionDto();
+    private AtomicLong commitVersion = new AtomicLong(0);
+    private volatile long hasCommitVersion = 0;
+    private long lastCommitTime = System.currentTimeMillis();
+
+    @Override
+    public ConsumerQueueVersionDto getChangedCommit() {
+        long commitV = commitVersion.get();
+        if (hasCommitVersion < commitV) {
+            hasCommitVersion = commitV;
+            return consumerQueueVersionDto;
+        }
+        if (hasCommitVersion > 0 && System.currentTimeMillis() - lastCommitTime > COMMIT_TIME_DELTA) {
+            return consumerQueueVersionDto;
+        }
+        return null;
+    }
+
     private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem) {
         if (batchRecorderItem == null)
             return;
-        CommitOffsetRequest request = new CommitOffsetRequest();
         if (checkOffsetVersion(temp)) {
-            List<ConsumerQueueVersionDto> queueVersionDtos = new ArrayList<>();
-            request.setQueueOffsets(queueVersionDtos);
-            ConsumerQueueVersionDto consumerQueueVersionDto = new ConsumerQueueVersionDto();
             // consumerQueueVersionDto.setOffset(temp.getOffset());
             consumerQueueVersionDto.setOffset(batchRecorderItem.getMaxId());
             consumerQueueVersionDto.setOffsetVersion(temp.getOffsetVersion());
             consumerQueueVersionDto.setQueueOffsetId(temp.getQueueOffsetId());
             consumerQueueVersionDto.setConsumerGroupName(temp.getConsumerGroupName());
             consumerQueueVersionDto.setTopicName(temp.getTopicName());
+            commitVersion.incrementAndGet();
             // request.setFailIds(preFailIds);
-            queueVersionDtos.add(consumerQueueVersionDto);
+            if (mqContext.getConfig().isSynCommit()) {
+                TraceMessageItem item = commit();
+                item.status = "提交偏移";
+                item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
+                traceMsgCommit.add(item);
+            }
+        } else {
             TraceMessageItem item = new TraceMessageItem();
-            mqResource.commitOffset(request);
-            item.status = "提交偏移";
-            item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
-            traceMsgCommit.add(item);
-        }
-        else{
-            TraceMessageItem item = new TraceMessageItem();
-            mqResource.commitOffset(request);
+            // mqResource.commitOffset(request);
             item.status = "提交偏移失败";
             item.msg = temp.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
             traceMsgCommit.add(item);
         }
         batchRecorder.delete(batchRecorderItem.getBatchReacorderId());
+
+    }
+
+    private TraceMessageItem commit() {
+        if (commitVersion.get() > 0) {
+            CommitOffsetRequest request = new CommitOffsetRequest();
+            List<ConsumerQueueVersionDto> queueVersionDtos = new ArrayList<>();
+            request.setQueueOffsets(queueVersionDtos);
+            queueVersionDtos.add(consumerQueueVersionDto);
+            TraceMessageItem item = new TraceMessageItem();
+            mqResource.commitOffset(request);
+            return item;
+        }
+        return null;
     }
 
     protected long threadExcute(ConsumerQueueDto pre, CountDownLatch countDownLatch) {

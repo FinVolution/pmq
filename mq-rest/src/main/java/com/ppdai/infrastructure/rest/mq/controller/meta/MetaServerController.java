@@ -40,7 +40,6 @@ import com.ppdai.infrastructure.mq.biz.service.ServerService;
 @RequestMapping(MqConstanst.METAPRE)
 public class MetaServerController {
     public static final String HTTP = "http://";
-    public static final String HS = "/hs";
     @Autowired
     private ServerService serverService;
     @Autowired
@@ -49,7 +48,6 @@ public class MetaServerController {
     private ConsumerGroupService consumerGroupService;
     @Autowired
     private QueueService queueService;
-    IHttpClient httpClient = new HttpClient(3000, 3000);
 
     @PostMapping("/getMeta")
     public GetMetaResponse getMeta(@RequestBody GetMetaRequest request) {
@@ -81,14 +79,13 @@ public class MetaServerController {
 
     private void addUrl(GetMetaGroupResponse response) {
         if (response.getBrokerIpG1().size() < soaConfig.getMinServerCount() && !Util.isEmpty(soaConfig.getBrokerDomain())) {
-            if (httpClient.check(HTTP + soaConfig.getBrokerDomain() + HS)) {
-                List<String> rs = new ArrayList<>(soaConfig.getMinServerCount());
-                rs.addAll(response.getBrokerIpG1());
-                for (int i = rs.size(); i < soaConfig.getMinServerCount(); i++) {
-                    rs.add(HTTP + soaConfig.getBrokerDomain());
-                }
-                response.setBrokerIpG1(rs);
+            List<String> rs = new ArrayList<>(soaConfig.getMinServerCount());
+            rs.addAll(response.getBrokerIpG1());
+            for (int i = rs.size(); i < soaConfig.getMinServerCount(); i++) {
+                rs.add(HTTP + soaConfig.getBrokerDomain());
             }
+            response.setBrokerIpG1(rs);
+
         }
     }
 

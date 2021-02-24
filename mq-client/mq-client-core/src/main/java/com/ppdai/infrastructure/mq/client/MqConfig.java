@@ -29,7 +29,10 @@ public class MqConfig {
 	private boolean mqclientopen=true;
 	// 消息执行超时告警时间
 	private int warnTimeout=300;
-
+	//标识是否是同步提交偏移
+	private boolean synCommit =false;
+	//异步提交偏移间隔
+	private long aynCommitInterval=2000;
 	public int getWarnTimeout() {
 		return warnTimeout;
 	}
@@ -50,6 +53,22 @@ public class MqConfig {
 
 	public void setPublishAsynTimeout(int publishAsynTimeout) {
 		this.publishAsynTimeout = publishAsynTimeout;
+	}
+
+	public boolean isSynCommit() {
+		return synCommit;
+	}
+
+	public void setSynCommit(boolean synCommit) {
+		this.synCommit = synCommit;
+	}
+
+	public long getAynCommitInterval() {
+		return aynCommitInterval;
+	}
+
+	public void setAynCommitInterval(long aynCommitInterval) {
+		this.aynCommitInterval = aynCommitInterval;
 	}
 
 	public int getPullDeltaTime() {
