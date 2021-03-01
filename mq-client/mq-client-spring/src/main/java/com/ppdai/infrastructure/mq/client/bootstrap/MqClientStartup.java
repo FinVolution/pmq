@@ -181,18 +181,18 @@ public class MqClientStartup {
 			}
 		}
 
-		String commitInterval = System.getProperty("mq.msg.warn.timeout",
-				env.getProperty("mq.msg.warn.timeout", "60"));
+		String commitInterval = System.getProperty("mq.client.commit.asyn.interval",
+				env.getProperty("mq.client.commit.asyn.interval", "500"));
 		if (!commitInterval1.equals(commitInterval)) {
 			try {
 				commitInterval1 = commitInterval;
 				long commitInterval2 = Long.parseLong(commitInterval);
-				if (commitInterval2 < 500) {
-					commitInterval2 = 2000;
+				if (commitInterval2 < 300) {
+					commitInterval2 = 300;
 				}
 				MqClient.getContext().getConfig().setAynCommitInterval(commitInterval2);
 			} catch (Exception e) {
-				logger.error("setPublishAsynTimeout_error", e);
+				logger.error("setCommit_error", e);
 			}
 		}
 	}
