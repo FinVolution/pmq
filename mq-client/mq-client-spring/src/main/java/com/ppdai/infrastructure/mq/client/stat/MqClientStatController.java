@@ -13,6 +13,7 @@ import com.ppdai.infrastructure.mq.biz.dto.proxy.ProxyResponse;
 import com.ppdai.infrastructure.mq.biz.event.ISubscriber;
 import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.core.IMsgNotifyService;
+import com.ppdai.infrastructure.mq.client.core.impl.MqHeartbeatService;
 import com.ppdai.infrastructure.mq.client.core.impl.MsgNotifyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,17 +140,7 @@ public class MqClientStatController {
 	@GetMapping("/mq/client/traceItem")
 	public String traceItem(String consumerGroupName, long queueId) {
 		if (isOpenFlag()) {
-			Map<String, TraceMessage> rsMap = new HashMap<>();
-			rsMap.put("MqQueueExcutorService-拉取过程-" + consumerGroupName + "-queueId-" + queueId, TraceFactory
-					.getInstance("MqQueueExcutorService-拉取过程-" + consumerGroupName + "-queueId-" + queueId));
-			rsMap.put("MqQueueExcutorService-处理-" + consumerGroupName + "-queueId-" + queueId, TraceFactory
-					.getInstance("MqQueueExcutorService-处理-" + consumerGroupName + "-queueId-" + queueId));
-
-			rsMap.put("MqQueueExcutorService-拉取状态-" + consumerGroupName + "-queueId-" + queueId, TraceFactory
-					.getInstance("MqQueueExcutorService-拉取过程-" + consumerGroupName + "-queueId-" + queueId));
-			rsMap.put("MqQueueExcutorService-提交偏移-" + consumerGroupName + "-queueId-" + queueId, TraceFactory
-					.getInstance("MqQueueExcutorService-提交偏移-" + consumerGroupName + "-queueId-" + queueId));
-			return JsonUtil.toJsonNull(rsMap);
+			return MqHeartbeatService.traceItem(consumerGroupName,queueId);
 		}
 		return "";
 	}

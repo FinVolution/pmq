@@ -530,14 +530,19 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             return consumerQueueVersionDto;
         }
         if (hasCommitVersion > 0 && System.currentTimeMillis() - lastCommitTime > COMMIT_TIME_DELTA) {
+            TraceMessageItem item = new TraceMessageItem();
+            item.status = "提交偏移-"+consumerQueueVersionDto.getOffset();
+            item.msg = consumerQueueVersionDto.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
+            traceMsgCommit.add(item);
             return consumerQueueVersionDto;
         }
         return null;
     }
 
     private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem) {
-        if (batchRecorderItem == null)
+        if (batchRecorderItem == null){
             return;
+        }
         if (checkOffsetVersion(temp)) {
             // consumerQueueVersionDto.setOffset(temp.getOffset());
             consumerQueueVersionDto.setOffset(batchRecorderItem.getMaxId());
