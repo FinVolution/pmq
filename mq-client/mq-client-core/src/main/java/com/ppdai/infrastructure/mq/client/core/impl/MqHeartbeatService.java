@@ -118,7 +118,7 @@ public class MqHeartbeatService implements IMqHeartbeatService {
 					}
 				});
 				if (rs.size() > 0) {
-					sendMsgWarn(warnTimeout, t1.getKey(), JsonUtil.toJsonNull(rs) + System.lineSeparator() + traceRs.toString());
+					sendMsgWarn(warnTimeout, t1.getKey(), JsonUtil.toJsonNull(rs) + System.lineSeparator() + traceRs.toString()+",消息消费warning时间为："+warnTimeout);
 				}
 			});
 		} catch (Throwable e) {
