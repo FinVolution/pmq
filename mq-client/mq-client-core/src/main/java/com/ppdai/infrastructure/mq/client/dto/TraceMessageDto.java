@@ -1,5 +1,6 @@
 package com.ppdai.infrastructure.mq.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerQueueDto;
 import com.ppdai.infrastructure.mq.biz.dto.base.MessageDto;
@@ -9,8 +10,10 @@ import java.util.Date;
 public class TraceMessageDto {
     private String inTime;
     private String startTime;
+    @JsonIgnore
     public transient long start;
     private long id;
+    @JsonIgnore
     public transient MessageDto message;
     private String topic;
     private String group;
