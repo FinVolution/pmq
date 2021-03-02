@@ -205,6 +205,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             if (isRunning && consumerQueue.getStopFlag() == 1) {
                 log.info("stop deal,停止消费" + consumerQueue.getTopicName());
                 TraceMessageItem item = new TraceMessageItem();
+                isRunning = consumerQueue.getStopFlag() == 0;
                 doCommit(temp);
                 item.status = "停止消费";
                 item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
@@ -239,23 +240,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
     // 停止拉取数据
     @Override
     public void close() {
-        isRunning = false;
-        isStop = true;
-        long start = System.currentTimeMillis();
-        ConsumerQueueDto consumerQueueDto = consumerQueueRef.get();
-        String topicName = "";
-        if (consumerQueueDto != null) {
-            topicName = consumerQueueDto.getOriginTopicName();
-        }
-        Transaction transaction = Tracer.newTransaction("mq-group", "close-queue-" + topicName);
-        // 这是为了等待有未完成的任务
-        while (runStatus) {
-            Util.sleep(10);
-            if (System.currentTimeMillis() - start > 10000) {
-                break;
-            }
-        }
-        commit();
+       stop();
         messages.clear();
         try {
             if (executor != null) {
@@ -267,8 +252,6 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         }
         clearTrace();
         slowMsgMap.clear();
-        transaction.setStatus(Transaction.SUCCESS);
-        transaction.complete();
         isStart.set(false);
     }
 
@@ -510,17 +493,66 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         }
     }
 
-    protected void doCommit(ConsumerQueueDto temp) {
+    private void doCommit(ConsumerQueueDto temp) {
         BatchRecorderItem item = batchRecorder.getLastestItem();
         if (item != null) {
-            doCommit(temp, item);
+            doCommit(temp, item, true);
         }
     }
+    private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem, boolean flag) {
+        if (batchRecorderItem == null) {
+            return;
+        }
+        if (checkOffsetVersion(temp)) {
+            // consumerQueueVersionDto.setOffset(temp.getOffset());
+            consumerQueueVersionDto.setOffset(batchRecorderItem.getMaxId());
+            consumerQueueVersionDto.setOffsetVersion(temp.getOffsetVersion());
+            consumerQueueVersionDto.setQueueOffsetId(temp.getQueueOffsetId());
+            consumerQueueVersionDto.setConsumerGroupName(temp.getConsumerGroupName());
+            consumerQueueVersionDto.setTopicName(temp.getTopicName());
+            commitVersion.incrementAndGet();
+            // request.setFailIds(preFailIds);
+            if (mqContext.getConfig().isSynCommit() || flag) {
+                TraceMessageItem item = commit();
+                item.status = "提交偏移";
+                item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
+                traceMsgCommit.add(item);
+            }
+        } else {
+            TraceMessageItem item = new TraceMessageItem();
+            // mqResource.commitOffset(request);
+            item.status = "提交偏移失败";
+            item.msg = temp.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
+            traceMsgCommit.add(item);
+        }
+        batchRecorder.delete(batchRecorderItem.getBatchReacorderId());
+    }
 
+    private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem) {
+        doCommit(temp, batchRecorderItem, false);
+    }
     private ConsumerQueueVersionDto consumerQueueVersionDto = new ConsumerQueueVersionDto();
     private AtomicLong commitVersion = new AtomicLong(0);
     private volatile long hasCommitVersion = 0;
     private long lastCommitTime = System.currentTimeMillis();
+    @Override
+    public ConsumerQueueVersionDto getLast() {
+        if(hasCommitVersion > 0){
+            return consumerQueueVersionDto;
+        }
+        return null;
+    }
+
+    @Override
+    public boolean hasFininshed() {
+        return taskCounter.get()==0;
+    }
+
+    @Override
+    public void stop() {
+        isRunning = false;
+        isStop = true;
+    }
 
     @Override
     public ConsumerQueueVersionDto getChangedCommit() {
@@ -537,36 +569,6 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             return consumerQueueVersionDto;
         }
         return null;
-    }
-
-    private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem) {
-        if (batchRecorderItem == null){
-            return;
-        }
-        if (checkOffsetVersion(temp)) {
-            // consumerQueueVersionDto.setOffset(temp.getOffset());
-            consumerQueueVersionDto.setOffset(batchRecorderItem.getMaxId());
-            consumerQueueVersionDto.setOffsetVersion(temp.getOffsetVersion());
-            consumerQueueVersionDto.setQueueOffsetId(temp.getQueueOffsetId());
-            consumerQueueVersionDto.setConsumerGroupName(temp.getConsumerGroupName());
-            consumerQueueVersionDto.setTopicName(temp.getTopicName());
-            commitVersion.incrementAndGet();
-            // request.setFailIds(preFailIds);
-            if (mqContext.getConfig().isSynCommit()) {
-                TraceMessageItem item = commit();
-                item.status = "提交偏移";
-                item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
-                traceMsgCommit.add(item);
-            }
-        } else {
-            TraceMessageItem item = new TraceMessageItem();
-            // mqResource.commitOffset(request);
-            item.status = "提交偏移失败";
-            item.msg = temp.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
-            traceMsgCommit.add(item);
-        }
-        batchRecorder.delete(batchRecorderItem.getBatchReacorderId());
-
     }
 
     private TraceMessageItem commit() {

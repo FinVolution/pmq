@@ -18,4 +18,8 @@ public interface IMqQueueExcutorService extends IMqClientService {
     Map<Long, TraceMessageDto> getSlowMsg();
 
     ConsumerQueueVersionDto getChangedCommit();
+
+    ConsumerQueueVersionDto getLast();
+    boolean hasFininshed();
+    void stop();
 }

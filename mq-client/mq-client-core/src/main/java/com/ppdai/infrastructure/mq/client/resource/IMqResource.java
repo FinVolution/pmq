@@ -20,7 +20,7 @@ public interface IMqResource {
 	GetGroupTopicResponse getGroupTopic(GetGroupTopicRequest request);
 
 	void addCat(CatRequest request);
-
+	void rb(RbRequest request);
 	boolean publish(PublishMessageRequest request, int retryTimes);
 
 	boolean publish(PublishMessageRequest request);
