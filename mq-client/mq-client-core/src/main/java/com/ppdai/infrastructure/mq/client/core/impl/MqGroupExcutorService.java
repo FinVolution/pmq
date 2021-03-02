@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
-import com.ppdai.infrastructure.mq.biz.dto.client.RbRequest;
+import com.ppdai.infrastructure.mq.biz.dto.client.UpdateMetaRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,9 +208,9 @@ public class MqGroupExcutorService implements IMqGroupExcutorService {
                     log.info("commit:" + localConsumerGroup.getMeta().getName() + " offset,commit size is " + JsonUtil.toJsonNull(queueVersionDtos));
                     mqResource.commitOffset(request);
                     //此行代码的目的是为了从客户端强制将偏移量同步更新到期的实例中
-                    RbRequest rbRequest = new RbRequest();
+                    UpdateMetaRequest rbRequest = new UpdateMetaRequest();
                     rbRequest.setConsumerGroupNames(Arrays.asList(localConsumerGroup.getMeta().getName()));
-                    mqResource.rb(rbRequest);
+                    mqResource.updateMeta(rbRequest);
                     versionCount = 0;
                 }
                 //Util.sleep(100_000L);

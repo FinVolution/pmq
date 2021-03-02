@@ -28,6 +28,7 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void notifyRb(long consumerGroupId);
 	void notifyRb(List<Long> consumerGroupIds);
 	void notifyRbByNames(List<String> consumerGroupNames);
+	void notifyMetaByNames(List<String> consumerGroupNames);
 	void notifyMeta(long consumerGroupId);
 	void notifyMeta(List<Long> consumerGroupIds);
 	void notifyOffset(long consumerGroupId);

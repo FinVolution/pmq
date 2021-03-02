@@ -127,7 +127,11 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 		int flag = queueOffsetRepository.commitOffset(entity);
 		return flag;
 	}
-
+	@Override
+	public int commitOffsetAndUpdateVersion(QueueOffsetEntity entity) {
+		int flag = queueOffsetRepository.commitOffsetAndUpdateVersion(entity);
+		return flag;
+	}
 	@Override
 	public void deRegister(long consumerId) {
 		queueOffsetRepository.deRegister(consumerId);

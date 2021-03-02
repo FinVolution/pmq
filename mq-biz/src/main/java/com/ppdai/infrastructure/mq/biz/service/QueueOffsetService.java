@@ -19,8 +19,8 @@ public interface QueueOffsetService extends BaseService<QueueOffsetEntity> {
 
 	void updateConsumerId(QueueOffsetEntity entity);
 	
-	int commitOffset(QueueOffsetEntity entity);	
-	
+	int commitOffset(QueueOffsetEntity entity);
+	int commitOffsetAndUpdateVersion(QueueOffsetEntity entity);
 	int commitOffsetById(QueueOffsetEntity entity);	
 	
 	void deRegister(long consumerId);

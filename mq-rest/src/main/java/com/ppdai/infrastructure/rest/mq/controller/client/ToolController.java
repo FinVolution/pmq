@@ -22,8 +22,8 @@ import com.ppdai.infrastructure.mq.biz.dto.client.CatResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.LogRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.OpLogRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.OpLogResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.RbRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.RbResponse;
+import com.ppdai.infrastructure.mq.biz.dto.client.UpdateMetaRequest;
+import com.ppdai.infrastructure.mq.biz.dto.client.UpdateMetaResponse;
 import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
 import com.ppdai.infrastructure.mq.biz.dto.client.SendMailResponse;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
@@ -87,15 +87,23 @@ public class ToolController {
 	}
 
 	@PostMapping("/rb")
-	public RbResponse rb(@RequestBody RbRequest request) {
+	public UpdateMetaResponse rb(@RequestBody UpdateMetaRequest request) {
 		if (request != null&&"1".equals(env.getProperty("mq.client.rb", "0"))) {
 			consumerGroupService.notifyRbByNames(request.getConsumerGroupNames());
 		}
-		RbResponse response = new RbResponse();
+		UpdateMetaResponse response = new UpdateMetaResponse();
 		response.setSuc(true);
 		return response;
 	}
-	
+	@PostMapping("/updateMeta")
+	public UpdateMetaResponse updateMeta(@RequestBody UpdateMetaRequest request) {
+		if (request != null && "1".equals(env.getProperty("mq.client.meta", "1"))) {
+			consumerGroupService.notifyMetaByNames(request.getConsumerGroupNames());
+		}
+		UpdateMetaResponse response = new UpdateMetaResponse();
+		response.setSuc(true);
+		return response;
+	}
 	@RequestMapping("/getIp")
 	public String getIp() {		
 		return IPUtil.getLocalIP();

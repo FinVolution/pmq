@@ -258,6 +258,15 @@
 			where id = #{id} and offset_version=#{offsetVersion} and offset<#{offset}
 		  ]]>
 	</update>
+
+	<update id="commitOffsetAndUpdateVersion"
+			parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity">
+		<![CDATA[
+			update queue_offset set
+			offset = #{offset},offset_version = offset_version+1
+			where id = #{id} and offset_version=#{offsetVersion} and offset<#{offset}
+		  ]]>
+	</update>
 	<update id="commitOffsetById"
 		parameterType="com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity">
 		  <![CDATA[

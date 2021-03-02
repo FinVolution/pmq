@@ -472,7 +472,21 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		});
 		notifyRb(ids);
 	}
-
+	@Override
+	public void notifyMetaByNames(List<String> consumerGroupNames) {
+		if (CollectionUtils.isEmpty(consumerGroupNames))
+			return;
+		List<Long> ids = new ArrayList<>();
+		Map<String, ConsumerGroupEntity> cacheData = consumerGroupRefMap.get();
+		if (cacheData == null || cacheData.size() == 0)
+			return;
+		consumerGroupNames.forEach(t1 -> {
+			if (cacheData.containsKey(t1)) {
+				ids.add(cacheData.get(t1).getId());
+			}
+		});
+		notifyMeta(ids);
+	}
 	@Override
 	public String getCacheJson() {
 		// TODO Auto-generated method stub

@@ -217,16 +217,16 @@ public class MqResource implements IMqResource {
 	}
 
 	@Override
-	public void rb(RbRequest request) {
+	public void updateMeta(UpdateMetaRequest request) {
 		if (request == null) {
 			return;
 		}
 		executor1.submit(new Runnable() {
 			@Override
 			public void run() {
-				String url = MqConstanst.TOOLPRE + "/rb";
+				String url = MqConstanst.TOOLPRE + "/updateMeta";
 				try {
-					smPost(request, url, 1, RbResponse.class, false);
+					smPost(request, url, 1, UpdateMetaResponse.class, false);
 				} catch (Throwable e) {
 					// TODO: handle exception
 				}
