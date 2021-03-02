@@ -131,8 +131,17 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 				queueOffsetEntity.setOffsetVersion(request.getOffsetVersion());
 				queueOffsetEntity.setOffset(request.getOffset());	
 				queueOffsetEntity.setConsumerGroupName(request.getConsumerGroupName());
-				queueOffsetEntity.setTopicName(request.getTopicName());				
-				if (queueOffsetService.commitOffset(queueOffsetEntity) > 0 && offsetVersionEntity != null) {
+				queueOffsetEntity.setTopicName(request.getTopicName());
+				boolean rs = false;
+				if (flag == 1) {
+					rs = queueOffsetService.commitOffsetAndUpdateVersion(queueOffsetEntity) > 0 && offsetVersionEntity != null;
+					if(rs){
+						queueOffsetEntity.setOffsetVersion(queueOffsetEntity.getOffsetVersion()+1);
+					}
+				} else {
+					rs = queueOffsetService.commitOffset(queueOffsetEntity) > 0 && offsetVersionEntity != null;
+				}
+				if (rs) {
 					reentrantLock.lock();
 					if (request.getOffsetVersion() == offsetVersionEntity.getOffsetVersion()
 							&& request.getOffset() > offsetVersionEntity.getOffset()) {
