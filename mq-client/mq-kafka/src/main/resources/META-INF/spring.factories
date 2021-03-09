@@ -1,2 +1,0 @@
-# Auto Configuration
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.ppdai.infrastructure.kafka.RadarKafkaConfiguration
