@@ -149,6 +149,36 @@ public class HttpClient implements IHttpClient{
 
 	}
 
+	@Override
+	public void getAsyn(String url, Callback callback) {
+		try {
+			Request.Builder requestbuilder = new Request.Builder().url(url).get();
+			Request request = requestbuilder.build();
+			if (callback != null) {
+				client.newCall(request).enqueue(callback);
+			} else {
+				client.newCall(request).enqueue(new Callback() {
+					@Override
+					public void onFailure(Call call, IOException e) {
+
+					}
+
+					@Override
+					public void onResponse(Call call, Response response) throws IOException {
+						try {
+							response.close();
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+				});
+
+			}
+		} catch (Exception e) {
+
+		}
+
+	}
 	public String get(String url) throws IOException {		
 		Response response = null; 
 		Transaction transaction = null;

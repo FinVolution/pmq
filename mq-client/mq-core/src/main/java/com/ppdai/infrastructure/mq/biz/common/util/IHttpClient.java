@@ -10,5 +10,6 @@ public interface IHttpClient {
 	<T> T post(String url, Object request, Class<T> class1) throws IOException,BrokerException;
 	<T> T get(String url, Class<T> class1) throws IOException;
 	void postAsyn(String var1, Object var2, Callback var3);
+	void getAsyn(String url, Callback callback);
 	String get(String url) throws IOException;
 }
