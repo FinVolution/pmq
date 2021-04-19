@@ -1,13 +1,11 @@
 package com.ppdai.infrastructure.mq.client.core.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
-import com.ppdai.infrastructure.mq.biz.dto.client.UpdateMetaRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,12 +205,6 @@ public class MqGroupExcutorService implements IMqGroupExcutorService {
                 if (queueVersionDtos.size() > 0) {
                     log.info("commit:" + localConsumerGroup.getMeta().getName() + " offset,commit size is " + JsonUtil.toJsonNull(queueVersionDtos));
                     mqResource.commitOffset(request);
-                    if (mqContext.getConfig().getRbTimes() <= 1) {
-                        //此行代码的目的是为了从客户端强制将偏移量同步更新到期的实例中
-                        UpdateMetaRequest rbRequest = new UpdateMetaRequest();
-                        rbRequest.setConsumerGroupNames(Arrays.asList(localConsumerGroup.getMeta().getName()));
-                        mqResource.updateMeta(rbRequest);
-                    }
                     versionCount = 0;
                 }
                 //Util.sleep(100_000L);
