@@ -87,7 +87,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
     private BatchRecorder batchRecorder = new BatchRecorder();
     // public volatile boolean timeOutFlag = true;
     private AtomicInteger timeOutCount = new AtomicInteger(0);
-    private AtomicInteger taskCounter=new AtomicInteger(0);
+    private AtomicInteger taskCounter = new AtomicInteger(0);
 
     public MqQueueExcutorService(String consumerGroupName, ConsumerQueueDto consumerQueue) {
         this.mqContext = MqClient.getContext();
@@ -240,7 +240,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
     // 停止拉取数据
     @Override
     public void close() {
-       stop();
+        stop();
         messages.clear();
         try {
             if (executor != null) {
@@ -375,7 +375,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         runStatus = false;
         int msgSize = messages.size();
         refreshSubscriber();
-        if (temp != null && msgSize > 0 && temp.getThreadSize()  - taskCounter.get() > 0
+        if (temp != null && msgSize > 0 && temp.getThreadSize() - taskCounter.get() > 0
                 && (iSubscriber != null || iAsynSubscriber != null)
                 && (temp.getTimeout() == 0 || (temp.getTimeout() > 0 && timeOutCount.get() == 0))) {
             if (!checkPreHand(temp)) {
@@ -443,7 +443,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 
     private void doHandleData(ConsumerQueueDto pre, int msgSize) {
         // int threadSize =threadRemain.get();
-        int threadSize = pre.getThreadSize()  -taskCounter.get();
+        int threadSize = pre.getThreadSize() - taskCounter.get();
         int startThread = (int) ((msgSize + pre.getConsumerBatchSize() - 1) / pre.getConsumerBatchSize());
         if (startThread >= threadSize) {
             startThread = threadSize;
@@ -499,31 +499,34 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             doCommit(temp, item, true);
         }
     }
+
     private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem, boolean flag) {
         if (batchRecorderItem == null) {
             return;
         }
-        if (checkOffsetVersion(temp)) {
-            // consumerQueueVersionDto.setOffset(temp.getOffset());
-            consumerQueueVersionDto.setOffset(batchRecorderItem.getMaxId());
-            consumerQueueVersionDto.setOffsetVersion(temp.getOffsetVersion());
-            consumerQueueVersionDto.setQueueOffsetId(temp.getQueueOffsetId());
-            consumerQueueVersionDto.setConsumerGroupName(temp.getConsumerGroupName());
-            consumerQueueVersionDto.setTopicName(temp.getTopicName());
-            commitVersion.incrementAndGet();
-            // request.setFailIds(preFailIds);
-            if (mqContext.getConfig().isSynCommit() || flag) {
-                TraceMessageItem item = commit();
-                item.status = "提交偏移";
-                item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
+        if (iAsynSubscriber == null) {
+            if (checkOffsetVersion(temp)) {
+                // consumerQueueVersionDto.setOffset(temp.getOffset());
+                consumerQueueVersionDto.setOffset(batchRecorderItem.getMaxId());
+                consumerQueueVersionDto.setOffsetVersion(temp.getOffsetVersion());
+                consumerQueueVersionDto.setQueueOffsetId(temp.getQueueOffsetId());
+                consumerQueueVersionDto.setConsumerGroupName(temp.getConsumerGroupName());
+                consumerQueueVersionDto.setTopicName(temp.getTopicName());
+                commitVersion.incrementAndGet();
+                // request.setFailIds(preFailIds);
+                if (mqContext.getConfig().isSynCommit() || flag) {
+                    TraceMessageItem item = commit();
+                    item.status = "提交偏移";
+                    item.msg = temp.getOffset() + "-" + temp.getOffsetVersion();
+                    traceMsgCommit.add(item);
+                }
+            } else {
+                TraceMessageItem item = new TraceMessageItem();
+                // mqResource.commitOffset(request);
+                item.status = "提交偏移失败";
+                item.msg = temp.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
                 traceMsgCommit.add(item);
             }
-        } else {
-            TraceMessageItem item = new TraceMessageItem();
-            // mqResource.commitOffset(request);
-            item.status = "提交偏移失败";
-            item.msg = temp.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
-            traceMsgCommit.add(item);
         }
         batchRecorder.delete(batchRecorderItem.getBatchReacorderId());
     }
@@ -531,13 +534,15 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
     private void doCommit(ConsumerQueueDto temp, BatchRecorderItem batchRecorderItem) {
         doCommit(temp, batchRecorderItem, false);
     }
+
     private ConsumerQueueVersionDto consumerQueueVersionDto = new ConsumerQueueVersionDto();
     private AtomicLong commitVersion = new AtomicLong(0);
     private volatile long hasCommitVersion = 0;
     private long lastCommitTime = System.currentTimeMillis();
+
     @Override
     public ConsumerQueueVersionDto getLast() {
-        if(hasCommitVersion > 0){
+        if (hasCommitVersion > 0) {
             return consumerQueueVersionDto;
         }
         return null;
@@ -545,7 +550,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
 
     @Override
     public boolean hasFininshed() {
-        return taskCounter.get()==0;
+        return taskCounter.get() == 0;
     }
 
     @Override
@@ -563,7 +568,7 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         }
         if (hasCommitVersion > 0 && System.currentTimeMillis() - lastCommitTime > COMMIT_TIME_DELTA) {
             TraceMessageItem item = new TraceMessageItem();
-            item.status = "提交偏移-"+consumerQueueVersionDto.getOffset();
+            item.status = "提交偏移-" + consumerQueueVersionDto.getOffset();
             item.msg = consumerQueueVersionDto.getOffsetVersion() + "-" + consumerQueueRef.get().getOffsetVersion();
             traceMsgCommit.add(item);
             return consumerQueueVersionDto;
@@ -752,8 +757,8 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             log.error("消息消费失败,参数为：" + com.ppdai.infrastructure.mq.biz.common.util.JsonUtil.toJson(messageMap.values()),
                     e);
         } finally {
-            if(failIds==null){
-                failIds=new ArrayList<>();
+            if (failIds == null) {
+                failIds = new ArrayList<>();
             }
             transaction.complete();
         }
@@ -971,11 +976,9 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
         public BatchRecorderItem end(long batchReacorderId, long maxId) {
             BatchRecorderItem finishedItem = recordMap.get(batchReacorderId);
             if (finishedItem == null) {
-                //System.out.println(batchReacorderId+":has deleted");
                 return null;
             }
             int count = finishedItem.getCounter().incrementAndGet();
-            //System.out.println("end:count:" + count + ":threadcount:" + finishedItem.getThreadCount() + ":batchReacorderId:" + finishedItem.getBatchReacorderId() + ":threadid:" + Thread.currentThread().getId());
             if (finishedItem.getMaxId() < maxId) {
                 finishedItem.setMaxId(maxId);
             }
@@ -996,12 +999,11 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
             start = batchReacorderId;
             for (long i = temp + 1; i <= batchReacorderId; i++) {
                 recordMap.remove(i);
-                //System.out.println("delete:"+batchReacorderId+":"+com.ppdai.infrastructure.mq.biz.common.util.JsonUtil.toJsonNull(recordMap.remove(i)));
             }
         }
 
         // 获取最大的连续执行线程批次
-        public  BatchRecorderItem getLastestItem() {
+        public BatchRecorderItem getLastestItem() {
             BatchRecorderItem finishedItemPre = null;
             long current1 = current.get();
             for (long i = start; i <= current1; i++) {
@@ -1012,12 +1014,13 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 if (!finishedItem.isBatchFinished()) {
                     break;
                 } else {
-                    finishedItemPre=finishedItem;
+                    finishedItemPre = finishedItem;
                 }
             }
             return finishedItemPre;
         }
     }
+
     public class MsgThread implements Runnable {
         private long batchRecorderId;
         private ConsumerQueueDto pre;
@@ -1046,11 +1049,11 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                     countDownLatch.countDown();
                 }
             } catch (Throwable e) {
-                log.error("",e);
+                log.error("", e);
             }
             synchronized (lockObject) {
                 batchRecorderItem = batchRecorder.end(batchRecorderId, maxId);
-                if (batchRecorderItem != null && iAsynSubscriber == null) {
+                if (batchRecorderItem != null) {
                     doCommit(pre, batchRecorderItem);
                 }
             }
@@ -1102,22 +1105,13 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 // 如果是失败消息更新失败消息执行成功结果
                 publishAndUpdateResultFailMsg(failRequest, consumerQueue, null);
             }
-            CommitOffsetRequest request = new CommitOffsetRequest();
-            if (checkOffsetVersion(consumerQueue) && consumerQueue.getOffset() > consumerQueueRef.get().getOffset()
-                    && checkOffsetVersion(consumerQueue)) {
-                List<ConsumerQueueVersionDto> queueVersionDtos = new ArrayList<>();
-                request.setQueueOffsets(queueVersionDtos);
-                ConsumerQueueVersionDto consumerQueueVersionDto = new ConsumerQueueVersionDto();
-                // consumerQueueVersionDto.setOffset(temp.getOffset());
+            if (checkOffsetVersion(consumerQueue) && consumerQueue.getOffset() > consumerQueueVersionDto.getOffset()) {
                 consumerQueueVersionDto.setOffset(consumerQueue.getOffset());
                 consumerQueueVersionDto.setOffsetVersion(consumerQueue.getOffsetVersion());
                 consumerQueueVersionDto.setQueueOffsetId(consumerQueue.getQueueOffsetId());
                 consumerQueueVersionDto.setConsumerGroupName(consumerQueue.getConsumerGroupName());
                 consumerQueueVersionDto.setTopicName(consumerQueue.getTopicName());
-                // request.setFailIds(preFailIds);
-                queueVersionDtos.add(consumerQueueVersionDto);
                 consumerQueueRef.get().setOffset(consumerQueue.getOffset());
-                mqResource.commitOffset(request);
             }
         }
     }
