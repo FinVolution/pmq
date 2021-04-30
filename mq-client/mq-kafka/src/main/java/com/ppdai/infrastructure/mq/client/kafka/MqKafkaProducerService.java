@@ -19,6 +19,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -158,12 +159,28 @@ public class MqKafkaProducerService implements BeanFactoryPostProcessor, Priorit
 
     private static MqKafkaStringProducerHelper create(String moudle) {
         MqKafkaProducerConfig kafkaProducerConfig = new MqKafkaProducerConfig();
-        PropertySourcesBinder propertySourcesBinder = new PropertySourcesBinder(env);
-        propertySourcesBinder.bindTo(moudle, kafkaProducerConfig);
+      /*  PropertySourcesBinder propertySourcesBinder = new PropertySourcesBinder(env);
+        propertySourcesBinder.bindTo(moudle, kafkaProducerConfig);*/
+        bind(moudle,kafkaProducerConfig);
         kafkaProducerConfig.setClientId(moudle + "-producer-" + IPUtil.getLocalIP());
         return new MqKafkaStringProducerHelper(kafkaProducerConfig);
     }
 
+    private static void bind(String moudle, Object target) {
+        Field[] fields = target.getClass().getFields();
+        for (Field field : fields) {
+            String key = moudle + "." + field.getName();
+            if (env.containsProperty(key)) {
+                field.setAccessible(true);
+                try {
+                    field.set(target, env.getProperty(key));
+                } catch (Exception e) {
+
+                }
+                field.setAccessible(false);
+            }
+        }
+    }
     public static Future<RecordMetadata> send(String module, String topic, String key, String value, mq.org.apache.kafka.clients.producer.Callback callable) {
         Transaction transaction = Tracer.newTransaction("kafka-send-syn", module + ":" + topic);
         Future<RecordMetadata> rs = null;
