@@ -16,6 +16,7 @@ import com.ppdai.infrastructure.mq.client.MessageUtil;
 import com.ppdai.infrastructure.mq.client.MqClient;
 import com.ppdai.infrastructure.mq.client.MqContext;
 import com.ppdai.infrastructure.mq.client.config.ConsumerGroupVo;
+import com.ppdai.messagequeue.utils.GZipUtil;
 import mq.org.apache.kafka.clients.consumer.*;
 import mq.org.apache.kafka.clients.producer.Callback;
 import mq.org.apache.kafka.clients.producer.RecordMetadata;

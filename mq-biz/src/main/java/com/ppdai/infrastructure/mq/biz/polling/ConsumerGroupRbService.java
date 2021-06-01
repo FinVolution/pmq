@@ -103,6 +103,7 @@ public class ConsumerGroupRbService extends AbstractTimerService {
 		Map<Long, ConsumerGroupQuqueVo> consumerGroupMap = new HashMap<>();
 		initRbData(consumerGroupEntities, consumerGroupMap);
 		for (ConsumerGroupQuqueVo t1 : consumerGroupMap.values()) {
+			addRbCompleteLog(t1,t1.consumerGroup.getName() + "开始重平衡！__version_is_" + t1.consumerGroup.getVersion());
 			rb(t1);
 			for (int i = 0; i < 3; i++) {
 				try {
@@ -115,7 +116,7 @@ public class ConsumerGroupRbService extends AbstractTimerService {
 					Util.sleep(5000);
 				}
 			}
-			addRbCompleteLog(t1);
+			addRbCompleteLog(t1,t1.consumerGroup.getName() + "重平衡完毕！__version_is_" + t1.consumerGroup.getVersion());
 		}
 		updateNotifyMessageId(currentMaxId);
 		int count = consumerGroupConsumerService.deleteUnActiveConsumer();
@@ -124,17 +125,18 @@ public class ConsumerGroupRbService extends AbstractTimerService {
 		}
 	}
 
-	private void addRbCompleteLog(ConsumerGroupQuqueVo t1) {
+	private void addRbCompleteLog(ConsumerGroupQuqueVo t1,String content) {
 		try {
 			AuditLogEntity auditLog = new AuditLogEntity();
 			auditLog.setTbName(ConsumerGroupEntity.TABLE_NAME);
 			auditLog.setRefId(t1.consumerGroup.getId());
 			auditLog.setInsertBy("broker-rq-" + IPUtil.getLocalIP());
 			// 注意重平衡完成后，版本号还会继续升级但是不进行重平衡操作，所以在日志中会出现版本号不一致的情况，属于正常情况
-			auditLog.setContent(t1.consumerGroup.getName() + "重平衡完毕！__version_is_" + t1.consumerGroup.getVersion());
+			//auditLog.setContent(t1.consumerGroup.getName() + "重平衡完毕！__version_is_" + t1.consumerGroup.getVersion());
+			auditLog.setContent(content);
 			auditLogService.insert(auditLog);
 		} catch (Exception e) {
-			// TODO: handle exception
+			log.error("",e);
 		}
 	}
 

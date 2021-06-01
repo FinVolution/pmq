@@ -1,7 +1,6 @@
 package com.ppdai.infrastructure.mq.biz.service.impl;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -10,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,8 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 	private SoaConfig soaConfig;
 	@Autowired
 	private QueueOffsetService queueOffsetService;
-
+	@Autowired
+	private ConsumerGroupService consumerGroupService;
 	TraceMessage traceMessageCommit = TraceFactory.getInstance("mq-commit");
 	// TraceMessage traceMessageCommit1 =
 	// TraceFactory.getInstance("mq-commit-data");
@@ -216,9 +217,12 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 				});
 				if (request.getFlag() == 1) {
 					Map<Long, OffsetVersionEntity> offsetVersionMap = queueOffsetService.getOffsetVersion();
+					Set<String> consumerGroupNames=new HashSet<>();
 					request.getQueueOffsets().forEach(t1 -> {
 						doCommitOffset(t1, 1, offsetVersionMap, 0);
+						consumerGroupNames.add(t1.getConsumerGroupName());
 					});
+					consumerGroupService.notifyMetaByNames(new ArrayList<>(consumerGroupNames));
 				}
 			}
 		} catch (Exception e) {

@@ -239,7 +239,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	public void rb(List<QueueOffsetEntity> queueOffsetEntities) {
 		Map<Long, String> idsMap = new HashMap<>(30);
 		List<NotifyMessageEntity> notifyMessageEntities = new ArrayList<>(30);
@@ -259,24 +259,13 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyRb(long id) {
-		updateRbVersion(Arrays.asList(id));
-		List<NotifyMessageEntity> notifyMessageEntities = new ArrayList<>();
-		NotifyMessageEntity notifyMessageEntity = new NotifyMessageEntity();
-		notifyMessageEntity.setConsumerGroupId(id);
-		notifyMessageEntity.setMessageType(MessageType.Rb);
-		notifyMessageEntities.add(notifyMessageEntity);
-
-		notifyMessageEntity = new NotifyMessageEntity();
-		notifyMessageEntity.setConsumerGroupId(id);
-		notifyMessageEntity.setMessageType(MessageType.Meta);
-		notifyMessageEntities.add(notifyMessageEntity);
-		notifyMessageService.insertBatch(notifyMessageEntities);
+		notifyRb(Arrays.asList(id));
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyRb(List<Long> ids) {
 		if (CollectionUtils.isEmpty(ids))
@@ -293,6 +282,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			notifyMessageEntity.setConsumerGroupId(id);
 			notifyMessageEntity.setMessageType(MessageType.Meta);
 			notifyMessageEntities.add(notifyMessageEntity);
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组需要重平衡！");
 		});
 		notifyMessageService.insertBatch(notifyMessageEntities);
 	}
@@ -301,9 +291,13 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		if (CollectionUtils.isEmpty(ids))
 			return;
 		consumerGroupRepository.updateRbVersion(ids);
+		ids.forEach(id->{
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组需要重平衡！");
+		});
+
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyMeta(long id) {
 		updateMetaVersion(Arrays.asList(id));
@@ -311,9 +305,10 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		notifyMessageEntity.setConsumerGroupId(id);
 		notifyMessageEntity.setMessageType(MessageType.Meta);
 		notifyMessageService.insert(notifyMessageEntity);
+		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组元数据发生变更！");
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyMeta(List<Long> ids) {
 		if (CollectionUtils.isEmpty(ids))
@@ -325,6 +320,8 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			notifyMessageEntity.setConsumerGroupId(id);
 			notifyMessageEntity.setMessageType(MessageType.Meta);
 			notifyMessageEntities.add(notifyMessageEntity);
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组元数据发生变更！");
+
 		});
 		notifyMessageService.insertBatch(notifyMessageEntities);
 	}
@@ -333,6 +330,9 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		if (CollectionUtils.isEmpty(ids))
 			return;
 		consumerGroupRepository.updateMetaVersion(ids);
+		ids.forEach(id->{
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组元数据发生变更！");
+		});
 	}
 
 	@Override
@@ -493,7 +493,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		return JsonUtil.toJsonNull(getCache());
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public ConsumerGroupCreateResponse createConsumerGroup(ConsumerGroupCreateRequest consumerGroupCreateRequest) {
 		CacheUpdateHelper.updateCache();
