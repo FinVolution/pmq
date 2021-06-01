@@ -216,13 +216,21 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 					}
 				});
 				if (request.getFlag() == 1) {
-					Map<Long, OffsetVersionEntity> offsetVersionMap = queueOffsetService.getOffsetVersion();
-					Set<String> consumerGroupNames=new HashSet<>();
-					request.getQueueOffsets().forEach(t1 -> {
-						doCommitOffset(t1, 1, offsetVersionMap, 0);
-						consumerGroupNames.add(t1.getConsumerGroupName());
-					});
-					consumerGroupService.notifyMetaByNames(new ArrayList<>(consumerGroupNames));
+					Transaction catTransaction = Tracer.newTransaction("Timer-service", "close-commitOffset");
+					try {
+						Map<Long, OffsetVersionEntity> offsetVersionMap = queueOffsetService.getOffsetVersion();
+						Set<String> consumerGroupNames = new HashSet<>();
+						request.getQueueOffsets().forEach(t1 -> {
+							doCommitOffset(t1, 1, offsetVersionMap, 0);
+							consumerGroupNames.add(t1.getConsumerGroupName());
+						});
+						consumerGroupService.notifyMetaByNames(new ArrayList<>(consumerGroupNames));
+						catTransaction.setStatus(Transaction.SUCCESS);
+					} catch (Throwable ee) {
+						catTransaction.setStatus(ee);
+						log.error("", ee);
+					}
+					catTransaction.complete();
 				}
 			}
 		} catch (Exception e) {
