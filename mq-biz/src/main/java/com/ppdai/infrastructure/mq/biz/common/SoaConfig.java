@@ -2263,6 +2263,28 @@ public class SoaConfig {
 		return commitThreadSize;
 	}
 
+	private volatile String _getCommitUpdateThreadSize = "20";
+	private volatile int getCommitUpdateThreadSize = 20;
+
+	private final String env_getCommitUpdateThreadSize_key = "mq.commit.update.thread.size";
+	private final String env_getCommitUpdateThreadSize_defaultValue = "25";
+	private final String env_getCommitUpdateThreadSize_des = "批量执行提交偏移线程数";
+
+	public int getCommitUpdateThreadSize() {
+		try {
+			if (!_getCommitUpdateThreadSize
+					.equals(env.getProperty(env_getCommitUpdateThreadSize_key, env_getCommitUpdateThreadSize_defaultValue))) {
+				_getCommitUpdateThreadSize = env.getProperty(env_getCommitUpdateThreadSize_key, env_getCommitUpdateThreadSize_defaultValue);
+				getCommitUpdateThreadSize = Integer.parseInt(_getCommitUpdateThreadSize);
+				onChange();
+			}
+		} catch (Exception e) {
+			getCommitUpdateThreadSize = 20;
+			onChange();
+		}
+		return getCommitUpdateThreadSize;
+	}
+
 	private final String env_getMqLdapUser_key = "mq.ldap.user";
 	private final String env_getMqLdapUser_defaultValue = "";
 	private final String env_getMqLdapUser_des = "访问ldap的用户名";

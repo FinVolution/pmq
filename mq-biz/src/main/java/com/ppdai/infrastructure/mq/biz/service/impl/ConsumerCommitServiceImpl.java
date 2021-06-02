@@ -51,13 +51,18 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 	private volatile boolean isRunning = true;
 	private ThreadPoolExecutor executorRun = null;
 	private volatile int commitThreadSize = 5;
-	private ReentrantLock reentrantLock = new ReentrantLock();
+	private volatile int commitUpdateThreadSize = 20;
+	private final ReentrantLock reentrantLock = new ReentrantLock();
+	private ThreadPoolExecutor executorCommit = null;
 
 	@Override
 	public void startBroker() {
 		commitThreadSize = soaConfig.getCommitThreadSize();
 		executorRun = new ThreadPoolExecutor(commitThreadSize + 1, commitThreadSize + 1, 10L, TimeUnit.SECONDS,
-				new ArrayBlockingQueue<>(50), SoaThreadFactory.create("commit-run", Thread.MAX_PRIORITY - 1, true),
+				new ArrayBlockingQueue<>(200), SoaThreadFactory.create("commit-run", Thread.MAX_PRIORITY - 1, true),
+				new ThreadPoolExecutor.CallerRunsPolicy());
+		executorCommit = new ThreadPoolExecutor(2, commitUpdateThreadSize, 10L, TimeUnit.SECONDS,
+				new ArrayBlockingQueue<>(500), SoaThreadFactory.create("commit-update", Thread.MAX_PRIORITY - 1, true),
 				new ThreadPoolExecutor.CallerRunsPolicy());
 		soaConfig.registerChanged(new Runnable() {
 			@Override
@@ -66,6 +71,11 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 					commitThreadSize = soaConfig.getCommitThreadSize();
 					executorRun.setCorePoolSize(commitThreadSize + 1);
 					executorRun.setMaximumPoolSize(commitThreadSize + 1);
+				}
+
+				if (commitUpdateThreadSize != soaConfig.getCommitUpdateThreadSize()) {
+					commitUpdateThreadSize = soaConfig.getCommitUpdateThreadSize();
+					executorCommit.setMaximumPoolSize(commitUpdateThreadSize);
 				}
 
 			}
@@ -216,21 +226,12 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 					}
 				});
 				if (request.getFlag() == 1) {
-					Transaction catTransaction = Tracer.newTransaction("Timer-service", "close-commitOffset");
-					try {
-						Map<Long, OffsetVersionEntity> offsetVersionMap = queueOffsetService.getOffsetVersion();
-						Set<String> consumerGroupNames = new HashSet<>();
-						request.getQueueOffsets().forEach(t1 -> {
-							doCommitOffset(t1, 1, offsetVersionMap, 0);
-							consumerGroupNames.add(t1.getConsumerGroupName());
-						});
-						consumerGroupService.notifyMetaByNames(new ArrayList<>(consumerGroupNames));
-						catTransaction.setStatus(Transaction.SUCCESS);
-					} catch (Throwable ee) {
-						catTransaction.setStatus(ee);
-						log.error("", ee);
-					}
-					catTransaction.complete();
+					executorCommit.submit(new Runnable() {
+						@Override
+						public void run() {
+							commitAndUpdate(request);
+						}
+					});
 				}
 			}
 		} catch (Exception e) {
@@ -239,7 +240,32 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 		// catTransaction.complete();
 		return response;
 	}
-
+	private void commitAndUpdate(CommitOffsetRequest request) {
+		Transaction catTransaction = Tracer.newTransaction("Timer-service", "close-commitOffset");
+		Set<String> consumerGroupNames = new HashSet<>();
+		try {
+			Map<Long, OffsetVersionEntity> offsetVersionMap = queueOffsetService.getOffsetVersion();
+			request.getQueueOffsets().forEach(t1 -> {
+				doCommitOffset(t1, 1, offsetVersionMap, 0);
+				consumerGroupNames.add(t1.getConsumerGroupName());
+			});
+			catTransaction.setStatus(Transaction.SUCCESS);
+		} catch (Throwable ee) {
+			catTransaction.setStatus(ee);
+			log.error("", ee);
+		} finally {
+			try {
+				if (consumerGroupNames.size() > 0) {
+					consumerGroupService.notifyMetaByNames(new ArrayList<>(consumerGroupNames));
+					catTransaction.setStatus(Transaction.SUCCESS);
+				}
+			} catch (Throwable ee) {
+				catTransaction.setStatus(ee);
+				log.error("", ee);
+			}
+		}
+		catTransaction.complete();
+	}
 	protected void clearOldData() {
 		boolean flag = (System.currentTimeMillis() - lastTime - 10 * 60 * 1000) > 0;
 		if (flag) {
@@ -258,6 +284,7 @@ public class ConsumerCommitServiceImpl implements ConsumerCommitService, BrokerT
 		try {
 			isRunning = false;
 			executorRun.shutdown();
+			executorCommit.shutdown();
 		} catch (Throwable e) {
 			// TODO: handle exception
 		}
