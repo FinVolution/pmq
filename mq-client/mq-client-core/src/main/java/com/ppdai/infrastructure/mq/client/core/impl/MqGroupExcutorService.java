@@ -88,6 +88,10 @@ public class MqGroupExcutorService implements IMqGroupExcutorService {
         if (isRunning) {
             log.info("commit offset,提交偏移" + consumerGroupOne.getMeta().getName());
             close();
+            //降低消息重复消费的概率
+            if(mqContext.getConfig().getRbTimes()<=1){
+                Util.sleep(1000L);
+            }
             addOpLog(consumerGroupOne, "提交偏移,停止拉取,commit offset,stop pull");
         }
         log.info("update offset version,更新重平衡版本号" + consumerGroupOne.getMeta().getName());
