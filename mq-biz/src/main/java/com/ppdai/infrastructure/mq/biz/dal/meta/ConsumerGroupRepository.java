@@ -33,4 +33,6 @@ public interface ConsumerGroupRepository extends BaseRepository<ConsumerGroupEnt
 
 	void updateByOriginName(ConsumerGroupEntity consumerGroupEntity);
 
+	List<ConsumerGroupEntity> getUnuseBroadConsumerGroup();
+
 }

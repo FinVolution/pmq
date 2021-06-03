@@ -46,4 +46,5 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void copyAndNewConsumerGroup(ConsumerGroupEntity consumerGroupEntityOld,ConsumerGroupEntity consumerGroupEntityNew);
 	BaseUiResponse deleteTopicNameFromConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity);
 	BaseUiResponse addTopicNameToConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity);
+	void deleteUnuseBroadConsumerGroup();
 }

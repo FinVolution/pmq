@@ -10,6 +10,7 @@ import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
 import com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity;
 import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
+import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
 import com.ppdai.infrastructure.mq.biz.service.Message01Service;
 import com.ppdai.infrastructure.mq.biz.service.QueueService;
 import com.ppdai.infrastructure.mq.biz.service.TopicService;
@@ -39,6 +40,8 @@ public class MessageCleanService extends AbstractTimerService {
 	private TopicService topicService;
 	@Autowired
 	private Message01Service message01Service;
+	@Autowired
+	private ConsumerGroupService consumerGroupService;
 	@Autowired
 	private EmailUtil emailUtil;
 	private ThreadPoolExecutor executor = null;
@@ -124,6 +127,7 @@ public class MessageCleanService extends AbstractTimerService {
 			log.error("", e);
 		}
 		sendWarnMail();
+		consumerGroupService.deleteUnuseBroadConsumerGroup();
 		log.info("end to clean all db queue!");
 	}
 

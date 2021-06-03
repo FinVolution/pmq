@@ -565,6 +565,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public ConsumerGroupEditResponse editConsumerGroup(ConsumerGroupEntity consumerGroupEntity) {
 		CacheUpdateHelper.updateCache();
 		ConsumerGroupEntity oldConsumerGroupEntity = get(consumerGroupEntity.getId());
@@ -634,6 +635,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public ConsumerGroupDeleteResponse deleteConsumerGroup(long consumerGroupId, boolean checkOnline) {
 		CacheUpdateHelper.updateCache();
 		// 缓存数据
@@ -702,6 +704,26 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 				"新增订阅，修改consumerGroup的topic字段，从" + oldTopicNames + "变为：" + consumerGroupEntity.getTopicNames());
 
 		return new BaseUiResponse<Void>();
+	}
+
+	private long lastCheckTime=System.currentTimeMillis();
+	@Override
+	public void deleteUnuseBroadConsumerGroup() {
+		if(System.currentTimeMillis()-lastCheckTime>24*60*60*1000){
+			lastCheckTime=System.currentTimeMillis();
+			List<ConsumerGroupEntity> unuse=consumerGroupRepository.getUnuseBroadConsumerGroup();
+			if(unuse.size()>0){
+				unuse.forEach(t->{
+					try{
+					  deleteConsumerGroup(t.getId(),true);
+						log.info("删除广播消费者组"+t.getName());
+					}catch (Throwable e){
+						e.printStackTrace();
+					}
+				});
+				log.info("删除完毕！");
+			}
+		}
 	}
 
 	@Override
