@@ -715,10 +715,13 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			if(unuse.size()>0){
 				unuse.forEach(t->{
 					try{
-					  deleteConsumerGroup(t.getId(),true);
+						userInfoHolder.setUserId(soaConfig.getMqAdminUser());
+					    deleteConsumerGroup(t.getId(),true);
 						log.info("删除广播消费者组"+t.getName());
 					}catch (Throwable e){
 						e.printStackTrace();
+					}finally {
+						userInfoHolder.clear();
 					}
 				});
 				log.info("删除完毕！");
