@@ -410,7 +410,7 @@ public class MqClient {
 			}
 			groupNames += consumerGroup.getMeta().getName() + ",";
 		}
-		//register();
+		register();
 		ConsumerGroupRegisterRequest request = new ConsumerGroupRegisterRequest();
 		request.setConsumerGroupNames(consumerGroupNames);
 		request.setConsumerId(mqContext.getConsumerId());
