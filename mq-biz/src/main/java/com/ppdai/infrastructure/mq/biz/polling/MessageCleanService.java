@@ -268,7 +268,7 @@ public class MessageCleanService extends AbstractTimerService {
 				topicMap.get(topicEntity.getName()).addAndGet(rows);
 				if(clearCount>20){
 					if (queueEntity.getMinId() < lastMinId) {
-						queueService.updateMinId(queueEntity.getId(), lastMinId);
+						queueService.updateMinId(queueEntity.getId(), lastMinId-1);
 					}
 					clearCount=0;
 				}
@@ -282,10 +282,10 @@ public class MessageCleanService extends AbstractTimerService {
 		}
 		if (clearCount > 0) {
 			if (queueEntity.getMinId() < lastMinId) {
-				queueService.updateMinId(queueEntity.getId(), lastMinId);
+				queueService.updateMinId(queueEntity.getId(), lastMinId-1);
 			}
 		} else if (queueEntity.getMinId() + 1 < lastMinId) {
-			queueService.updateMinId(queueEntity.getId(), lastMinId);
+			queueService.updateMinId(queueEntity.getId(), lastMinId-1);
 		}
 	}
 
