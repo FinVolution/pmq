@@ -761,6 +761,13 @@ public class MqQueueExcutorService implements IMqQueueExcutorService {
                 failIds = new ArrayList<>();
             }
             transaction.complete();
+            try {
+                messageMap.entrySet().forEach(t -> {
+                    slowMsgMap.remove(t.getKey());
+                });
+            } catch (Throwable e) {
+
+            }
         }
         try {
             if (MqClient.getContext().getMqEvent().getPostHandleListener() != null) {
