@@ -52,7 +52,7 @@ public class Message01ServiceImpl implements Message01Service {
 
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
     public void insertBatchDy(String topic, String tbName, List<Message01Entity> entities) {
         Timer.Context context = publishTimer.time();
         // Transaction transaction=Tracer.newTransaction("Msg", getDbName() +
@@ -84,7 +84,7 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
     public List<Message01Entity> getListDy(String topic, String tbName, long start, long end) {
         List<Message01Entity> rs = new ArrayList<>();
         setMaster(false);
@@ -252,7 +252,7 @@ public class Message01ServiceImpl implements Message01Service {
      * 注意是某个数据库实例下面的数据库名和表名对应的 最大id
      */
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
     public Map<String, Map<String, Long>> getMaxIdByIp(String ip) {
         setMaster(true);
         Map<String, Map<String, Long>> map = new HashMap<>();
@@ -303,14 +303,14 @@ public class Message01ServiceImpl implements Message01Service {
      * 注意是某个数据库实例下面的数据库名和表名对应的 最大id
      */
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
     public Map<String, Map<String, Long>> getMaxId() {
         return getMaxIdByIp(null);
     }
 
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
     public void truncate(String tbName) {
         try {
             setMaster(true);
@@ -383,11 +383,11 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
-    public int deleteDy(String tbName, long nextId, String date, int size,long maxId) {
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
+    public int deleteDy(String tbName, long nextId, String date, int size) {
         try {
             setMaster(true);
-            return message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date, size, maxId);
+            return message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date, size);
         } catch (Throwable e) {
             otherFailCounter.inc();
             return 0;
@@ -428,7 +428,7 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
     public void updateFailMsgResult(String tbName, List<Long> ids, int retryCount) {
         try {
             setMaster(true);
@@ -439,7 +439,7 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
     public int deleteOldFailMsg(String tbName, long id, int retryCount) {
         try {
             setMaster(true);
@@ -450,7 +450,7 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NEVER, value = "msgTransactionManager")
     public long getNextId(String tbName, long id, int size) {
         try {
             setMaster(true);
@@ -468,7 +468,7 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, value = "msgTransactionManager")
     public void deleteByIds(String tbName, List<Long> ids) {
         try {
             setMaster(true);
@@ -488,7 +488,6 @@ public class Message01ServiceImpl implements Message01Service {
 
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
     public TableInfoEntity getSingleTableInfoFromCache(QueueEntity queueEntity) {
         Map<String, Map<String, Map<String, TableInfoEntity>>> tableInfoCache = getTableInfoCache();
         if (tableInfoCache.containsKey(queueEntity.getIp()) && tableInfoCache.get(queueEntity.getIp()).containsKey(queueEntity.getDbName()) && tableInfoCache.get(queueEntity.getIp()).get(queueEntity.getDbName()).containsKey(queueEntity.getTbName())) {
@@ -499,25 +498,10 @@ public class Message01ServiceImpl implements Message01Service {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
     public Message01Entity getMinIdMsg(String tbName) {
         try {
             setMaster(false);
             return message01Repository.getMinIdMsg(getDbName() + "." + tbName);
-        } catch (Exception e) {
-            log.error("deleteByIds_error", e);
-        } finally {
-            clearDbId();
-        }
-        return null;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
-    public Message01Entity getMaxIdMsg(String tbName) {
-        try {
-            setMaster(true);
-            return message01Repository.getMaxIdMsg(getDbName() + "." + tbName);
         } catch (Exception e) {
             log.error("deleteByIds_error", e);
         } finally {
