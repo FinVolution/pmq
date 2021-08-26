@@ -32,7 +32,7 @@ public interface Message01Service {
 
 	Message01Entity getNearByMessageById(String tbName, long id);
 
-	int deleteDy(String tbName, long nextId, String date,int size);
+	int deleteDy(String tbName, long nextId, String date,int size,long maxId);
 	
 	void deleteByIds(String tbName, List<Long> ids);
 
@@ -84,4 +84,5 @@ public interface Message01Service {
 	long getNextId(String tbName, long id,  int size);
 	TableInfoEntity getSingleTableInfoFromCache(QueueEntity queueEntity);
 	Message01Entity getMinIdMsg(String tbName);
+	Message01Entity getMaxIdMsg(String tbName);
 }

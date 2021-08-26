@@ -31,7 +31,7 @@ public interface Message01Repository extends BaseRepository<Message01Entity> {
 
 	Message01Entity getNearByMessageById(@Param("tbName") String tbName, @Param("id") long id);
 
-	int deleteDy(@Param("tbName") String tbName, @Param("nextId") long nextId, @Param("date") String date,@Param("size") int size);
+	int deleteDy(@Param("tbName") String tbName, @Param("nextId") long nextId, @Param("date") String date,@Param("size") int size,@Param("maxId") long maxId);
 
 	void deleteByIds(@Param("tbName") String tbName, @Param("ids") List<Long> ids);
 
@@ -59,4 +59,6 @@ public interface Message01Repository extends BaseRepository<Message01Entity> {
 	Long getNextId(@Param("tbName") String tbName, @Param("id") long id, @Param("size") int size);
 
 	Message01Entity getMinIdMsg(@Param("tbName") String tbName);
+	Message01Entity getMaxIdMsg(@Param("tbName") String tbName);
+
 }

@@ -145,7 +145,7 @@
 	<delete id="deleteDy" parameterType="java.util.Map"
 			statementType="STATEMENT">
 		<![CDATA[
-	       delete from ${tbName} where id<=${nextId} and send_time <'${date}' and send_time<date_sub(now(), interval 1 day) limit ${size}
+	       delete from ${tbName} where id<=${nextId} and send_time <'${date}' and send_time<date_sub(now(), interval 1 day)  and id< ${maxId} limit ${size}
 	      ]]>
 	</delete>
 	<select id="getNextId" resultType="java.lang.Long" useCache="false">
@@ -254,5 +254,8 @@
 	<select id="getMinIdMsg" resultMap="BaseResultMap" useCache="false">
 		select *
 		from ${tbName} order by id asc limit 1
+	</select>
+	<select id="getMaxIdMsg" resultMap="BaseResultMap" useCache="false">
+		select * from ${tbName} order by id desc limit 1
 	</select>
 </mapper>

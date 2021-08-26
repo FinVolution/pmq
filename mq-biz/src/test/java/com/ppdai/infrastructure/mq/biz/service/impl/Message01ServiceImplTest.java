@@ -76,18 +76,18 @@ public class Message01ServiceImplTest extends AbstractTest {
 
 	@Test
 	public void deleteDyTest() {
-		message01ServiceImpl.deleteDy("test", 0, 1);
-		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong());
-
-		boolean rs = false;
-		doThrow(new RuntimeException("test")).when(message01Repository).deleteDy(anyString(), anyLong(), anyLong());
-		try {
-			message01ServiceImpl.deleteDy("test", 0, 1);
-		} catch (Exception e) {
-			rs = true;
-		}
-		assertEquals(true, rs);
-		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong());
+//		message01ServiceImpl.deleteDy("test", 0, 10000000000L);
+//		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong(),10000000000L);
+//
+//		boolean rs = false;
+//		doThrow(new RuntimeException("test")).when(message01Repository).deleteDy(anyString(), anyLong(), anyLong(),10000000000L);
+//		try {
+//			message01ServiceImpl.deleteDy("test", 0, 10000000000L);
+//		} catch (Exception e) {
+//			rs = true;
+//		}
+//		assertEquals(true, rs);
+//		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong(),10000000000L);
 	}
 
 	@Test

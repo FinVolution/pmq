@@ -384,10 +384,10 @@ public class Message01ServiceImpl implements Message01Service {
 
     @Override
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
-    public int deleteDy(String tbName, long nextId, String date, int size) {
+    public int deleteDy(String tbName, long nextId, String date, int size,long maxId) {
         try {
             setMaster(true);
-            return message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date, size);
+            return message01Repository.deleteDy(getDbName() + "." + tbName, nextId, date, size, maxId);
         } catch (Throwable e) {
             otherFailCounter.inc();
             return 0;
@@ -504,6 +504,20 @@ public class Message01ServiceImpl implements Message01Service {
         try {
             setMaster(false);
             return message01Repository.getMinIdMsg(getDbName() + "." + tbName);
+        } catch (Exception e) {
+            log.error("deleteByIds_error", e);
+        } finally {
+            clearDbId();
+        }
+        return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NOT_SUPPORTED, value = "msgTransactionManager")
+    public Message01Entity getMaxIdMsg(String tbName) {
+        try {
+            setMaster(true);
+            return message01Repository.getMaxIdMsg(getDbName() + "." + tbName);
         } catch (Exception e) {
             log.error("deleteByIds_error", e);
         } finally {

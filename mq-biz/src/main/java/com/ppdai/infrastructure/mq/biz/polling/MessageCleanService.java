@@ -7,6 +7,7 @@ import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
 import com.ppdai.infrastructure.mq.biz.common.util.EmailUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
+import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
 import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
 import com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity;
 import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
@@ -198,6 +199,11 @@ public class MessageCleanService extends AbstractTimerService {
 		long nextId = 0;
 		boolean flag=false;
 		int clearCount=0;
+		message01Service.setDbId(queueEntity.getDbNodeId());
+		Message01Entity message01Entity=message01Service.getMaxIdMsg(queueEntity.getTbName());
+		if(message01Entity==null){
+			return;
+		}
 		while (true && isMaster() && soaConfig.isEnbaleMessageClean()) {
 			int size = soaConfig.getCleanBatchSize();
 			flag=false;
@@ -252,7 +258,7 @@ public class MessageCleanService extends AbstractTimerService {
 					Util.sleep(sleepTime);
 				}
 				message01Service.setDbId(queueEntity.getDbNodeId());
-				int rows = message01Service.deleteDy(queueEntity.getTbName(), nextId, date, size);
+				int rows = message01Service.deleteDy(queueEntity.getTbName(), nextId, date, size,message01Entity.getId());
 				if (rows == 0) {
 					transaction.setStatus(Transaction.SUCCESS);
 					break;
