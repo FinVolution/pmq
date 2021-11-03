@@ -1,0 +1,2 @@
+# Auto Configuration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.ppdai.infrastructure.mq.client.kafka.MqKafkaConfiguration

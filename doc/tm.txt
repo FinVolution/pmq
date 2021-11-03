@@ -1,0 +1,73 @@
+{
+  "order": 0,
+  "index_patterns": [
+    "agent-log-*"
+  ],
+  "settings": {
+    "index": {
+      "analysis": {
+        "analyzer": {
+          "oap_analyzer": {
+            "type": "stop"
+          }
+        }
+      },
+      "number_of_shards": "13",
+      "refresh_interval": "60s"
+    }
+  },
+  "mappings": {
+    "properties": {
+      "timeStamp": {
+        "type": "long"
+      },
+      "layoutMessage": {
+        "type": "text"
+      },
+      "logName": {
+        "type": "text"
+      },
+      "level": {
+        "type": "keyword"
+      },
+      "appId": {
+        "type": "keyword"
+      },
+      "mdc": {
+        "properties": {
+          "cluster": {
+            "type": "keyword"
+          },
+          "env": {
+            "type": "keyword"
+          }
+        }
+      },
+      "threadName": {
+        "type": "keyword"
+      },
+      "tags": {
+        "properties": {
+          "orginAppId": {
+            "type": "keyword"
+          },
+          "HOST_IP": {
+            "type": "keyword"
+          },
+          "appName": {
+            "type": "keyword"
+          },
+          "version": {
+            "type": "keyword"
+          },
+          "coreVersion": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  },
+  "aliases": {
+    "agent-log": {}
+  }
+}

@@ -1,0 +1,351 @@
+package com.ppdai.infrastructure.mq.client.kafka;
+
+import com.ppdai.infrastructure.mq.biz.common.thread.SoaThreadFactory;
+import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
+import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
+import com.ppdai.infrastructure.mq.biz.common.util.IPUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.TopicUtil;
+import com.ppdai.infrastructure.mq.biz.common.util.Util;
+import com.ppdai.infrastructure.mq.biz.dto.base.ConsumerQueueDto;
+import com.ppdai.infrastructure.mq.biz.dto.base.MessageDto;
+import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageRequest;
+import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
+import com.ppdai.infrastructure.mq.biz.event.ISubscriber;
+import com.ppdai.infrastructure.mq.client.MessageUtil;
+import com.ppdai.infrastructure.mq.client.MqClient;
+import com.ppdai.infrastructure.mq.client.MqContext;
+import com.ppdai.infrastructure.mq.client.config.ConsumerGroupVo;
+import com.ppdai.messagequeue.utils.GZipUtil;
+import mq.org.apache.kafka.clients.consumer.*;
+import mq.org.apache.kafka.clients.producer.Callback;
+import mq.org.apache.kafka.clients.producer.RecordMetadata;
+import mq.org.apache.kafka.common.TopicPartition;
+import mq.org.apache.kafka.common.serialization.StringDeserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+public class PMqKafkaProducerService {
+    private static final Logger logger = LoggerFactory.getLogger(PMqKafkaProducerService.class);
+    public static final String MQ_KAFKA = "MqKafka";
+    public static final String MQ_CLIENT_KAFKA_FLAG = "mq.client.kafka.flag";
+    public static final String MQ_CLIENT_KAFKA_SYN_FLAG = "mq.client.kafka.syn.flag";
+    public static final String MQ_CLIENT_KAFKA = "mq.client.kafka";
+    public static final String RATE = ".rate";
+    public static final String MQ_CLIENT_KAFKA_RATE = "mq.client.kafka.rate";
+    public static final String DEF_VALUE20 = "20";
+    public static final String DEF_VALUE0 = "0";
+    public static final String DEF_VALUE1 = "1";
+    public static final String MQ_CLIENT_KAFKA_FAILD_MQ_FLAG = "mq.client.kafka.faild.mq.flag";
+    public static final String BOOTSTRAP_SERVERS = ".bootstrapServers";
+    public static final int BOUND = 100;
+    public static final int ALARM_TIME = 60_000;
+    public static final int MAX_RETRY_COUNT = 3;
+    private static ThreadPoolExecutor executor = new ThreadPoolExecutor(0, 1, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(BOUND), SoaThreadFactory.create("KafkaConsumerService-" + IPUtil.getLocalIP() + System.currentTimeMillis() % 10000, true),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
+
+    public static boolean send(MqContext mqContext, PublishMessageRequest request) {
+        if (kafkaFlag(request.getTopicName()) && request.getMsgs() != null && request.getMsgs().size() > 0) {
+            if (request.getMsgs().size() > 1 || request.getSynFlag() == 0) {
+                request.getMsgs().forEach(t1 -> {
+                    doSendKafka(mqContext, request, t1);
+                });
+                return true;
+            } else {
+                Future<RecordMetadata> rs = doSendKafka(mqContext, request, request.getMsgs().get(0));
+                if (rs != null) {
+                    try {
+                        if (kafkaSynFlag()) {
+                            return rs.get().offset() > 0;
+                        } else {
+                            return true;
+                        }
+                    } catch (Throwable e) {
+                        logger.error("", e);
+                        return false;
+                    }
+                }
+                return false;
+            }
+        } else {
+            return doPmqSend(mqContext, request);
+        }
+    }
+
+    private static boolean doPmqSend(MqContext mqContext, PublishMessageRequest request) {
+        return mqContext.getMqResource().publish(request, mqContext.getConfig().getPbRetryTimes());
+    }
+
+    private static Future<RecordMetadata> doSendKafka(MqContext mqContext, PublishMessageRequest request, MessageDto t1) {
+        String body = JsonUtil.toJsonNull(t1);
+        Future<RecordMetadata> rs = MqKafkaProducerService.send(MQ_KAFKA, request.getTopicName(), null, body, new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                if (e != null) {
+                    SendMailRequest mailRequest = new SendMailRequest();
+                    mailRequest.setSubject("消息发送失败,客户端：" + request.getClientIp() + ",Topic:" + request.getTopicName());
+                    mailRequest.setContent("消息发送异常，" + ",消息体是：" + body + ",异常原因是：" + e.getMessage());
+                    mailRequest.setTopicName(request.getTopicName());
+                    mailRequest.setType(2);
+                    mqContext.getMqResource().sendMail(mailRequest);
+                    //如果kafka发送失败会将消息发送到PMQ中
+                    if (kafkaFailedMQFlag()) {
+                        doPmqSend(mqContext, request);
+                    }
+                }
+            }
+        });
+        return rs;
+    }
+
+    private static boolean kafkaFlag(String topic) {
+        try {
+            if (DEF_VALUE1.equalsIgnoreCase(MqContext.getProperty(MQ_CLIENT_KAFKA_FLAG, DEF_VALUE0))) {
+                if (MqKafkaProducerService.sample(MQ_CLIENT_KAFKA + topic + RATE, MQ_CLIENT_KAFKA_RATE, DEF_VALUE20)) {
+                    return true;
+                }
+            }
+        } catch (Throwable e) {
+            logger.warn("", e);
+        }
+        return false;
+    }
+
+    private static boolean kafkaSynFlag() {
+        return DEF_VALUE1.equalsIgnoreCase(MqContext.getProperty(MQ_CLIENT_KAFKA_SYN_FLAG, DEF_VALUE0));
+    }
+
+    private static boolean kafkaFailedMQFlag() {
+        return DEF_VALUE1.equalsIgnoreCase(MqContext.getProperty(MQ_CLIENT_KAFKA_FAILD_MQ_FLAG, DEF_VALUE1));
+    }
+
+
+    private static AtomicBoolean registerFlag = new AtomicBoolean(false);
+    private static KafkaConsumer<String, String> consumer = null;
+    private static final String FAIL_TOPIC = "mq-faill-tpic";
+    private static final String YS_FLAG = "ys";
+
+
+    public static void kafkaRegister() {
+        if (!Util.isEmpty(MqContext.getProperty(MQ_KAFKA + BOOTSTRAP_SERVERS, ""))) {
+            if (registerFlag.compareAndSet(false, true)) {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        Properties properties = new Properties();
+                        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, MqContext.getProperty("MqKafka.bootstrapServers", ""));
+                        String consumerGroupName = MqClient.getContext().getOrignConfig().keySet().iterator().next();
+                        properties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupName);
+                        properties.put(ConsumerConfig.GROUP_INSTANCE_ID_CONFIG, MqClient.getContext().getConsumerName().replaceAll("\\.", "a").replaceAll("\\|", "a"));
+                        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+                        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+                        consumer = new KafkaConsumer<String, String>(properties);
+                        consumer.subscribe(getAllTopics(), new ConsumerRebalanceListener() {
+                            @Override
+                            public void onPartitionsRevoked(Collection<TopicPartition> collection) {
+
+                            }
+
+                            @Override
+                            public void onPartitionsAssigned(Collection<TopicPartition> collection) {
+
+                            }
+
+                            @Override
+                            public void onPartitionsLost(Collection<TopicPartition> partitions) {
+
+                            }
+                        });
+                        while (registerFlag.get()) {
+                            ConsumerRecords<String, String> records = consumer.poll(1000L);
+                            for (ConsumerRecord<String, String> record : records) {
+                                String topic = record.topic();
+                                String body = record.value();
+                                MessageDto messageDto = JsonUtil.parseJson(body, MessageDto.class);
+                                if (messageDto.getHead() != null && messageDto.getHead().containsKey(FAIL_TOPIC)) {
+                                    topic = messageDto.getHead().get(FAIL_TOPIC);
+                                    if (messageDto.getHead().containsKey(YS_FLAG)) {
+                                        messageDto.setBody(GZipUtil.uncompress(messageDto.getBody()));
+                                    }
+                                }
+                                messageDto.setTopicName(topic);
+                                messageDto.setId(record.offset());
+                                boolean rs = invokeMsg(consumerGroupName, topic, messageDto);
+                                if (!rs) {
+                                    // 发送失败告警
+                                    sendFailMail(consumerGroupName);
+                                    // 发送失败队列消息
+                                    sendFailMsg(consumerGroupName, messageDto);
+                                }
+                            }
+                            consumer.commitAsync();
+                        }
+                    }
+                });
+
+            }
+        }
+    }
+
+    private static long failBeginTime = 0;
+    private static AtomicLong failCount = new AtomicLong(0);
+
+    private static void sendFailMail(String consumerGroupName) {
+
+        // 超过一分钟，一次都没有成功，则告警
+        if ((System.currentTimeMillis() - failBeginTime) >= ALARM_TIME) {
+            String subject = "消息处理失败！";
+            String content = String.format(
+                    "ConsumerGroup:[%s]下的处理的消息从[%s]到[%s]这段时间一直处理失败，失败总数已达到%s条，请尽快处理!",
+                    consumerGroupName, Util.formateDate(new Date(failBeginTime)),
+                    Util.formateDate(new Date()), failCount.get());
+
+            SendMailRequest request = new SendMailRequest();
+            request.setType(2);
+            request.setConsumerGroupName(consumerGroupName);
+            //request.setTopicName(consumerQueueRef.get().getTopicName());
+            request.setSubject(subject);
+            request.setContent(content);
+            request.setKey(consumerGroupName + "-消息处理失败");
+            MqClient.getContext().getMqResource().sendMail(request);
+            failCount.set(0);
+            failBeginTime = 0L;
+        } else {
+            failCount.incrementAndGet();
+        }
+    }
+
+    private static void sendFailMsg(String consumerGroupName, MessageDto messageDto) {
+        String failTopicName = TopicUtil.getFailTopicName(consumerGroupName, messageDto.getTopicName());
+        List<MessageDto> messageDtos1 = new ArrayList<>(1);
+        messageDto.setRetryCount(messageDto.getRetryCount() + 1);
+        if (messageDto.getRetryCount() <= MAX_RETRY_COUNT) {
+            MqClient.checkBody(messageDto);
+            messageDtos1.add(messageDto);
+            if (messageDto.getHead() == null) {
+                messageDto.setHead(new HashMap<>());
+                messageDto.getHead().put(FAIL_TOPIC, messageDto.getTopicName());
+                PublishMessageRequest publishMessageRequest = new PublishMessageRequest();
+                publishMessageRequest.setTopicName(failTopicName);
+                doSendKafka(MqClient.getContext(), publishMessageRequest, messageDto);
+            }
+        } else {
+            logger.warn("当前消息达到最大重试次数" + messageDto.getRetryCount() + "了,此条失败消息会丢失。"
+                    + com.ppdai.infrastructure.mq.biz.common.util.JsonUtil.toJsonNull(messageDto));
+        }
+       /* if (messageDtos1.size() > 0) {
+            PublishMessageRequest request = new PublishMessageRequest();
+            request.setTopicName(failTopicName);
+            request.setMsgs(messageDtos1);
+            return request;
+        }*/
+    }
+
+
+    private static boolean invokeMsg(String consumerGroupName, String topic, MessageDto messageDto) {
+        Transaction transaction = Tracer.newTransaction("mq-queue-thread-handleMessage-kafka", messageDto.getTopicName());
+        try {
+            boolean flag = false;
+            boolean rs = true;
+            ISubscriber iSubscriber = getISubscriber(consumerGroupName, topic);
+            if (iSubscriber != null) {
+                List<Long> ids = iSubscriber.onMessageReceived(Arrays.asList(messageDto));
+                flag = true;
+                rs = (ids == null || ids.size() == 0);
+            } else {
+                com.ppdai.messagequeue.consumer.defaultConsumer.ISubscriber iSubscriber1 = getISubscriber2(consumerGroupName, topic);
+                if (iSubscriber1 != null) {
+                    rs = iSubscriber1.onMessageReceived(MessageUtil.convertMsg(topic, messageDto));
+                    flag = true;
+                }
+            }
+            if (!flag) {
+                logger.error("groupname_{}_topic_{} has no sub method!", consumerGroupName, topic);
+            }
+            if (!rs) {
+                logger.error("groupname_{}_topic_{}_bizId_{}_fail,消费失败", consumerGroupName, topic,
+                        messageDto.getBizId());
+            }
+            transaction.setStatus(Transaction.SUCCESS);
+            return rs;
+        } catch (Throwable e) {
+            logger.error("groupname_{}_topic_{}_bizId_{}_fail,消费失败,errMsg is {}", consumerGroupName, topic,
+                    messageDto.getBizId(), e.getMessage());
+            transaction.setStatus(e);
+            return false;
+        } finally {
+            transaction.complete();
+        }
+    }
+
+    private static Map<String, ISubscriber> subMap = new ConcurrentHashMap<>();
+    private static Map<String, com.ppdai.messagequeue.consumer.defaultConsumer.ISubscriber> subMap1 = new ConcurrentHashMap<>();
+
+    private static ISubscriber getISubscriber(String consumerGroupName, String topic) {
+        String key = consumerGroupName + "." + topic;
+        if (subMap.containsKey(key)) {
+            return subMap.get(key);
+        }
+        ISubscriber iSubscriber = null;
+        if (MqClient.getContext().getMqEvent().getiSubscriberSelector() != null) {
+            iSubscriber = MqClient.getContext().getMqEvent().getiSubscriberSelector().getSubscriber(consumerGroupName,
+                    topic);
+        } else {
+            iSubscriber = MqClient.getContext().getSubscriber(consumerGroupName, topic);
+        }
+
+        if (iSubscriber != null) {
+            subMap.putIfAbsent(key, iSubscriber);
+        }
+        return iSubscriber;
+
+    }
+
+    private static com.ppdai.messagequeue.consumer.defaultConsumer.ISubscriber getISubscriber2(String consumerGroupName, String topic) {
+        String key = consumerGroupName + "." + topic;
+        if (subMap1.containsKey(key)) {
+            return subMap1.get(key);
+        }
+        com.ppdai.messagequeue.consumer.defaultConsumer.ISubscriber iSubscriber = null;
+        if (MqClient.getContext().getMqEvent().getiSubscriberSelector() != null) {
+            iSubscriber = MqClient.getContext().getMqSubscriber(consumerGroupName, topic);
+        }
+        if (iSubscriber != null) {
+            subMap1.putIfAbsent(key, iSubscriber);
+        }
+        return iSubscriber;
+
+    }
+
+    @Override
+    protected void finalize() {
+        try {
+            registerFlag.set(false);
+            consumer.close();
+
+            executor.shutdownNow();
+            executor = null;
+        } catch (Throwable e) {
+        }
+
+    }
+
+    private static List<String> getAllTopics() {
+        List<String> topics = new ArrayList<>();
+        Set<Map.Entry<String, ConsumerGroupVo>> entrySets = MqClient.getContext().getOrignConfig().entrySet();
+        for (Map.Entry<String, ConsumerGroupVo> entry : entrySets) {
+            entry.getValue().getTopics().entrySet().forEach(t1 -> {
+                topics.add(t1.getKey());
+                topics.add(TopicUtil.getFailTopicName(entry.getKey(), t1.getKey()));
+            });
+            break;
+        }
+        return topics;
+    }
+}

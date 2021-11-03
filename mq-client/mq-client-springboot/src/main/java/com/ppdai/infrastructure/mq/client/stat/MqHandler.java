@@ -20,7 +20,7 @@ import com.ppdai.infrastructure.mq.client.MqSpringUtil;
 @Component
 public class MqHandler implements Handler {
 
-	
+	//@Autowired
 	private MqClientStatController mqClientStatController;
 
 	private Map<String, Method> maps = new HashMap<>();

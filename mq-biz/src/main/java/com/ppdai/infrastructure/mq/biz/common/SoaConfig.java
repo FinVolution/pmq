@@ -81,7 +81,7 @@ public class SoaConfig {
 					}
 					Util.sleep(1000);
 				}
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				// TODO: handle exception
 			}
 		});
@@ -116,7 +116,7 @@ public class SoaConfig {
 			for (Runnable runnable : changed.keySet()) {
 				try {
 					runnable.run();
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					log.error("onchange-error", e);
 				}
 			}
@@ -355,7 +355,7 @@ public class SoaConfig {
 	private volatile String _getCleanMessageInterval = "";
 	private volatile int getCleanMessageInterval = 0;
 	private final String env_getCleanMessageInterval_key = "mq.msg.clean.interval";
-	private final String env_getCleanMessageInterval_defaultValue = "86400";
+	private final String env_getCleanMessageInterval_defaultValue = "1800";
 	private final String env_getCleanMessageInterval_des = "审计日志和历史消息定时清理时间";
 
 	// 审计日志和历史消息定时清理时间
@@ -367,13 +367,13 @@ public class SoaConfig {
 						env_getCleanMessageInterval_defaultValue);
 				getCleanMessageInterval = Integer.parseInt(
 						env.getProperty(env_getCleanMessageInterval_key, env_getCleanMessageInterval_defaultValue));
-				if (getCleanMessageInterval < 86400) {
-					getCleanMessageInterval = 86400;
+				if (getCleanMessageInterval < 1800) {
+					getCleanMessageInterval = 1800;
 				}
 				onChange();
 			}
 		} catch (Exception e) {
-			getCleanMessageInterval = 86400;
+			getCleanMessageInterval = 1800;
 			onChange();
 			log.error("getgetCleanMessageInterval_SoaConfig_error", e);
 		}
@@ -435,7 +435,7 @@ public class SoaConfig {
 	private volatile String _getCleanSleepTime = "";
 	private volatile int getCleanSleepTime = 100;
 	private final String env_getCleanSleepTime_key = "mq.message.clean.sleep.time";
-	private final String env_getCleanSleepTime_defaultValue = "100";
+	private final String env_getCleanSleepTime_defaultValue = "50";
 	private final String env_getCleanSleepTime_des = "历史消息清理间隔时间";
 
 	// 历史消息清理间隔时间
@@ -446,13 +446,13 @@ public class SoaConfig {
 				_getCleanSleepTime = env.getProperty(env_getCleanSleepTime_key, env_getCleanSleepTime_defaultValue);
 				getCleanSleepTime = Integer
 						.parseInt(env.getProperty(env_getCleanSleepTime_key, env_getCleanSleepTime_defaultValue));
-				if (getCleanSleepTime < 50) {
-					getCleanSleepTime = 50;
+				if (getCleanSleepTime < 10) {
+					getCleanSleepTime = 10;
 				}
 				onChange();
 			}
 		} catch (Exception e) {
-			getCleanSleepTime = 100;
+			getCleanSleepTime = 10;
 			onChange();
 			log.error("getgetCleanSleepTime_SoaConfig_error", e);
 		}
@@ -2263,6 +2263,28 @@ public class SoaConfig {
 		return commitThreadSize;
 	}
 
+	private volatile String _getCommitUpdateThreadSize = "20";
+	private volatile int getCommitUpdateThreadSize = 20;
+
+	private final String env_getCommitUpdateThreadSize_key = "mq.commit.update.thread.size";
+	private final String env_getCommitUpdateThreadSize_defaultValue = "25";
+	private final String env_getCommitUpdateThreadSize_des = "批量执行提交偏移线程数";
+
+	public int getCommitUpdateThreadSize() {
+		try {
+			if (!_getCommitUpdateThreadSize
+					.equals(env.getProperty(env_getCommitUpdateThreadSize_key, env_getCommitUpdateThreadSize_defaultValue))) {
+				_getCommitUpdateThreadSize = env.getProperty(env_getCommitUpdateThreadSize_key, env_getCommitUpdateThreadSize_defaultValue);
+				getCommitUpdateThreadSize = Integer.parseInt(_getCommitUpdateThreadSize);
+				onChange();
+			}
+		} catch (Exception e) {
+			getCommitUpdateThreadSize = 20;
+			onChange();
+		}
+		return getCommitUpdateThreadSize;
+	}
+
 	private final String env_getMqLdapUser_key = "mq.ldap.user";
 	private final String env_getMqLdapUser_defaultValue = "";
 	private final String env_getMqLdapUser_des = "访问ldap的用户名";
@@ -2748,7 +2770,7 @@ public class SoaConfig {
 	private final String env_getSkipTime_defaultValue = "";
 	private final String env_getSkipTime_des = "消息清理跳过时间格式为, 00:00-1:00,2:00-3:00";
 
-	private volatile String _getSkipTime = "";
+	public volatile String _getSkipTime = "";
 	private AtomicReference<List<TimeRange>> getSkipTime = new AtomicReference<List<TimeRange>>(new ArrayList<>());
 
 	public List<TimeRange> getSkipTime() {
@@ -3116,4 +3138,12 @@ public class SoaConfig {
 
 			return getMqTopicRouteMap;
 		}
+		private final String env_getMqBakUrl_key = "mq.bak.url";
+		private final String env_getMqBakUrl_defaultValue = "";
+		private final String env_getMqBakUrl_des = "mq备份集群url";
+
+		public String getMqBakUrl() {
+			return env.getProperty(env_getMqBakUrl_key, env_getMqBakUrl_defaultValue);
+		}
+
 }

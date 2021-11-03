@@ -14,7 +14,7 @@ import com.ppdai.infrastructure.mq.biz.dal.common.BaseRepository;
  */
 @Mapper
 public interface ConsumerRepository extends BaseRepository<ConsumerEntity> {
-	void heartbeat(@Param("ids") List<Long> ids);
+	int heartbeat(@Param("ids") List<Long> ids);
 
 	List<ConsumerEntity> findByHeartTimeInterval(@Param("heartTimeInterval") long heartTimeInterval);
 

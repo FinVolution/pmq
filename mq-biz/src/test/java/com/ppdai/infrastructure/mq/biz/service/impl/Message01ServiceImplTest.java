@@ -76,18 +76,18 @@ public class Message01ServiceImplTest extends AbstractTest {
 
 	@Test
 	public void deleteDyTest() {
-		message01ServiceImpl.deleteDy("test", 0, 1);
-		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong());
-
-		boolean rs = false;
-		doThrow(new RuntimeException("test")).when(message01Repository).deleteDy(anyString(), anyLong(), anyLong());
-		try {
-			message01ServiceImpl.deleteDy("test", 0, 1);
-		} catch (Exception e) {
-			rs = true;
-		}
-		assertEquals(true, rs);
-		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong());
+//		message01ServiceImpl.deleteDy("test", 0, 10000000000L);
+//		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong(),10000000000L);
+//
+//		boolean rs = false;
+//		doThrow(new RuntimeException("test")).when(message01Repository).deleteDy(anyString(), anyLong(), anyLong(),10000000000L);
+//		try {
+//			message01ServiceImpl.deleteDy("test", 0, 10000000000L);
+//		} catch (Exception e) {
+//			rs = true;
+//		}
+//		assertEquals(true, rs);
+//		verify(message01Repository).deleteDy(anyString(), anyLong(), anyLong(),10000000000L);
 	}
 
 	@Test
@@ -231,14 +231,14 @@ public class Message01ServiceImplTest extends AbstractTest {
 		message01ServiceImpl.setDbId(1);
 		List<TableInfoEntity> dataLst = new ArrayList<TableInfoEntity>();
 		TableInfoEntity tableInfoEntity = new TableInfoEntity();
-		tableInfoEntity.setAutoIncrement(1L);
-		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setMaxId(1L);
+		tableInfoEntity.setDbName("test");
 		tableInfoEntity.setTbName("t1");
 
 		dataLst.add(tableInfoEntity);
 		tableInfoEntity = new TableInfoEntity();
-		tableInfoEntity.setAutoIncrement(1L);
-		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setMaxId(1L);
+		tableInfoEntity.setDbName("test");
 		tableInfoEntity.setTbName("t2");
 		dataLst.add(tableInfoEntity);
 		when(message01Repository.getMaxIdByDb()).thenReturn(dataLst);
@@ -272,8 +272,8 @@ public class Message01ServiceImplTest extends AbstractTest {
 		
 		List<TableInfoEntity> dataLst =new ArrayList<TableInfoEntity>();
 		TableInfoEntity tableInfoEntity=new TableInfoEntity();
-		tableInfoEntity.setAutoIncrement(1L);
-		tableInfoEntity.setTableSchema("test");
+		tableInfoEntity.setMaxId(1L);
+		tableInfoEntity.setDbName("test");
 		tableInfoEntity.setTbName("test");
 		dataLst.add(tableInfoEntity);
 		message01ServiceImpl.setDbId(1);		

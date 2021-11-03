@@ -7,6 +7,16 @@ import com.ppdai.infrastructure.mq.biz.dto.BaseRequest;
 public class HeartbeatRequest extends BaseRequest {
 	private long consumerId;
 	private List<Long> consumerIds;
+	private int asyn = 1;
+
+	public int getAsyn() {
+		return asyn;
+	}
+
+	public void setAsyn(int asyn) {
+		this.asyn = asyn;
+	}
+
 
 	public List<Long> getConsumerIds() {
 		return consumerIds;

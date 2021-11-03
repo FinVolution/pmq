@@ -321,10 +321,11 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
     }
 
     @Override
-    public void heartbeat(List<Long> ids) {
+    public int heartbeat(List<Long> ids) {
         if (!CollectionUtils.isEmpty(ids)) {
-            consumerRepository.heartbeat(ids);
+           return consumerRepository.heartbeat(ids);
         }
+        return 0;
     }
 
     @Override
@@ -424,6 +425,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
 
     private void checkBroadcastAndSubEnv(ConsumerGroupRegisterRequest request, List<String> consumerGroupNames,
                                          Map<String, ConsumerGroupEntity> map, ConsumerGroupRegisterResponse response) {
+        boolean flag=false;
         for (String name : consumerGroupNames) {
             ConsumerGroupEntity consumerGroupEntity = map.get(name);
             if (consumerGroupEntity.getMode() == 2) {
@@ -434,12 +436,13 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                         ConsumerGroupEntity.class);
                 consumerGroupEntityNew.setSubEnv(request.getSubEnv());
                 consumerGroupEntityNew.setName(newConsumerGroupName);
-                if (!map.containsKey(newConsumerGroupName)) {
-                    try {
-                        consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
-                    } catch (Exception e) {
-
-                    }
+                Transaction transaction=Tracer.newTransaction("mq-consumergroup","broad");
+                try {
+                    consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
+                    transaction.setStatus(Transaction.SUCCESS);
+                } catch (Exception e) {
+                    log.error("",e);
+                    transaction.setStatus(e);
                 }
                 request.getConsumerGroupNames().put(consumerGroupEntityNew.getName(),
                         request.getConsumerGroupNames().get(name));
@@ -447,6 +450,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                 request.getConsumerGroupNames().remove(name);
                 response.getBroadcastConsumerGroupName().put(name, consumerGroupEntityNew.getName());
                 response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
+                flag=true;
             } else if (MqClient.getMqEnvironment() != null && !Util.isEmpty(request.getSubEnv())
                     && !MqConst.DEFAULT_SUBENV.equalsIgnoreCase(request.getSubEnv() + "")
                     && MqEnv.FAT == MqClient.getMqEnvironment().getEnv()) {
@@ -458,11 +462,15 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                     consumerGroupEntityNew.setSubEnv(request.getSubEnv());
                     consumerGroupEntityNew.setName(newConsumerGroupName);
                     // consumerGroupEntityNew.setOriginName(newConsumerGroupName);
+                    Transaction transaction=Tracer.newTransaction("mq-consumergroup","subenv");
                     try {
                         consumerGroupService.copyAndNewConsumerGroup(consumerGroupEntity, consumerGroupEntityNew);
-                    } catch (Exception e) {
+                        transaction.setStatus(Transaction.SUCCESS);
+                    } catch (Throwable e) {
+                        transaction.setStatus(e);
                         //consumerGroupService.updateCache();
                     }
+                    transaction.complete();
                 }
 
                 request.getConsumerGroupNames().put(newConsumerGroupName, request.getConsumerGroupNames().get(name));
@@ -470,9 +478,14 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
                 request.getConsumerGroupNames().remove(name);
                 response.getBroadcastConsumerGroupName().put(name, newConsumerGroupName);
                 response.getConsumerGroupNameNew().put(name, consumerGroupEntityNew.getName());
+                flag=true;
             }
         }
-        consumerGroupService.updateCache();
+        if(flag){
+            consumerGroupService.forceUpdateCache();
+        }else{
+            consumerGroupService.updateCache();
+        }
     }
 
     protected void addRegisterConsumerGroupLog(ConsumerGroupRegisterRequest request,
@@ -548,6 +561,10 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
         for (String consumerGroupName : consumerGroupNames) {
             ConsumerGroupEntity consumerGroupEntity = consumerGroupMap.get(consumerGroupName);
             if (consumerGroupEntity != null) {
+                /*Transaction transaction=Tracer.newTransaction("ConsumerGroupRegister",consumerGroupEntity.getOriginName());
+                transaction.addData("clientIp",consumerEntity.getIp());
+                transaction.setStatus(Transaction.SUCCESS);
+                transaction.complete();*/
                 if (!Util.isEmpty(consumerGroupEntity.getIpBlackList())
                         && consumerGroupEntity.getIpBlackList().contains(consumerEntity.getIp())) {
                     ids.remove(consumerGroupEntity.getId());
@@ -802,6 +819,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
         } else {
             transaction = Tracer.newTransaction("Publish-Asyn", request.getTopicName());
         }
+        transaction.addData("arg-data",request.getTopicName()+"-"+request.getClientIp());
         String key = request.getTopicName();
         Map<String, AtomicInteger> counterTemp = counter.get();
         if (!counterTemp.containsKey(key)) {
@@ -1149,6 +1167,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
         if (checkFailTime(request.getTopicName(), temp, null) && checkStatus(temp, dbNodeMap)) {
             message01Service.setDbId(temp.getDbNodeId());
             transaction = Tracer.newTransaction("Pull-Data", temp.getIp());
+            transaction.addData("arg-data", request.getConsumerGroupName() + "-" + request.getTopicName() + "-" + request.getQueueId() + "-" + request.getClientIp());
             try {
                 entities = message01Service.getListDy(temp.getTopicName(), temp.getTbName(), request.getOffsetStart(),
                         request.getOffsetEnd());

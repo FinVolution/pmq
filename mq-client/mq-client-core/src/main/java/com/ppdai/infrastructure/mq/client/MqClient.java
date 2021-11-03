@@ -11,6 +11,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.ppdai.infrastructure.mq.client.core.*;
+import com.ppdai.infrastructure.mq.client.resource.IMqResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +50,6 @@ import com.ppdai.infrastructure.mq.biz.event.PreHandleListener;
 import com.ppdai.infrastructure.mq.biz.event.PreSendListener;
 import com.ppdai.infrastructure.mq.client.config.ClientConfigHelper;
 import com.ppdai.infrastructure.mq.client.config.ConsumerGroupVo;
-import com.ppdai.infrastructure.mq.client.core.IConsumerPollingService;
-import com.ppdai.infrastructure.mq.client.core.IMqBrokerUrlRefreshService;
-import com.ppdai.infrastructure.mq.client.core.IMqCheckService;
-import com.ppdai.infrastructure.mq.client.core.IMqGroupExcutorService;
-import com.ppdai.infrastructure.mq.client.core.IMqHeartbeatService;
-import com.ppdai.infrastructure.mq.client.core.IMqQueueExcutorService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqMeticReporterService;
 import com.ppdai.infrastructure.mq.client.core.impl.MqTopicQueueRefreshService;
 import com.ppdai.infrastructure.mq.client.event.RegisterConsumerGroupListener;
@@ -75,6 +71,7 @@ public class MqClient {
 	private static IMqCheckService mqCheckService = null;
 	private static MqContext mqContext = new MqContext();
 	private static IConsumerPollingService consumerPollingService = null;
+	private static IMqCommitService mqCommitService = null;
 	private static ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 5, 5L, TimeUnit.SECONDS,
 			new ArrayBlockingQueue<>(50), SoaThreadFactory.create("MqClient", true),
 			new ThreadPoolExecutor.CallerRunsPolicy());
@@ -218,19 +215,29 @@ public class MqClient {
 						// 因为删除close之前，所以需要先备份订阅信息
 						Map<String, ConsumerGroupVo> consumerGroups = mqContext.getOrignConfig();
 						close();
+						while (true) {
+							try {
+								register();
+								break;
+							} catch (Throwable e) {
+								log.error("restart_error", e);
+								registerFlag.set(false);
+							}
+						}
 						if (consumerGroups != null && consumerGroups.size() > 0) {
 							while (true) {
 								try {
+									register();
 									registerConsumerGroup(consumerGroups);
 									break;
-								} catch (Exception e) {
+								} catch (Throwable e) {
 									log.error("restart_error", e);
 									registerFlag.set(false);
 									Util.sleep(1000);
 								}
 							}
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("restart_error", e);
 					} finally {
 						restartFlag.set(false);
@@ -239,6 +246,7 @@ public class MqClient {
 			});
 		}
 	}
+
 
 	// start=init+registerconsumergroup
 
@@ -371,7 +379,7 @@ public class MqClient {
 					}
 					try {
 						doRegisterConsumerGroup(groups);
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("doRegisterConsumerGroup_error", e);
 					}
 				}
@@ -435,6 +443,8 @@ public class MqClient {
 				mqBrokerUrlRefreshService.start();
 				mqCheckService = mqFactory.createMqCheckService();
 				mqCheckService.start();
+				mqCommitService=mqFactory.createCommitService();
+				mqCommitService.start();
 				// MqCheckService.getInstance().start(mqContext);
 				log.info(groupNames + "  subscribe_suc,订阅成功！ and json is " + JsonUtil.toJson(request));
 			} else {
@@ -505,8 +515,8 @@ public class MqClient {
 				request.setTopicName(topic);
 				request.setMsgs(messages);
 				checkBody(messages);
-				return mqContext.getMqResource().publish(request, mqContext.getConfig().getPbRetryTimes());
-			} catch (Exception e) {
+				return publish(request, mqContext.getConfig().getPbRetryTimes());
+			} catch (Throwable e) {
 				log.error("publish_error,and request json is " + JsonUtil.toJsonNull(request), e);
 				return false;
 			}
@@ -585,7 +595,7 @@ public class MqClient {
 									preRequest.getMsgs().addAll(request.getMsgs());									
 									if (preRequest.getMsgs().size() > 10 || System.currentTimeMillis()
 											- lastTime > mqContext.getConfig().getPublishAsynTimeout()) {
-										mqContext.getMqResource().publish(preRequest,
+										publish(preRequest,
 												mqContext.getConfig().getPbRetryTimes());
 										lastTime = System.currentTimeMillis();
 										preRequest = null;
@@ -593,9 +603,9 @@ public class MqClient {
 
 								} else if (preRequest != null) {									
 									checkBody(request.getMsgs());
-									mqContext.getMqResource().publish(preRequest,
+									publish(preRequest,
 											mqContext.getConfig().getPbRetryTimes());
-									mqContext.getMqResource().publish(request, mqContext.getConfig().getPbRetryTimes());
+									publish(request, mqContext.getConfig().getPbRetryTimes());
 									lastTime = System.currentTimeMillis();
 									preRequest = null;
 								} else {
@@ -604,13 +614,13 @@ public class MqClient {
 								}
 							} else if (preRequest != null) {
 								checkBody(preRequest.getMsgs());
-								mqContext.getMqResource().publish(preRequest, mqContext.getConfig().getPbRetryTimes());
+								publish(preRequest, mqContext.getConfig().getPbRetryTimes());
 								lastTime = System.currentTimeMillis();
 								preRequest = null;
 							} else {
 								Util.sleep(10);
 							}
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							log.error("publish_aysn_error,and request json is " + JsonUtil.toJsonNull(request), e);
 						}
 					}
@@ -631,7 +641,7 @@ public class MqClient {
 
 			}
 			if (request != null) {
-				mqContext.getMqResource().publish(request, mqContext.getConfig().getPbRetryTimes());
+				publish(request, mqContext.getConfig().getPbRetryTimes());
 			}
 		}
 	}
@@ -671,6 +681,26 @@ public class MqClient {
 
 	}
 
+	public static boolean publish(PublishMessageRequest request, int times) {
+		IMqResource mqbakresourece = mqContext.getMqBakResource();
+		try {
+			return mqContext.getMqResource().publish(request, times);
+		} catch (Throwable e) {
+			try {
+				if (mqbakresourece != null) {
+					return mqbakresourece.publish(request, times);
+				} else {
+					log.error("publish_bakfail", e);
+					return false;
+				}
+			} catch (Throwable e1) {
+				log.error("publish_fail", e1);
+				return false;
+			}
+
+		}
+
+	}
 	// 此close表示退出消费
 	public static void close() {
 		Transaction transaction = Tracer.newTransaction("mq-client", "close-client");
@@ -679,6 +709,10 @@ public class MqClient {
 			if (consumerPollingService != null) {
 				consumerPollingService.close();
 				consumerPollingService = null;
+			}
+			if(mqCommitService!=null){
+				mqCommitService.close();
+				mqCommitService = null;
 			}
 			// ConsumerPollingService.getInstance().close();
 			deRegister();
@@ -705,7 +739,7 @@ public class MqClient {
 			// asynFlag.set(false);
 			mqFactory = new MqFactory();
 			transaction.setStatus(Transaction.SUCCESS);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			transaction.setStatus(e);
 		} finally {
 			transaction.complete();

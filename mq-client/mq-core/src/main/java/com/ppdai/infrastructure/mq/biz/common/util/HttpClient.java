@@ -35,7 +35,7 @@ public class HttpClient implements IHttpClient{
 		    response = client.newCall(request).execute();	
 		    transaction.setStatus(Transaction.SUCCESS);
 			return response.isSuccessful();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			transaction.setStatus(e);			
 			return false;
 		} finally {			
@@ -80,7 +80,7 @@ public class HttpClient implements IHttpClient{
 		} catch (IOException e) {
 			transaction.setStatus(e);
 			throw e;
-		}catch (Exception e) {
+		}catch (Throwable e) {
 			transaction.setStatus(e);
 			throw e;
 		}
@@ -149,6 +149,36 @@ public class HttpClient implements IHttpClient{
 
 	}
 
+	@Override
+	public void getAsyn(String url, Callback callback) {
+		try {
+			Request.Builder requestbuilder = new Request.Builder().url(url).get();
+			Request request = requestbuilder.build();
+			if (callback != null) {
+				client.newCall(request).enqueue(callback);
+			} else {
+				client.newCall(request).enqueue(new Callback() {
+					@Override
+					public void onFailure(Call call, IOException e) {
+
+					}
+
+					@Override
+					public void onResponse(Call call, Response response) throws IOException {
+						try {
+							response.close();
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+				});
+
+			}
+		} catch (Exception e) {
+
+		}
+
+	}
 	public String get(String url) throws IOException {		
 		Response response = null; 
 		Transaction transaction = null;
@@ -166,7 +196,7 @@ public class HttpClient implements IHttpClient{
 						response.code() + " error,and message is " + response.message());				
 				throw exception;
 			}
-		} catch (Exception e) {			
+		} catch (Throwable e) {
 			transaction.setStatus(e);
 			throw new RuntimeException(e);
 		} finally {

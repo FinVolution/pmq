@@ -2,10 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ppdai.infrastructure.mq.biz.dal.msg.Message01Repository">
 	<resultMap id="TableInfoMap"
-		type="com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity">
-		<result column="auto_increment" property="autoIncrement" />
+			   type="com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity">
+		<result column="auto_increment" property="maxId" />
 		<result column="table_name" property="tbName" />
-		<result column="table_schema" property="tableSchema" />
+		<result column="table_schema" property="dbName" />
+		<result column="table_rows" property="tbRows"/>
+		<result column="dataSize" property="dataSize"/>
 	</resultMap>
 	<!-- 业务逻辑sql请写在这个文件内 -->
 	<insert id="insertBatchDy" useGeneratedKeys="false">
@@ -139,12 +141,16 @@
 	</select>
 
 
+
 	<delete id="deleteDy" parameterType="java.util.Map"
-		statementType="STATEMENT">
-	     <![CDATA[
-	       delete from ${tbName} where id<=${end}
+			statementType="STATEMENT">
+		<![CDATA[
+	       delete from ${tbName} where id<=${nextId} and send_time <'${date}' and send_time<date_sub(now(), interval 1 day)  and id< ${maxId} limit ${size}
 	      ]]>
 	</delete>
+	<select id="getNextId" resultType="java.lang.Long" useCache="false">
+		select id from ${tbName} where id>=${id} order by id asc limit ${size},1
+	</select>
 	<delete id="deleteByIds">
 		delete from ${tbName} where id in
 		(
@@ -167,7 +173,7 @@
 
 	<select id="getMaxIdByDb" resultMap="TableInfoMap" useCache="false">
 		select
-		table_schema,table_name,auto_increment from
+		table_schema,table_name,auto_increment,table_rows ,round(data_length/1024/1024/1024,2) as dataSize from
 		information_schema.tables
 		where table_type='BASE TABLE'
 	</select>
@@ -245,5 +251,11 @@
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 		COLLATE=utf8mb4_unicode_ci COMMENT='消息'
 	</update>
-
+	<select id="getMinIdMsg" resultMap="BaseResultMap" useCache="false">
+		select *
+		from ${tbName} order by id asc limit 1
+	</select>
+	<select id="getMaxIdMsg" resultMap="BaseResultMap" useCache="false">
+		select * from ${tbName} order by id desc limit 1
+	</select>
 </mapper>

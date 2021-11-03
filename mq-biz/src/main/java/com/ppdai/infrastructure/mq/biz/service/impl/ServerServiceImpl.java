@@ -88,7 +88,7 @@ public class ServerServiceImpl extends AbstractBaseService<ServerEntity>
 					try {
 						updateHeartBeat();
 						updateCache();
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("ServerServiceImpl_updateHeartBeat_error", e);
 					}
 					Util.sleep(soaConfig.getServerHeartbeat() * 1000);
@@ -180,7 +180,7 @@ public class ServerServiceImpl extends AbstractBaseService<ServerEntity>
 			executor.shutdown();
 			isRunning = false;
 			id = 0;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 		}
 
 	}

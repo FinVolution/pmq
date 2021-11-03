@@ -227,7 +227,7 @@ public class TopicServiceImpl extends AbstractBaseService<TopicEntity>
 		isRunning = false;
 		try {
 			executor.shutdown();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			// TODO: handle exception
 		}
 	}

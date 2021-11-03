@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>mq-client</artifactId>
 		<groupId>com.ppdai.infrastructure</groupId>
-		<version>5.1.0</version>
+		<version>5.5.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>mq-client-core</artifactId>
@@ -15,6 +15,11 @@
 		<java.version>1.8</java.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-server</artifactId>
+			<version>9.4.4.v20170414</version>
+		</dependency>
 		<dependency>
 			<groupId>com.ppdai.infrastructure</groupId>
 			<artifactId>mq-core</artifactId>

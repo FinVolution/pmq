@@ -127,7 +127,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 					while (isRunning) {
 						try {
 							updateCache();
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							log.error("ConsumerGroupServiceImpl_doUpdateCache_error", e);
 						}
 						Util.sleep(soaConfig.getMqConsumerGroupCacheInterval());
@@ -239,7 +239,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	public void rb(List<QueueOffsetEntity> queueOffsetEntities) {
 		Map<Long, String> idsMap = new HashMap<>(30);
 		List<NotifyMessageEntity> notifyMessageEntities = new ArrayList<>(30);
@@ -259,24 +259,13 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyRb(long id) {
-		updateRbVersion(Arrays.asList(id));
-		List<NotifyMessageEntity> notifyMessageEntities = new ArrayList<>();
-		NotifyMessageEntity notifyMessageEntity = new NotifyMessageEntity();
-		notifyMessageEntity.setConsumerGroupId(id);
-		notifyMessageEntity.setMessageType(MessageType.Rb);
-		notifyMessageEntities.add(notifyMessageEntity);
-
-		notifyMessageEntity = new NotifyMessageEntity();
-		notifyMessageEntity.setConsumerGroupId(id);
-		notifyMessageEntity.setMessageType(MessageType.Meta);
-		notifyMessageEntities.add(notifyMessageEntity);
-		notifyMessageService.insertBatch(notifyMessageEntities);
+		notifyRb(Arrays.asList(id));
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyRb(List<Long> ids) {
 		if (CollectionUtils.isEmpty(ids))
@@ -293,6 +282,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			notifyMessageEntity.setConsumerGroupId(id);
 			notifyMessageEntity.setMessageType(MessageType.Meta);
 			notifyMessageEntities.add(notifyMessageEntity);
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组需要重平衡！");
 		});
 		notifyMessageService.insertBatch(notifyMessageEntities);
 	}
@@ -301,9 +291,13 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		if (CollectionUtils.isEmpty(ids))
 			return;
 		consumerGroupRepository.updateRbVersion(ids);
+		ids.forEach(id->{
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组需要重平衡！");
+		});
+
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyMeta(long id) {
 		updateMetaVersion(Arrays.asList(id));
@@ -311,9 +305,10 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		notifyMessageEntity.setConsumerGroupId(id);
 		notifyMessageEntity.setMessageType(MessageType.Meta);
 		notifyMessageService.insert(notifyMessageEntity);
+		uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组元数据发生变更！");
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public void notifyMeta(List<Long> ids) {
 		if (CollectionUtils.isEmpty(ids))
@@ -325,6 +320,8 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			notifyMessageEntity.setConsumerGroupId(id);
 			notifyMessageEntity.setMessageType(MessageType.Meta);
 			notifyMessageEntities.add(notifyMessageEntity);
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组元数据发生变更！");
+
 		});
 		notifyMessageService.insertBatch(notifyMessageEntities);
 	}
@@ -333,6 +330,9 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		if (CollectionUtils.isEmpty(ids))
 			return;
 		consumerGroupRepository.updateMetaVersion(ids);
+		ids.forEach(id->{
+			uiAuditLogService.recordAudit(ConsumerGroupEntity.TABLE_NAME,id,"此消费者组元数据发生变更！");
+		});
 	}
 
 	@Override
@@ -472,14 +472,28 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		});
 		notifyRb(ids);
 	}
-
+	@Override
+	public void notifyMetaByNames(List<String> consumerGroupNames) {
+		if (CollectionUtils.isEmpty(consumerGroupNames))
+			return;
+		List<Long> ids = new ArrayList<>();
+		Map<String, ConsumerGroupEntity> cacheData = consumerGroupRefMap.get();
+		if (cacheData == null || cacheData.size() == 0)
+			return;
+		consumerGroupNames.forEach(t1 -> {
+			if (cacheData.containsKey(t1)) {
+				ids.add(cacheData.get(t1).getId());
+			}
+		});
+		notifyMeta(ids);
+	}
 	@Override
 	public String getCacheJson() {
 		// TODO Auto-generated method stub
 		return JsonUtil.toJsonNull(getCache());
 	}
 
-	// @Transactional(rollbackFor = Exception.class)
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public ConsumerGroupCreateResponse createConsumerGroup(ConsumerGroupCreateRequest consumerGroupCreateRequest) {
 		CacheUpdateHelper.updateCache();
@@ -551,6 +565,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public ConsumerGroupEditResponse editConsumerGroup(ConsumerGroupEntity consumerGroupEntity) {
 		CacheUpdateHelper.updateCache();
 		ConsumerGroupEntity oldConsumerGroupEntity = get(consumerGroupEntity.getId());
@@ -620,6 +635,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public ConsumerGroupDeleteResponse deleteConsumerGroup(long consumerGroupId, boolean checkOnline) {
 		CacheUpdateHelper.updateCache();
 		// 缓存数据
@@ -690,6 +706,29 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 		return new BaseUiResponse<Void>();
 	}
 
+	private long lastCheckTime=System.currentTimeMillis();
+	@Override
+	public void deleteUnuseBroadConsumerGroup() {
+		if(System.currentTimeMillis()-lastCheckTime>24*60*60*1000){
+			lastCheckTime=System.currentTimeMillis();
+			List<ConsumerGroupEntity> unuse=consumerGroupRepository.getUnuseBroadConsumerGroup();
+			if(unuse.size()>0){
+				unuse.forEach(t->{
+					try{
+						userInfoHolder.setUserId(soaConfig.getMqAdminUser());
+					    deleteConsumerGroup(t.getId(),true);
+						log.info("删除广播消费者组"+t.getName());
+					}catch (Throwable e){
+						e.printStackTrace();
+					}finally {
+						userInfoHolder.clear();
+					}
+				});
+				log.info("删除完毕！");
+			}
+		}
+	}
+
 	@Override
 	public BaseUiResponse<Void> deleteTopicNameFromConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity) {
 		ConsumerGroupEntity consumerGroupEntity = get(consumerGroupTopicEntity.getConsumerGroupId());
@@ -718,7 +757,7 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			ConsumerGroupEntity consumerGroupEntityNew) {
 		consumerGroupEntityNew.setId(0);
 		insert(consumerGroupEntityNew);
-		Map<String, ConsumerGroupEntity> consumerGroupMap = getData();
+		Map<String, ConsumerGroupEntity> consumerGroupMap = getConsumerGroupByName(consumerGroupEntityOld.getName());
 		Map<Long, Map<String, ConsumerGroupTopicEntity>> ctMap = consumerGroupTopicService.getCache();
 		Map<String, ConsumerGroupTopicEntity> consumerTopics = ctMap.get(consumerGroupEntityOld.getId());
 		if (consumerTopics != null) {
@@ -755,5 +794,15 @@ public class ConsumerGroupServiceImpl extends AbstractBaseService<ConsumerGroupE
 			dataMap.put(t1.getName(), t1);
 		});
 		return dataMap;
+	}
+	private Map<String, ConsumerGroupEntity> getConsumerGroupByName(String name) {
+		Map<String,Object> condition=new HashMap<>();
+		condition.put(ConsumerGroupEntity.FdOriginName,name);
+		List<ConsumerGroupEntity> consumerGroupEntities=  getList(condition);
+		Map<String,ConsumerGroupEntity> map=new HashMap<>();
+		consumerGroupEntities.forEach(t->{
+			map.put(t.getName(),t);
+		});
+		return map;
 	}
 }

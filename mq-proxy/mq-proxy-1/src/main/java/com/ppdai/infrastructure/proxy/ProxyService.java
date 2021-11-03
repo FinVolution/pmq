@@ -56,7 +56,7 @@ public class ProxyService {
 						map.values().forEach(t1 -> {
 							MqClient.registerConsumerGroup(t1);
 						});
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("订阅失败", e);
 					}
 				}

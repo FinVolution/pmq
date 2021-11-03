@@ -34,6 +34,7 @@
                     <option value="">请选择排序类型</option>
                     <option value ="1">消息总数</option>
                     <option value ="2">消息平均数</option>
+                    <option value ="3">消息单表容量</option>
                 </select>
             </div>
 
@@ -53,17 +54,20 @@
         <thead>
         <tr>
             <th lay-data="{field: 'id', align: 'center', sort: true,templet:'#idTpl',totalRowText: '合计'}">队列编号</th>
-            <th lay-data="{field: 'dbNodeId', align: 'center', sort: true}">数据节点编号</th>
             <th lay-data="{field: 'ip', align: 'center', sort: true}">ip</th>
             <th lay-data="{field: 'dbName', align: 'center', sort: true}">数据库名</th>
             <th lay-data="{field: 'tbName', align: 'center', sort: true}">表名</th>
             <th lay-data="{field: 'topicName', align: 'center', templet:'#useStatusTpl', sort: true}">topic</th>
+            <th lay-data="{field: 'topicOwnerName', align: 'center', sort: true}">负责人</th>
+            <th lay-data="{field: 'saveDayNum', align: 'center', sort: true}">保存天数</th>
             <th lay-data="{field: 'nodeType', align: 'center', templet:'#nodeTypeTpl', sort: true}">存储类型</th>
-            <th lay-data="{field: 'msgCount', align: 'center',totalRow: true, sort: true}">消息总量</th>
             <th lay-data="{field: 'avgCount', align: 'center',totalRow: true, sort: true}">平均数/天</th>
             <th lay-data="{field: 'minId', align: 'center',templet:'#minIdTpl', sort: true}">最小Id</th>
             <th lay-data="{field: 'maxId', align: 'center', sort: true}">最大Id</th>
+            <th lay-data="{field: 'dataSize',align: 'center', sort: true }">单表大小(G)</th>
+            <th lay-data="{field: 'msgCount',align: 'center', sort: true}">单表行数</th>
             <th lay-data="{field: 'minTime',align: 'center', sort: true}">最小时间</th>
+            <!--            <th lay-data="{field: 'autoIncrement',align: 'center', sort: true}">autoIncrementId</th>-->
         </tr>
         </thead>
     </table>

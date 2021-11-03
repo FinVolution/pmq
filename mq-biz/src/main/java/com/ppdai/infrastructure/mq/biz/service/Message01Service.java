@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
+import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
+import com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity;
 
 /**
  * @author dal-generator
@@ -30,7 +32,7 @@ public interface Message01Service {
 
 	Message01Entity getNearByMessageById(String tbName, long id);
 
-	void deleteDy(String tbName, long start, long end);
+	int deleteDy(String tbName, long nextId, String date,int size,long maxId);
 	
 	void deleteByIds(String tbName, List<Long> ids);
 
@@ -48,7 +50,10 @@ public interface Message01Service {
 	/*
 	 * key为dbname,里面的key为tbname value为id ,注意此id为下一次的插入的id
 	 */
+	Map<String, Map<String, Long>> getMaxIdByIp(String ip);
 	Map<String, Map<String, Long>> getMaxId();
+
+	Map<String,Map<String,Map<String, TableInfoEntity>>> getTableInfoCache();
 
 	void truncate(String tbName);
 
@@ -76,4 +81,8 @@ public interface Message01Service {
 	void updateFailMsgResult(String tbName, List<Long> ids, int retryCount);
 
 	int deleteOldFailMsg(String tbName, long id, int retryCount);
+	long getNextId(String tbName, long id,  int size);
+	TableInfoEntity getSingleTableInfoFromCache(QueueEntity queueEntity);
+	Message01Entity getMinIdMsg(String tbName);
+	Message01Entity getMaxIdMsg(String tbName);
 }

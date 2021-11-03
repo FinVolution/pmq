@@ -176,7 +176,7 @@ public class DbNodeServiceImpl extends AbstractBaseService<DbNodeEntity>
 				if (checkChanged()) {
 					forceUpdateCache();
 				}
-			} catch (Exception e) {
+			} catch (Throwable e) {
 
 			}
 			updateFlag.set(false);

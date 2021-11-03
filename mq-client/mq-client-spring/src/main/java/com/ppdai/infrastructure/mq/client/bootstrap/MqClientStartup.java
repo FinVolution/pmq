@@ -54,6 +54,8 @@ public class MqClientStartup {
 		String pbRetryTimes = System.getProperty("mq.pb.retry.times", env.getProperty("mq.pb.retry.times", "10"));
 		String readTimeOut = System.getProperty("mq.http.timeout", env.getProperty("mq.http.timeout", "10000"));
 		String pullDeltaTime = System.getProperty("mq.pull.time.delta", env.getProperty("mq.pull.time.delta", "150"));
+		String timeOutWarn=System.getProperty("mq.msg.warn.timeout", env.getProperty("mq.msg.warn.timeout", "300"));
+
 		boolean metaMode = "true"
 				.equals(System.getProperty("mq.broker.metaMode", env.getProperty("mq.broker.metaMode", "true")));
 		if(!Util.isEmpty(netCard)){
@@ -78,6 +80,7 @@ public class MqClientStartup {
 		config.setPbRetryTimes(getPbRetryTimes(pbRetryTimes));
 		config.setPullDeltaTime(Integer.parseInt(pullDeltaTime));
 		config.setReadTimeOut(Long.parseLong(readTimeOut));
+		config.setWarnTimeout(Integer.parseInt(timeOutWarn));
 		logger.info("当前生效的配置是："+JsonUtil.toJsonNull(config));
 		MqClient.init(config);
 		updateConfig();
@@ -122,6 +125,9 @@ public class MqClientStartup {
 	protected static String subEnvs1 = " ";
 	protected static String publishAsynTimeout1="1000";
 	protected static Map<String, String> properties = null;
+	protected static String warnTimeout1="300";
+	protected static String commitFlag1 = "0";
+	protected static String commitInterval1 = "2000";
 
 	private static void monitorConfig() {
 		if (env != null) {
@@ -158,12 +164,53 @@ public class MqClientStartup {
 		setMetaMode();
 
 		setPullDeltaTime();
-		
+		setWarnTimeout();
 		//setAppSubEnvs();
-		
+		setCommit();
 		setPublishAsynTimeout();
 	}
+	private static void setCommit() {
+		String commitFlag = System.getProperty("mq.client.commit.syn.flag",
+				env.getProperty("mq.client.commit.syn.flag", "false"));
+		if (!commitFlag1.equals(commitFlag)) {
+			try {
+				commitFlag1 = commitFlag;
+				MqClient.getContext().getConfig().setSynCommit("true".equalsIgnoreCase(commitFlag));
+			} catch (Exception e) {
+				logger.error("setCommit_error", e);
+			}
+		}
 
+		String commitInterval = System.getProperty("mq.client.commit.asyn.interval",
+				env.getProperty("mq.client.commit.asyn.interval", "500"));
+		if (!commitInterval1.equals(commitInterval)) {
+			try {
+				commitInterval1 = commitInterval;
+				long commitInterval2 = Long.parseLong(commitInterval);
+				if (commitInterval2 < 300) {
+					commitInterval2 = 300;
+				}
+				MqClient.getContext().getConfig().setAynCommitInterval(commitInterval2);
+			} catch (Exception e) {
+				logger.error("setCommit_error", e);
+			}
+		}
+	}
+
+	private static void setWarnTimeout() {
+		String warnTimeout = System.getProperty("mq.msg.warn.timeout",
+				env.getProperty("mq.msg.warn.timeout", "300"));
+		if (!warnTimeout.equals(warnTimeout1)) {
+			try {
+				warnTimeout1 = warnTimeout;
+				int warnTimeout2 = Integer.parseInt(warnTimeout);
+				MqClient.getContext().getConfig().setWarnTimeout(warnTimeout2);
+			} catch (Exception e) {
+				logger.error("setPublishAsynTimeout_error", e);
+			}
+
+		}
+	}
 	private static void setPublishAsynTimeout() {
 		String publishAsynTimeout = System.getProperty("mq.publish.asyn.timeout", env.getProperty("mq.publish.asyn.timeout", "1000"));
 		if (!publishAsynTimeout.equals(publishAsynTimeout1)) {

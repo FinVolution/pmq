@@ -1,6 +1,7 @@
 package com.ppdai.infrastructure.mq.biz.ui.vo;
 
 import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
+import com.ppdai.infrastructure.mq.biz.entity.TableInfoEntity;
 import org.springframework.beans.BeanUtils;
 
 import java.util.Date;
@@ -17,11 +18,37 @@ public class QueueVo extends QueueEntity {
 
     private long msgCount=0;
 
-    private long avgCount=0;//消息平均数，消息总数除以消息保留天数
+    //消息平均数，消息总数除以消息保留天数
+    private long avgCount=0;
+    //如果消息库中最早的一条消息的插入日期，加上消息的保存天数，比今天的日期大，则为异常。把isException设置为1，最小Id字段标红。
+    private int isException=0;
+    //队列的最大Id
+    private long maxId=0;
 
-    private int isException=0;//如果消息库中最早的一条消息的插入日期，加上消息的保存天数，比今天的日期大，则为异常。把isException设置为1，最小Id字段标红。
+    private float dataSize;
 
-    private long maxId=0;//队列的最大Id
+    private String topicOwnerName;
+
+    private int saveDayNum;
+
+
+    public int getSaveDayNum() {
+        return saveDayNum;
+    }
+
+    public QueueVo setSaveDayNum(int saveDayNum) {
+        this.saveDayNum = saveDayNum;
+        return this;
+    }
+
+    public String getTopicOwnerName() {
+        return topicOwnerName;
+    }
+
+    public QueueVo setTopicOwnerName(String topicOwnerName) {
+        this.topicOwnerName = topicOwnerName;
+        return this;
+    }
 
     /**
      * 消息表中，id最小的消息的插入时间
@@ -82,5 +109,15 @@ public class QueueVo extends QueueEntity {
 
     public void setMaxId(long maxId) {
         this.maxId = maxId;
+    }
+
+
+    public float getDataSize() {
+        return dataSize;
+    }
+
+    public QueueVo setDataSize(float dataSize) {
+        this.dataSize = dataSize;
+        return this;
     }
 }

@@ -233,6 +233,10 @@
 		
 	</update>
 
+	<select id="getUnuseBroadConsumerGroup" parameterType="java.util.Map" resultMap="BaseResultMap">
+		SELECT * FROM consumer_group where mode=2 and name!=origin_name and id not in (select consumer_group_id from consumer_group_consumer)
+	</select>
+
 	<update id="updateByOriginName" parameterType="com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity">
 		update consumer_group set
         `dpt_name` = #{dptName},

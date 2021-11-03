@@ -33,7 +33,7 @@ public class Util {
 		try {
 			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(DEFAULT_FORMATE);
 			return simpleDateFormat.format(date);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			return null;
 		}
 	}
@@ -41,7 +41,7 @@ public class Util {
 	public static void sleep(long millisecondes) {
 		try {
 			TimeUnit.MILLISECONDS.sleep(millisecondes);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			// e.printStackTrace();
 		}

@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
 
+import com.ppdai.infrastructure.mq.biz.entity.*;
 import com.ppdai.infrastructure.mq.biz.ui.dto.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +37,6 @@ import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.UserInfo;
 import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity;
-import com.ppdai.infrastructure.mq.biz.entity.DbNodeEntity;
-import com.ppdai.infrastructure.mq.biz.entity.Message01Entity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity;
-import com.ppdai.infrastructure.mq.biz.entity.TopicEntity;
 import com.ppdai.infrastructure.mq.biz.service.AuditLogService;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
 import com.ppdai.infrastructure.mq.biz.service.DbNodeService;
@@ -91,6 +85,8 @@ public class UiQueueService implements TimerService {
 	private ThreadPoolExecutor executor = null;
 	private volatile boolean isRunning = true;
 	private AtomicReference<List<QueueVo>> queueListAvg = new AtomicReference<>(new ArrayList<>());
+	private AtomicReference<List<QueueVo>> queueListByDataSize = new AtomicReference<>(new ArrayList<>());
+	private AtomicReference<List<QueueVo>> queueWarningInfo = new AtomicReference<>(new ArrayList<>());
 	private AtomicReference<List<QueueVo>> queueListCount = new AtomicReference<>(new ArrayList<>());
 	private AtomicReference<Map<String, List<QueueVo>>> queueListCountMap = new AtomicReference<>(
 			new ConcurrentHashMap<>());
@@ -118,7 +114,7 @@ public class UiQueueService implements TimerService {
 								}
 							}
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("UiQueueServiceImpl_initCache_error", e);
 					}
 					if (queueListAvg.get().size() == 0) {
@@ -149,6 +145,7 @@ public class UiQueueService implements TimerService {
 				return false;
 			List<QueueVo> queueVosAvg = new ArrayList<>(queueList.size());
 			List<QueueVo> queueVosCount = new ArrayList<>(queueList.size());
+			List<QueueVo> queueVosByDataSize = new ArrayList<>(queueList.size());
 			Map<String, List<QueueVo>> queueVoMap = new ConcurrentHashMap<>();
 			Map<Long, Long> queueMaxIdMap = queueService.getMax();
 			if (queueMaxIdMap.size() == 0)
@@ -166,40 +163,34 @@ public class UiQueueService implements TimerService {
 						continue;
 					}
 					long maxId = queueMaxIdMap.get(queueEntity.getId());
-					long minId = queueEntity.getMinId();
-					queueVo.setMsgCount(maxId - minId - 1);
+
 					queueVo.setMaxId(maxId);
 
 					message01Service.setDbId(queueEntity.getDbNodeId());
-					// 取倒数第2000条消息
-					Message01Entity message01Entity1 = message01Service.getMessageById(queueEntity.getTbName(),
-							minId + 1 + soaConfig.getCleanBatchSize());
 
-					message01Service.setDbId(queueEntity.getDbNodeId());
 					// 取倒数第一条消息
-					Message01Entity message01Entity2 = message01Service.getMessageById(queueEntity.getTbName(),
-							minId + 1);
+					Message01Entity message01Entity1 = message01Service.getMinIdMsg(queueEntity.getTbName());
+					TableInfoEntity tableInfo = message01Service.getSingleTableInfoFromCache(queueEntity);
+					queueVo.setMsgCount(tableInfo.getTbRows());
 					queueVo.setAvgCount(queueVo.getMsgCount() / topicEntity.getSaveDayNum());
+					// 插入Table空间信息
+					queueVo.setDataSize(tableInfo.getDataSize());
+					if(!StringUtils.isEmpty(topicEntity.getOwnerNames())){
+						queueVo.setTopicOwnerName(topicEntity.getOwnerNames());
+						queueVo.setSaveDayNum(topicEntity.getSaveDayNum());
+					}
 
 					if (message01Entity1 != null) {
 						queueVo.setMinTime(message01Entity1.getSendTime());
 						if ((System.currentTimeMillis()
 								- message01Entity1.getSendTime().getTime()) > (topicEntity.getSaveDayNum() + 1) * 24
-										* 60 * 60 * 1000) {
+								* 60 * 60 * 1000) {
 							queueVo.setIsException(1);
-						}
-					} else {
-						if (message01Entity2 != null) {
-							queueVo.setMinTime(message01Entity2.getSendTime());
-							if ((System.currentTimeMillis()
-									- message01Entity2.getSendTime().getTime()) > (topicEntity.getSaveDayNum() + 1)
-											* 24 * 60 * 60 * 1000) {
-								queueVo.setIsException(1);
-							}
 						}
 					}
 					queueVosAvg.add(queueVo);
 					queueVosCount.add(queueVo);
+					queueVosByDataSize.add(queueVo);
 					if (queueVoMap.containsKey(queueVo.getTopicName())) {
 						queueVoMap.get(queueVo.getTopicName()).add(queueVo);
 					} else {
@@ -209,11 +200,13 @@ public class UiQueueService implements TimerService {
 					}
 				}
 			}
-			queueSort(queueVosAvg);
+			queueSortAvg(queueVosAvg);
 			queueSort(queueVosCount);
+			queueSortByDataSize(queueVosByDataSize);
 			queueListAvg.set(queueVosAvg);
 			queueListCount.set(queueVosCount);
 			queueListCountMap.set(queueVoMap);
+			queueListByDataSize.set(queueVosByDataSize);
 			transaction.setStatus(Transaction.SUCCESS);
 		} catch (Exception e) {
 			log.error("UiQueueService_initCache_error", e);
@@ -248,14 +241,40 @@ public class UiQueueService implements TimerService {
 		Collections.sort(queueVoList, new Comparator<QueueVo>() {
 			@Override
 			public int compare(QueueVo q1, QueueVo q2) {
-				long i = q1.getMsgCount() - q2.getMsgCount();
-				if (i == 0) {
-					return 0;
-				} else if (i > 0) {
+				if(q1.getMsgCount()>q2.getMsgCount()){
 					return -1;
-				} else {
+				}else if(q1.getMsgCount()<q2.getMsgCount()){
 					return 1;
 				}
+				return 0;
+			}
+		});
+	}
+	private void queueSortAvg(List<QueueVo> queueVoList) {
+		// 按照消息总量
+		Collections.sort(queueVoList, new Comparator<QueueVo>() {
+			@Override
+			public int compare(QueueVo q1, QueueVo q2) {
+				if(q1.getAvgCount()>q2.getAvgCount()){
+					return -1;
+				}else if(q1.getAvgCount()<q2.getAvgCount()){
+					return 1;
+				}
+				return 0;
+			}
+		});
+	}
+	private void queueSortByDataSize(List<QueueVo> queueVoList) {
+		// 按照消息容量大小
+		Collections.sort(queueVoList, new Comparator<QueueVo>() {
+			@Override
+			public int compare(QueueVo q1, QueueVo q2) {
+				if(q1.getDataSize()>q2.getDataSize()){
+					return -1;
+				}else if(q1.getDataSize()<q2.getDataSize()){
+					return 1;
+				}
+				return 0;
 			}
 		});
 	}
@@ -556,8 +575,10 @@ public class UiQueueService implements TimerService {
 		// 如果根据消息平均数排序的列表
 		if ("2".equals(queueGetListRequest.getSortTypeId())) {
 			qlist = queueListAvg.get();
-		} else {
+		} else if ("1".equals(queueGetListRequest.getSortTypeId())) {
 			qlist = queueListCount.get();
+		} else {
+			qlist =queueListByDataSize.get();
 		}
 		for (QueueVo queueVo : qlist) {
 			if (isAdmin(userId)) {

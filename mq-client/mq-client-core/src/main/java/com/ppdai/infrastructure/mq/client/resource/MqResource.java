@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.ppdai.infrastructure.mq.biz.dto.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,42 +28,6 @@ import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dto.BaseResponse;
 import com.ppdai.infrastructure.mq.biz.dto.MqConstanst;
-import com.ppdai.infrastructure.mq.biz.dto.client.CatRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.CatResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.CommitOffsetRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.CommitOffsetResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerDeRegisterRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerDeRegisterResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupRegisterRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerGroupRegisterResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerRegisterRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.ConsumerRegisterResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.FailMsgPublishAndUpdateResultRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.FailMsgPublishAndUpdateResultResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetConsumerGroupResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetGroupTopicRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetGroupTopicResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetMessageCountRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetMessageCountResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetMetaGroupRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetMetaGroupResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetTopicQueueIdsRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetTopicQueueIdsResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetTopicRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.GetTopicResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.HeartbeatRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.HeartbeatResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.LogRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.LogResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.OpLogRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.OpLogResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.PublishMessageResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.PullDataRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.PullDataResponse;
-import com.ppdai.infrastructure.mq.biz.dto.client.SendMailRequest;
-import com.ppdai.infrastructure.mq.biz.dto.client.SendMailResponse;
 import com.ppdai.infrastructure.mq.client.metric.MetricSingleton;
 
 public class MqResource implements IMqResource {
@@ -243,15 +208,25 @@ public class MqResource implements IMqResource {
 			public void run() {
 				String url = MqConstanst.TOOLPRE + "/addCat";
 				try {
-					post(request, url, 1, CatResponse.class, false);
-				} catch (Exception e) {
+					smPost(request, url, 1, CatResponse.class, false);
+				} catch (Throwable e) {
 					// TODO: handle exception
 				}
 			}
 		});
-
 	}
 
+	protected <T> void smPost(Object request, String path, int tryCount, Class<T> class1, boolean isImportant) {
+		T response = null;
+		String url = null;
+		String host = getHost(isImportant);
+		url = host + path;
+		try {
+			response = httpClient.post(url, request, class1);
+		} catch (Throwable e) {
+
+		}
+	}
 	public boolean publish(PublishMessageRequest request) {
 		return publish(request, 10);
 	}
@@ -285,7 +260,7 @@ public class MqResource implements IMqResource {
 				addCat(request2);
 			}
 			return response.isSuc();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			MetricSingleton.getMetricRegistry().counter("mq.client.publish.fail.count?topic=" + request.getTopicName())
 					.inc();
 			logger.error("publish_error", e);
@@ -303,7 +278,7 @@ public class MqResource implements IMqResource {
 			mailRequest.setType(2);
 			mailRequest.setTopicName(request.getTopicName());
 			sendMail(mailRequest);
-			return false;
+			throw new RuntimeException(e);
 		} finally {
 			transaction.complete();
 			timer1.stop();
@@ -350,16 +325,17 @@ public class MqResource implements IMqResource {
 
 	}
 
-	public void heartbeat(HeartbeatRequest request) {
+	public HeartbeatResponse heartbeat(HeartbeatRequest request) {
 		if (request == null) {
-			return;
+			return null;
 		}
 		String url = MqConstanst.CONSUMERPRE + "/heartbeat";
 		try {
-			post(request, url, 3, HeartbeatResponse.class, false);
-		} catch (Exception e) {
+			return post(request, url, 3, HeartbeatResponse.class, false);
+		} catch (Throwable e) {
 			// TODO: handle exception
 		}
+		return null;
 	}
 
 	public GetConsumerGroupResponse getConsumerGroup(GetConsumerGroupRequest request) {
@@ -421,8 +397,8 @@ public class MqResource implements IMqResource {
 			public void run() {
 				String url = MqConstanst.TOOLPRE + "/addLog";
 				try {
-					post(request, url, 1, LogResponse.class, false);
-				} catch (Exception e) {
+					smPost(request, url, 1, LogResponse.class, false);
+				} catch (Throwable e) {
 
 				}
 			}
@@ -439,8 +415,8 @@ public class MqResource implements IMqResource {
 			public void run() {
 				String url = MqConstanst.TOOLPRE + "/addOpLog";
 				try {
-					post(request, url, 5, OpLogResponse.class, false);
-				} catch (Exception e) {
+					smPost(request, url, 5, OpLogResponse.class, false);
+				} catch (Throwable e) {
 					// TODO: handle exception
 				}
 
@@ -458,8 +434,8 @@ public class MqResource implements IMqResource {
 			public void run() {
 				String url = MqConstanst.TOOLPRE + "/sendMail";
 				try {
-					post(request, url, 1, SendMailResponse.class, false);
-				} catch (Exception e) {
+					smPost(request, url, 1, SendMailResponse.class, false);
+				} catch (Throwable e) {
 					// TODO: handle exception
 				}
 			}

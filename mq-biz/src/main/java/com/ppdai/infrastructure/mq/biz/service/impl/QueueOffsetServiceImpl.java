@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import com.ppdai.infrastructure.mq.biz.entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +42,6 @@ import com.ppdai.infrastructure.mq.biz.common.util.JsonUtil;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.biz.dal.meta.QueueOffsetRepository;
 import com.ppdai.infrastructure.mq.biz.dto.response.BaseUiResponse;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupEntity;
-import com.ppdai.infrastructure.mq.biz.entity.ConsumerGroupTopicEntity;
-import com.ppdai.infrastructure.mq.biz.entity.LastUpdateEntity;
-import com.ppdai.infrastructure.mq.biz.entity.OffsetVersionEntity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueEntity;
-import com.ppdai.infrastructure.mq.biz.entity.QueueOffsetEntity;
 import com.ppdai.infrastructure.mq.biz.service.AuditLogService;
 import com.ppdai.infrastructure.mq.biz.service.CacheUpdateService;
 import com.ppdai.infrastructure.mq.biz.service.ConsumerGroupService;
@@ -127,7 +122,11 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 		int flag = queueOffsetRepository.commitOffset(entity);
 		return flag;
 	}
-
+	@Override
+	public int commitOffsetAndUpdateVersion(QueueOffsetEntity entity) {
+		int flag = queueOffsetRepository.commitOffsetAndUpdateVersion(entity);
+		return flag;
+	}
 	@Override
 	public void deRegister(long consumerId) {
 		queueOffsetRepository.deRegister(consumerId);
@@ -558,9 +557,16 @@ public class QueueOffsetServiceImpl extends AbstractBaseService<QueueOffsetEntit
 			queueOffsetEntity
 					.setDbInfo(queueEntity.getIp() + " | " + queueEntity.getDbName() + " | " + queueEntity.getTbName());
 			String userId = userInfoHolder.getUserId();
+			long maxId =0;
 			queueOffsetEntity.setInsertBy(userId);
 			message01Service.setDbId(queueEntity.getDbNodeId());
-			long maxId = queueService.getMaxId(queueEntity.getId(), queueEntity.getTbName());
+			Message01Entity message01Entity=message01Service.getMaxIdMsg(queueEntity.getTbName());
+			if(message01Entity==null){
+				message01Service.setDbId(queueEntity.getDbNodeId());
+				maxId = queueService.getMaxId(queueEntity.getId(), queueEntity.getTbName());
+			}else {
+				maxId=message01Entity.getId()+1;
+			}
 			// 正常topic的起始偏移为：当前的最大Id
 			if (consumerGroupTopicEntity.getTopicType() == 1) {
 				queueOffsetEntity.setOffset(maxId - 1);

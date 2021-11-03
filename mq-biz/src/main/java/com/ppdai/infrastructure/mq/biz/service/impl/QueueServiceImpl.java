@@ -130,7 +130,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 						updateCache();
 						lastUpdateTime = System.currentTimeMillis();
 
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("QueueServiceImpl_initCache_error", e);
 					}
 					Util.sleep(soaConfig.getMqQueueCacheInterval());
@@ -156,7 +156,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 							initMaxTrace.add(traceMessageItem);
 							lastUpdateTime = System.currentTimeMillis();
 						}
-					} catch (Exception e) {
+					} catch (Throwable e) {
 						log.error("QueueServiceImpl_initMax_error", e);
 					}
 					Util.sleep(soaConfig.getMqQueueMaxRebuildInterval());
@@ -338,7 +338,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 		try {
 			executor.shutdown();
 			isRunning = false;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 		}
 	}
 
@@ -523,7 +523,7 @@ public class QueueServiceImpl extends AbstractBaseService<QueueEntity>
 			// Map<Long, Long> maxMap = new HashMap<>(data.size());
 			dbIpIdMap.entrySet().forEach(t1 -> {
 				message01Service.setDbId(t1.getValue());
-				Map<String, Map<String, Long>> maxNode = message01Service.getMaxId();
+				Map<String, Map<String, Long>> maxNode = message01Service.getMaxIdByIp(t1.getKey());
 				maxNode.entrySet().forEach(t2 -> {
 					t2.getValue().entrySet().forEach(t3 -> {
 						String key = getKey(t1.getKey(), t2.getKey(), t3.getKey());

@@ -28,10 +28,12 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void notifyRb(long consumerGroupId);
 	void notifyRb(List<Long> consumerGroupIds);
 	void notifyRbByNames(List<String> consumerGroupNames);
+	void notifyMetaByNames(List<String> consumerGroupNames);
 	void notifyMeta(long consumerGroupId);
 	void notifyMeta(List<Long> consumerGroupIds);
 	void notifyOffset(long consumerGroupId);
 	void updateCache();
+	void forceUpdateCache();
 	Map<String,ConsumerGroupEntity> getCache();
 	Map<String,ConsumerGroupEntity> getData();
 	Map<Long,ConsumerGroupEntity> getIdCache();
@@ -44,4 +46,5 @@ public interface ConsumerGroupService extends BaseService<ConsumerGroupEntity> {
 	void copyAndNewConsumerGroup(ConsumerGroupEntity consumerGroupEntityOld,ConsumerGroupEntity consumerGroupEntityNew);
 	BaseUiResponse deleteTopicNameFromConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity);
 	BaseUiResponse addTopicNameToConsumerGroup(ConsumerGroupTopicEntity consumerGroupTopicEntity);
+	void deleteUnuseBroadConsumerGroup();
 }

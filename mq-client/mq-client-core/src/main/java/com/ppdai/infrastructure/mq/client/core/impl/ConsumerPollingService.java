@@ -68,7 +68,7 @@ public class ConsumerPollingService implements IConsumerPollingService {
 						try {
 							traceMessageItem.status = "suc";
 							longPolling();
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							// e.printStackTrace();
 							traceMessageItem.status = "fail";
 							Util.sleep(1000);
@@ -115,11 +115,12 @@ public class ConsumerPollingService implements IConsumerPollingService {
 				MqClient.getContext().setAppSubEnvMap(response.getConsumerGroupSubEnvMap());
 			}
 		}
-		if (response != null && response.getConsumerDeleted() == 1) {
+	/*	if (response != null && response.getConsumerDeleted() == 1) {
 			MqClient.reStart();
 			Util.sleep(5000);
 			return;
-		} else if (response != null && response.getConsumerGroups() != null
+		} else*/
+		if (response != null && response.getConsumerGroups() != null
 				&& response.getConsumerGroups().size() > 0) {
 			log.info("get_consumer_group_data,获取到的最新消费者组数据为：" + JsonUtil.toJson(response));
 			TraceMessageItem item = new TraceMessageItem();

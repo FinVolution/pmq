@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ppdai.infrastructure.mq.biz.common.util.HttpClient;
-import com.ppdai.infrastructure.mq.biz.common.util.IHttpClient;
 import com.ppdai.infrastructure.mq.biz.common.util.Util;
 import com.ppdai.infrastructure.mq.client.MqClient;
 
@@ -20,28 +19,17 @@ public class StatService {
 	private static final Logger logger = LoggerFactory.getLogger(StatService.class);
 	private Thread thread;
 	private AtomicBoolean startFlag = new AtomicBoolean(false);
-	private IHttpClient httpClient = new HttpClient(1000, 1000);
+	private HttpClient httpClient = new HttpClient(1000, 1000);
 	@Autowired
 	private MqHandler mqHandler;
 	Server server = null;
-	ServerFactory serverFactory;
-
-	public StatService() {
-		serverFactory=new ServerFactory() {			
-			@Override
-			public Server createServer(int port) {
-				// TODO Auto-generated method stub
-				return new Server(port);
-			}
-		};
-	}
 
 	public void start() {
 		if (startFlag.compareAndSet(false, true)) {
 			thread = new Thread(new Runnable() {
 				@Override
 				public void run() {
-					// Util.sleep(60 * 1000L);
+					//Util.sleep(60 * 1000L);
 					checkStat();
 
 				}
@@ -67,10 +55,10 @@ public class StatService {
 			count = 0;
 			while (count < 10) {
 				try {
-					createServer(port);
+					server = new Server(port);
 					server.setHandler(mqHandler);
 					server.start();
-					logger.warn(port + "端口启动成功");
+					logger.warn(port+"端口启动成功");
 					server.join();
 					break;
 				} catch (Exception e) {
@@ -85,10 +73,6 @@ public class StatService {
 		}
 	}
 
-	private void createServer(int port) {
-		server = serverFactory.createServer(port);
-	}
-
 	@PreDestroy
 	public void close() {
 		try {
@@ -98,9 +82,5 @@ public class StatService {
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-	}
-
-	protected interface ServerFactory {
-		Server createServer(int port);
 	}
 }

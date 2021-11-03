@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import com.ppdai.infrastructure.mq.biz.service.Message01Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,8 @@ public class TruncateQueueService extends AbstractTimerService {
 	private SoaConfig soaConfig;
 	@Autowired
 	private QueueService queueService;
-
+	@Autowired
+	private Message01Service message01Service;
 	@PostConstruct
 	private void init() {
 		super.init("mq_queue_truncate_sk", soaConfig.getTruncateMessageInterval(), soaConfig);
@@ -62,7 +64,11 @@ public class TruncateQueueService extends AbstractTimerService {
 				if (isMaster()) {
 					if (getSkipTime() == 0) {
 						try {
-							queueService.truncate(temp);
+							message01Service.setDbId(temp.getDbNodeId());
+							Long minId=message01Service.getTableMinId(temp.getTbName());
+							if(minId==null||minId==0){
+								queueService.truncate(temp);
+							}
 							log.info("truncate queue "+temp.getId()+","+temp.getDbName()+"-"+temp.getTbName());
 						} catch (Exception e) {
 							log.error("truncate error "+temp.getId()+","+temp.getDbName()+"-"+temp.getTbName(),e);

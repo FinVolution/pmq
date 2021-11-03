@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.ppdai.infrastructure.mq.biz.dto.BaseRequest;
 
-public class RbRequest extends BaseRequest{
+public class UpdateMetaRequest extends BaseRequest{
 	private List<String> consumerGroupNames;
 
 	public List<String> getConsumerGroupNames() {
