@@ -12,11 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PostConstruct;
 
+import com.ppdai.infrastructure.mq.biz.common.inf.TimerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +101,7 @@ import okhttp3.Response;
  * @author dal-generator
  */
 @Service
-public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> implements ConsumerService {
+public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> implements ConsumerService, TimerService {
     private Logger log = LoggerFactory.getLogger(ConsumerServiceImpl.class);
     @Autowired
     private ConsumerRepository consumerRepository;
@@ -173,6 +175,7 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
             }
         });
     }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -1113,6 +1116,56 @@ public class ConsumerServiceImpl extends AbstractBaseService<ConsumerEntity> imp
             return false;
         }
 
+    }
+    private AtomicBoolean startFlag = new AtomicBoolean(false);
+    private AtomicBoolean updateFlag = new AtomicBoolean(false);
+    protected volatile boolean isRunning = true;
+    private AtomicReference<Map<Long, ConsumerEntity>> idEntityMap = new AtomicReference<>(
+            new ConcurrentHashMap<>(3000));
+    @Override
+    public void start() {
+        if (startFlag.compareAndSet(false, true)) {
+            updateCache();
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    while (isRunning) {
+                        try {
+                            updateCache();
+                        } catch (Throwable e) {
+                            log.error("ConsumerServiceImpl_doUpdateCache_error", e);
+                        }
+                        Util.sleep(soaConfig.getMqConsumerGroupCacheInterval());
+                    }
+                }
+            });
+        }
+    }
+    @Override
+    public boolean isActive(long id){
+        ConsumerEntity temp=idEntityMap.get().get(id);
+        if(temp==null){
+            return false;
+        }
+        return true;
+    }
+    public void updateCache() {
+        Map<Long, ConsumerEntity> data=new HashMap<>(3000);
+        List<ConsumerEntity> list=getList();
+        list.forEach(t->{
+            data.put(t.getId(),t);
+        });
+        idEntityMap.set(data);
+    }
+
+    @Override
+    public void stop() {
+        isRunning=false;
+    }
+
+    @Override
+    public String info() {
+        return null;
     }
 
     class NotifyCallBack implements Callback {

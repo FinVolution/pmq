@@ -3,6 +3,7 @@ package com.ppdai.infrastructure.mq.biz.polling;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -44,6 +45,7 @@ public class NoActiveConsumerService extends AbstractTimerService {
 	private DbService dbService;
 	@Autowired
 	private Environment env;
+	private AtomicLong dbCheckCounter=new AtomicLong(0);
 
 	@PostConstruct
 	private void init() {
@@ -69,6 +71,11 @@ public class NoActiveConsumerService extends AbstractTimerService {
 			// 查找过期的consumer，大于心跳间隔时间 还没发送心跳
 			List<ConsumerEntity> consumerList = consumerService
 					.findByHeartTimeInterval(soaConfig.getConsumerInactivityTime());
+			dbCheckCounter.incrementAndGet();
+			if(dbCheckCounter.get()<=2){
+				transaction.setStatus(Transaction.SUCCESS);
+				return;
+			}
 			Date dbTime = dbService.getDbTime();
 			if (consumerList == null || consumerList.size() < 1) {
 				transaction.setStatus(Transaction.SUCCESS);
@@ -83,6 +90,7 @@ public class NoActiveConsumerService extends AbstractTimerService {
 			}
 			transaction.setStatus(Transaction.SUCCESS);
 		} catch (Exception ex) {
+			dbCheckCounter.set(0);
 			transaction.setStatus(ex);
 			String message = String.format("NoActiveConsumerService执行异常,异常信息:%s", ex.getMessage() + ex.getStackTrace());
 			logger.error("NoActiveConsumerService", ex);

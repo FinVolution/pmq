@@ -3102,6 +3102,32 @@ public class SoaConfig {
 		}
 		return getSocketTimeout;
 	}
+
+	private volatile String _getConRegistCount = "";
+	private volatile int getConRegistCount = 0;
+	public final String env_getConRegistCount_key = "mq.con.regist.count";
+	private final String env_getConRegistCount_defaultValue = "200";
+	private final String env_getConRegistCount_des = "客户端注册最大并发数";
+
+	public int getConRegistCount() {
+		try {
+			if (!_getConRegistCount
+					.equals(env.getProperty(env_getConRegistCount_key, env_getConRegistCount_defaultValue))) {
+				_getConRegistCount = env.getProperty(env_getConRegistCount_key, env_getConRegistCount_defaultValue);
+				getConRegistCount = Integer
+						.parseInt(env.getProperty(env_getConRegistCount_key, env_getConRegistCount_defaultValue));
+				if (getConRegistCount < 100) {
+					getConRegistCount = 100;
+				}
+				onChange();
+			}
+		} catch (Exception e) {
+			getConRegistCount = 100;
+			onChange();
+			log.error("getHeartBeatTime_SoaConfig_error", e);
+		}
+		return getConRegistCount;
+	}
 	
 	// 通过apollo开关，控制broker发消息时，是否给消息头加上子环境信息
 		private final String env_getMqBrokerSetSubEnvFlag_key = "mq.broker.set.sub.env.flag";

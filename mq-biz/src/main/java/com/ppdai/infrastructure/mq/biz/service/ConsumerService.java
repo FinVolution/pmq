@@ -41,4 +41,5 @@ public interface ConsumerService extends BaseService<ConsumerEntity> {
 	ConsumerEntity getConsumerByConsumerGroupId(Long consumerGroupId);
 	long countBy(Map<String, Object> conditionMap);
 	List<ConsumerEntity> getListBy(Map<String, Object> conditionMap);
+	boolean isActive(long id);
 }

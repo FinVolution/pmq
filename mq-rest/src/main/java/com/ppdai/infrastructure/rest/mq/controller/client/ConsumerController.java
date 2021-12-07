@@ -1,6 +1,7 @@
 package com.ppdai.infrastructure.rest.mq.controller.client;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ppdai.infrastructure.mq.biz.common.trace.Tracer;
 import com.ppdai.infrastructure.mq.biz.common.trace.spi.Transaction;
@@ -43,20 +44,46 @@ public class ConsumerController {
 	@Autowired
 	private SoaConfig soaConfig;
 
+	private AtomicInteger counter=new AtomicInteger(0);
+
 	@PostMapping("/register")
 	public ConsumerRegisterResponse register(@RequestBody ConsumerRegisterRequest request) {
-		ConsumerRegisterResponse response = consumerService.register(request);
-		return response;
+		if(counter.get()>soaConfig.getConRegistCount()){
+			ConsumerRegisterResponse response=new ConsumerRegisterResponse();
+			response.setSuc(false);
+			response.setMsg("注册失败，超过最大注册并发数"+soaConfig.getConRegistCount());
+			return response;
+		}
+		try {
+			counter.incrementAndGet();
+			ConsumerRegisterResponse response = consumerService.register(request);
+			return response;
+		}finally {
+			counter.decrementAndGet();
+		}
+
 	}
 
 	@PostMapping("/registerConsumerGroup")
 	public ConsumerGroupRegisterResponse consumerGroupRegister(@RequestBody ConsumerGroupRegisterRequest request) {
-		Transaction transaction= Tracer.newTransaction("ConsumerGroupRegist", "Group-"+ JsonUtil.toJsonNull(request.getConsumerGroupNames().keySet()));
-		ConsumerGroupRegisterResponse response = consumerService.registerConsumerGroup(request);
-		transaction.addData("clientIp",request.getClientIp());
-		transaction.setStatus(Transaction.SUCCESS);
-		transaction.complete();
-		return response;
+		if(counter.get()>soaConfig.getConRegistCount()){
+			ConsumerGroupRegisterResponse response=new ConsumerGroupRegisterResponse();
+			response.setSuc(false);
+			response.setMsg("消费者注册注册失败，超过最大注册并发数"+soaConfig.getConRegistCount());
+			return response;
+		}
+		try {
+			counter.incrementAndGet();
+			Transaction transaction= Tracer.newTransaction("ConsumerGroupRegist", "Group-"+ JsonUtil.toJsonNull(request.getConsumerGroupNames().keySet()));
+			ConsumerGroupRegisterResponse response = consumerService.registerConsumerGroup(request);
+			transaction.addData("clientIp",request.getClientIp());
+			transaction.setStatus(Transaction.SUCCESS);
+			transaction.complete();
+			return response;
+		}finally {
+			counter.decrementAndGet();
+		}
+
 	}
 
 	@PostMapping("/deRegister")

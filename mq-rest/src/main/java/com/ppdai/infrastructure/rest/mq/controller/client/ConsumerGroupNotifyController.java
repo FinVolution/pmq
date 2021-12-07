@@ -174,7 +174,7 @@ public class ConsumerGroupNotifyController implements ConsumerGroupChangedListen
 		response.setConsumerDeleted(0);
 		response.setBrokerMetaMode(soaConfig.getBrokerMetaMode());
 		try {
-			if (consumerService.get(request.getConsumerId()) == null) {
+			if (!consumerService.isActive(request.getConsumerId())) {
 				response.setConsumerDeleted(1);
 				return response;
 			}
